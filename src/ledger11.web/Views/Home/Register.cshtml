@@ -1,0 +1,36 @@
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="container d-flex flex-column align-items-center justify-content-center px-3">
+
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show w-100 mb-4" role="alert" style="max-width: 500px;">
+            @TempData["Message"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="text-center mb-4">
+        <h1 class="display-5 fw-bold text-primary">Registration Closed</h1>
+        <p class="lead text-secondary">
+            We're currently accepting new users by invitation only.<br />
+            Leave your email and we'll notify you as soon as registration opens!
+        </p>
+    </div>
+
+    <div class="card shadow rounded-4 p-4" style="max-width: 500px; width: 100%;">
+        <form method="post" asp-action="RegisterNotify">
+            <div class="mb-3">
+                <label for="email" class="form-label fw-semibold">Email address</label>
+                <input type="email" class="form-control form-control-lg" id="email" name="email" placeholder="you@example.com" required />
+            </div>
+            <button type="submit" class="btn btn-primary w-100 btn-lg">Notify Me</button>
+        </form>
+    </div>
+
+    <div class="text-muted mt-4 small">
+        We respect your privacy. No spam. Unsubscribe anytime.
+    </div>
+</div>

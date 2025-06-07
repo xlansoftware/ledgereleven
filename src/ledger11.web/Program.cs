@@ -1,0 +1,168 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using ledger11.model.Config;
+using ledger11.service;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.FeatureManagement;
+using ledger11.data;
+using ledger11.model.Data;
+using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Mvc;
+
+namespace ledger11.web;
+
+public class Program
+{
+    public static async Task Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
+
+        DotNetEnv.Env.Load();
+
+        builder.Configuration
+            .AddEnvironmentVariables();
+
+        builder.Services.Configure<AppConfig>(builder.Configuration.GetSection("AppConfig"));
+
+        builder.Services.AddFeatureManagement();
+
+        builder.Services.AddDbContext<AppDbContext>((provider, options) =>
+        {
+            var config = provider.GetRequiredService<IOptions<AppConfig>>().Value;
+            // Console.WriteLine($"2:DataPath: {config.DataPath}");
+            options.UseSqlite($"Data Source={Path.Combine(config.DataPath, "appdata.db")};Pooling={config.Pooling}");
+            options.EnableSensitiveDataLogging();
+        });
+
+        builder.Services
+            .AddIdentity<ApplicationUser, IdentityRole<Guid>>()
+            .AddEntityFrameworkStores<AppDbContext>()
+            .AddDefaultTokenProviders();
+
+        builder.Services.Configure<SecurityStampValidatorOptions>(options =>
+        {
+            options.ValidationInterval = TimeSpan.Zero; // Always validate
+        });
+
+        builder.AddAuthentication();
+
+        // Business logic
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+        builder.Services.AddScoped<IUserSpaceService, UserSpaceService>();
+        builder.Services.AddScoped<ICurrentLedgerService, CurrentLedgerService>();
+        builder.Services.AddScoped<IBackupService, BackupService>();
+
+        builder.Services.AddHttpClient<IChatGptService, ChatGptService>();
+
+        // Add services to the container.
+        builder.Services.AddControllersWithViews();
+
+        builder.Services.AddRazorPages();
+
+        // Configure CORS
+        if (builder.Environment.IsDevelopment())
+        {
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("ReactApp", policy =>
+                {
+                    policy.WithOrigins("http://localhost:5173") // Vite dev server
+                          .AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowCredentials(); // Required for cookies/auth
+                });
+            });
+        }
+
+        // Add HttpClient service
+        builder.Services.AddHttpClient();
+
+        var app = builder.Build();
+
+        var appConfig = app.Services.GetRequiredService<IOptions<AppConfig>>().Value;
+        Console.WriteLine($"Effective DataPath: {appConfig.DataPath}");
+
+        using (var scope = app.Services.CreateScope())
+        {
+            var services = scope.ServiceProvider;
+
+            var appContext = services.GetRequiredService<AppDbContext>();
+            await appContext.Database.MigrateAsync();
+        }
+
+        // Configure the HTTP request pipeline.
+        if (!app.Environment.IsDevelopment())
+        {
+            app.UseExceptionHandler("/Home/Error");
+            // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+            app.UseHsts();
+        }
+
+        // app.UseHttpsRedirection();
+        app.UseRouting();
+
+        app.UseCors("ReactApp");
+
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        app.MapStaticAssets();
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            OnPrepareResponse = ctx =>
+            {
+                var headers = ctx.Context.Response.Headers;
+
+                var path = ctx.File.PhysicalPath;
+
+                if (path != null && path.Contains("index.html"))
+                {
+                    // No cache for index.html
+                    headers.CacheControl = "no-cache, no-store, must-revalidate";
+                    headers.Pragma = "no-cache";
+                    headers.Expires = "-1";
+                }
+                else
+                {
+                    // Allow long cache for hashed static files (recommended)
+                    headers.CacheControl = "public,max-age=31536000,immutable";
+                }
+            }
+        });
+
+        app.MapFallbackToFile("/app/{*path}", "app/index.html");
+
+        app.Use(async (context, next) =>
+        {
+            var featureManager = context.RequestServices.GetRequiredService<IFeatureManager>();
+
+            if (await featureManager.IsEnabledAsync("DisableRegister") &&
+                context.Request.Path.Equals("/Identity/Account/Register", StringComparison.OrdinalIgnoreCase))
+            {
+                context.Response.Redirect("/Home/Register");
+                return;
+            }
+
+            // Console.WriteLine($"Path: {context.Request.Path}");
+            await next();
+        });
+
+        app.MapRazorPages();
+
+        app.MapGet("/", async (HttpContext context, IWebHostEnvironment env) =>
+        {
+            context.Response.ContentType = "text/html";
+            await context.Response.SendFileAsync(Path.Combine(env.WebRootPath, "video", "index.html"));
+        });
+
+        app.MapControllerRoute(
+            name: "default",
+            pattern: "{controller=Home}/{action=Index}/{id?}")
+            .WithStaticAssets();
+
+        app.Run();
+
+    }
+}

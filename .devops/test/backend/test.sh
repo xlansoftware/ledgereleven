@@ -1,0 +1,1 @@
+docker-compose run --build --rm app-test

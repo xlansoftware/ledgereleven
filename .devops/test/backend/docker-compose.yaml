@@ -1,0 +1,11 @@
+services:
+
+  app-test:
+    image: ledger11-web-test
+    build:
+      context: ../../../src
+      dockerfile: ../.devops/test/backend/Dockerfile
+    environment:
+      - AppConfig__DataPath=memory
+    volumes:
+      - ./test-results:/app/test-results

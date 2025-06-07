@@ -1,0 +1,4 @@
+@host = localhost:5139
+
+###
+GET http://{{host}}/api/category

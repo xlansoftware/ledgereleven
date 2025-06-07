@@ -1,0 +1,46 @@
+# Build artifacts
+bin/
+obj/
+TestResults/
+out/
+build/
+
+# .NET cache and local dbs
+*.db
+*.db-shm
+*.db-wal
+*.log
+
+# User-specific files and IDEs
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.vcxproj.user
+.idea/
+.vscode/
+*.code-workspace
+
+# Package manager cache
+node_modules/
+packages/
+*.nupkg
+*.snupkg
+
+# Git files (source is copied via context)
+.git/
+.gitignore
+
+# Docker files
+Dockerfile*
+docker-compose.override.yml
+.dockerignore
+
+# OS-generated files
+Thumbs.db
+.DS_Store
+ehthumbs.db
+desktop.ini
+
+# Test output mounted via volume
+test-results/

@@ -1,0 +1,12 @@
+@{
+    Layout = null;
+}
+<form method="post">
+    <h2>Login</h2>
+    <label>Username</label>
+    <input name="username" />
+    <label>Password</label>
+    <input name="password" type="password" />
+    <button type="submit">Login</button>
+    <p style="color:red">@ViewBag.Error</p>
+</form>

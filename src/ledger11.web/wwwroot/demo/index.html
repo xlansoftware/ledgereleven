@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple OCR (Tesseract.js v5)</title>
+    <style>
+        /* ... (keep general body, heading, container styles) ... */
+        body { font-family: sans-serif; line-height: 1.6; padding: 10px; max-width: 800px; margin: auto; background-color: #f4f4f4; }
+        h1, h2 { color: #333; text-align: center; font-size: 1.5em; }
+        .controls, .progress-area, .output-area { background-color: #fff; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+
+        /* Style the file input to look more like a button */
+        input[type="file"] { opacity: 0; position: absolute; z-index: -1; }
+        label[for="imageUpload"] { display: block; width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; background-color: #e9e9e9; text-align: center; cursor: pointer; font-weight: normal; transition: background-color 0.3s ease; }
+        label[for="imageUpload"]:hover { background-color: #dcdcdc; }
+        label[for="imageUpload"]::before { content: '📷 '; margin-right: 5px; }
+        /* Style disabled file upload label */
+        label[for="imageUpload"].disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            color: #888;
+        }
+        label[for="imageUpload"].disabled:hover {
+             background-color: #cccccc; /* Prevent hover effect when disabled */
+        }
+
+
+        /* --- Styles for Custom Searchable Dropdown --- */
+        .language-search-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        #languageSearchInput {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+        #languageDropdownResults {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            border: 1px solid #ccc;
+            border-top: none;
+            background-color: white;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        #languageDropdownResults button {
+            display: block;
+            width: 100%;
+            padding: 8px 12px;
+            text-align: left;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 0.95em;
+            border-bottom: 1px solid #eee;
+        }
+        #languageDropdownResults button:last-child { border-bottom: none; }
+        #languageDropdownResults button:hover,
+        #languageDropdownResults button:focus { background-color: #f0f0f0; outline: none; }
+        #languageDropdownResults.visible { display: block; }
+        /* --- End Custom Dropdown Styles --- */
+
+        /* Removed detectionStatus styles */
+
+        /* Removed processButton styles */
+
+        progress { width: 100%; height: 25px; margin-bottom: 10px; }
+        #progressStatus { font-style: italic; color: #555; text-align: center; }
+        #outputText { width: 100%; min-height: 150px; background-color: #e9e9e9; border: 1px solid #ccc; padding: 10px; box-sizing: border-box; white-space: pre-wrap; word-wrap: break-word; font-family: monospace; border-radius: 4px; font-size: 0.9em; }
+        .error { color: red; font-weight: bold; }
+        .processing-overlay { position: relative; }
+        .processing-overlay::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255, 255, 255, 0.7); z-index: 10; display: none; cursor: wait; }
+        .processing-overlay.processing::after { display: block; } /* Renamed class */
+    </style>
+</head>
+<body>
+
+    <h1>Simple OCR</h1>
+
+    <!-- Added 'processing' class for overlay during OCR -->
+    <div class="controls processing-overlay">
+
+        <label for="languageSearchInput">1. Select Language:</label>
+        <!-- Custom Searchable Dropdown Structure -->
+        <div class="language-search-container">
+            <input type="text" id="languageSearchInput" placeholder="Search or Select Language...">
+            <input type="hidden" id="selectedLanguageCode"> <!-- Store the actual code -->
+            <div id="languageDropdownResults"></div>
+        </div>
+        <!-- End Custom Dropdown -->
+
+        <label for="imageUpload" id="imageUploadTriggerLabel">2. Upload or Capture Image</label>
+        <!-- Input is triggered by the label above -->
+        <input type="file" id="imageUpload" accept="image/*" capture="environment" disabled> <!-- Start disabled -->
+
+        <!-- Removed processButton -->
+        <!-- Removed detectionStatus -->
+
+    </div>
+
+    <div class="progress-area">
+        <h2>Processing Progress</h2>
+        <progress id="progressBar" value="0" max="100"></progress>
+        <!-- Updated initial status message -->
+        <p id="progressStatus">Idle. Please select a language first.</p>
+    </div>
+
+    <div class="output-area">
+        <h2>Extracted Text</h2>
+        <pre id="outputText">Text will appear here...</pre>
+    </div>
+
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+
+    <script>
+        // --- Element References ---
+        const imageUpload = document.getElementById('imageUpload');
+        const imageUploadTriggerLabel = document.getElementById('imageUploadTriggerLabel'); // Get the label too
+        const languageSearchInput = document.getElementById('languageSearchInput');
+        const languageDropdownResults = document.getElementById('languageDropdownResults');
+        const selectedLanguageCodeInput = document.getElementById('selectedLanguageCode');
+        const progressBar = document.getElementById('progressBar');
+        const progressStatus = document.getElementById('progressStatus');
+        const outputText = document.getElementById('outputText');
+        const controlsDiv = document.querySelector('.controls'); // For overlay
+
+        // --- Constants ---
+        const localStorageKey = 'preferredOcrLanguage';
+
+        // --- Language List (Keep curated list) ---
+        const tesseractLanguages = {
+            // ... (Keep the curated list) ...
+            "afr": "Afrikaans", "amh": "Amharic", "ara": "Arabic", "asm": "Assamese", "aze": "Azerbaijani",
+            "aze_cyrl": "Azerbaijani - Cyrillic", "bel": "Belarusian", "ben": "Bengali", "bod": "Tibetan",
+            "bos": "Bosnian", "bre": "Breton", "bul": "Bulgarian", "cat": "Catalan; Valencian", "ceb": "Cebuano",
+            "ces": "Czech", "chi_sim": "Chinese - Simplified", "chi_tra": "Chinese - Traditional",
+            "chr": "Cherokee", "cos": "Corsican", "cym": "Welsh", "dan": "Danish", "deu": "German",
+            "dzo": "Dzongkha", "ell": "Greek, Modern (1453-)", "eng": "English",
+            "est": "Estonian", "eus": "Basque", "fao": "Faroese", "fas": "Persian",
+            "fil": "Filipino", "fin": "Finnish", "fra": "French",
+            "fry": "Western Frisian", "gla": "Scottish Gaelic", "gle": "Irish", "glg": "Galician",
+            "guj": "Gujarati", "hat": "Haitian; Haitian Creole", "heb": "Hebrew", "hin": "Hindi", "hrv": "Croatian",
+            "hun": "Hungarian", "hye": "Armenian", "iku": "Inuktitut", "ind": "Indonesian", "isl": "Icelandic",
+            "ita": "Italian", "jav": "Javanese", "jpn": "Japanese", "kan": "Kannada",
+            "kat": "Georgian", "kaz": "Kazakh", "khm": "Central Khmer", "kir": "Kirghiz; Kyrgyz",
+            "kmr": "Kurmanji (Kurdish - Latin Script)", "kor": "Korean", "kor_vert": "Korean (vertical)", "lao": "Lao",
+            "lav": "Latvian", "lit": "Lithuanian", "ltz": "Luxembourgish", "mal": "Malayalam", "mar": "Marathi",
+            "mkd": "Macedonian", "mlt": "Maltese", "mon": "Mongolian", "mri": "Maori", "msa": "Malay",
+            "mya": "Burmese", "nep": "Nepali", "nld": "Dutch; Flemish", "nor": "Norwegian",
+            "ori": "Oriya", "pan": "Panjabi; Punjabi", "pol": "Polish",
+            "por": "Portuguese", "pus": "Pushto; Pashto", "que": "Quechua", "ron": "Romanian; Moldavian; Moldovan",
+            "rus": "Russian", "sin": "Sinhala; Sinhalese", "slk": "Slovak", "slv": "Slovenian",
+            "snd": "Sindhi", "spa": "Spanish; Castilian", "sqi": "Albanian",
+            "srp": "Serbian", "srp_latn": "Serbian - Latin", "sun": "Sundanese", "swa": "Swahili", "swe": "Swedish",
+            "tam": "Tamil", "tat": "Tatar", "tel": "Telugu", "tgk": "Tajik", "tha": "Thai",
+            "tir": "Tigrinya", "tur": "Turkish", "uig": "Uighur; Uyghur", "ukr": "Ukrainian",
+            "urd": "Urdu", "uzb": "Uzbek", "uzb_cyrl": "Uzbek - Cyrillic", "vie": "Vietnamese", "yid": "Yiddish",
+            "yor": "Yoruba"
+        };
+        const languageList = Object.entries(tesseractLanguages)
+            .map(([code, name]) => ({ code, name }))
+            .sort((a, b) => a.name.localeCompare(b.name));
+
+        // --- Language Search/Select Functions ---
+        function populateDropdownResults(filter = '') {
+            // ... (Keep this function exactly as before) ...
+            languageDropdownResults.innerHTML = ''; // Clear previous results
+            const normalizedFilter = filter.toLowerCase().trim();
+            const filteredList = languageList.filter(lang =>
+                lang.name.toLowerCase().includes(normalizedFilter)
+            );
+
+            if (filteredList.length === 0) {
+                languageDropdownResults.innerHTML = '<button disabled style="color: #888; cursor: default;">No matching languages</button>';
+            } else {
+                filteredList.forEach(lang => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.dataset.code = lang.code;
+                    button.textContent = lang.name;
+                    button.addEventListener('click', () => selectLanguage(lang.code, lang.name));
+                    languageDropdownResults.appendChild(button);
+                });
+            }
+             if (filter || filteredList.length > 0) {
+                 languageDropdownResults.classList.add('visible');
+             } else {
+                 languageDropdownResults.classList.remove('visible');
+             }
+        }
+
+        function selectLanguage(code, name) {
+            languageSearchInput.value = name;
+            selectedLanguageCodeInput.value = code;
+            languageDropdownResults.classList.remove('visible');
+            languageSearchInput.blur();
+
+            localStorage.setItem(localStorageKey, code); // Save selection
+            console.log(`Selected and saved language: ${code}`);
+
+            // Enable image upload now that language is selected
+            imageUpload.disabled = false;
+            imageUploadTriggerLabel.classList.remove('disabled');
+            imageUploadTriggerLabel.title = ''; // Remove potential disabled title
+
+            progressStatus.textContent = `Language: ${name}. Ready for image upload.`;
+            outputText.textContent = 'Text will appear here...'; // Reset output
+            outputText.classList.remove('error');
+            progressBar.value = 0; // Reset progress
+        }
+
+        // --- Load Initial Language Preference ---
+        function loadInitialLanguage() {
+            const savedLangCode = localStorage.getItem(localStorageKey);
+            const savedLang = languageList.find(lang => lang.code === savedLangCode);
+
+            if (savedLang) {
+                // Pre-fill and enable upload
+                languageSearchInput.value = savedLang.name;
+                selectedLanguageCodeInput.value = savedLang.code;
+                imageUpload.disabled = false;
+                imageUploadTriggerLabel.classList.remove('disabled');
+                imageUploadTriggerLabel.title = '';
+                console.log(`Loaded saved language preference: ${savedLang.code}`);
+                progressStatus.textContent = `Language: ${savedLang.name}. Ready for image upload.`;
+            } else {
+                // Keep upload disabled
+                imageUpload.disabled = true;
+                imageUploadTriggerLabel.classList.add('disabled');
+                imageUploadTriggerLabel.title = 'Please select a language first'; // Tooltip hint
+                progressStatus.textContent = `Idle. Please select a language first.`;
+                 // Clear potentially invalid codes from previous versions if they exist
+                 selectedLanguageCodeInput.value = '';
+                 languageSearchInput.value = '';
+            }
+        }
+
+        // --- OCR Processing Function ---
+        async function processImage(file) {
+            const lang = selectedLanguageCodeInput.value; // Get selected language
+
+            if (!file) {
+                // This shouldn't happen if called correctly, but good practice
+                console.error("processImage called without a file.");
+                return;
+            }
+             if (!lang) {
+                 // This check should ideally happen before calling processImage
+                 console.error("Cannot process image: No language selected.");
+                 progressStatus.textContent = 'Error: Please select a language first!';
+                 progressStatus.classList.add('error');
+                 languageSearchInput.focus();
+                 return;
+            }
+
+            // --- Start UI changes for processing ---
+            outputText.textContent = '';
+            outputText.classList.remove('error');
+            progressStatus.classList.remove('error'); // Clear previous errors
+            progressBar.value = 0;
+            progressStatus.textContent = 'Initializing Tesseract...';
+            languageSearchInput.disabled = true; // Disable language change during OCR
+            imageUpload.disabled = true; // Disable further uploads during OCR
+            imageUploadTriggerLabel.classList.add('disabled');
+            controlsDiv.classList.add('processing'); // Show overlay
+            // ---
+
+            let worker = null;
+
+            try {
+                progressStatus.textContent = 'Loading Tesseract core & language...';
+                worker = await Tesseract.createWorker( lang, 1, { logger: m => updateProgress(m) });
+
+                progressStatus.textContent = 'Recognizing text...';
+                const { data: { text } } = await worker.recognize(file);
+                outputText.textContent = text || "(No text detected)";
+                // Final status set by updateProgress('done')
+
+            } catch (error) {
+                console.error('OCR Error:', error);
+                outputText.textContent = `Error during OCR: ${error.message || error}`;
+                outputText.classList.add('error');
+                progressStatus.textContent = 'Error occurred during processing.';
+                progressStatus.classList.add('error');
+                progressBar.value = 0; // Reset progress on error
+            } finally {
+                 if (worker) {
+                     await worker.terminate();
+                     console.log('Tesseract worker terminated.');
+                 }
+                 // --- Reset UI after processing (success or error) ---
+                 languageSearchInput.disabled = false; // Re-enable language selection
+                 imageUpload.disabled = false; // Re-enable uploads
+                 imageUploadTriggerLabel.classList.remove('disabled');
+                 controlsDiv.classList.remove('processing'); // Hide overlay
+                 imageUpload.value = null; // Reset file input to allow re-uploading same file
+                 // Keep language selected, update status based on success/failure
+                 if (!progressStatus.classList.contains('error')) {
+                      progressStatus.textContent = `Processing complete. Ready for next image.`;
+                 }
+                 // ---
+            }
+        }
+
+
+        // --- Progress Update Callback ---
+        function updateProgress(data) {
+             console.log(data);
+             let statusText = data.status.replace(/_/g, ' ');
+             statusText = statusText.charAt(0).toUpperCase() + statusText.slice(1);
+
+             // Avoid showing confusing intermediate steps if possible, focus on main ones
+             if (data.status === 'recognizing text' || data.status.includes('load') || data.status.includes('initialize')) {
+                  progressStatus.textContent = `${statusText}...`;
+             }
+
+             if (data.progress && data.status === 'recognizing text') {
+                 progressBar.value = Math.floor(data.progress * 100);
+             }
+             if (data.status === 'done') {
+                  progressBar.value = 100;
+                  // Final status message is set in the 'finally' block of processImage
+             }
+             if (data.status.includes('load') || data.status.includes('initialize')) {
+                  progressBar.value = 0; // Show starting progress
+             }
+        }
+
+        // --- Initialize ---
+        loadInitialLanguage(); // Load saved pref or set initial disabled state
+
+        // --- Event Listeners for Language Search ---
+        languageSearchInput.addEventListener('input', () => {
+            populateDropdownResults(languageSearchInput.value);
+            // If user types something invalid after selecting, disable upload again
+            if (!languageList.some(lang => lang.name === languageSearchInput.value)) {
+                 selectedLanguageCodeInput.value = '';
+                 imageUpload.disabled = true;
+                 imageUploadTriggerLabel.classList.add('disabled');
+                 imageUploadTriggerLabel.title = 'Please select a valid language first';
+                 progressStatus.textContent = 'Please select a valid language from the list.';
+            }
+        });
+        languageSearchInput.addEventListener('focus', () => {
+            populateDropdownResults(languageSearchInput.value);
+        });
+        document.addEventListener('click', (event) => {
+            if (!languageSearchInput.contains(event.target) && !languageDropdownResults.contains(event.target)) {
+                languageDropdownResults.classList.remove('visible');
+            }
+        });
+         languageSearchInput.addEventListener('keyup', (event) => {
+             if (languageSearchInput.value === '') {
+                 selectedLanguageCodeInput.value = '';
+                 populateDropdownResults('');
+                 imageUpload.disabled = true; // Disable upload if language is cleared
+                 imageUploadTriggerLabel.classList.add('disabled');
+                 imageUploadTriggerLabel.title = 'Please select a language first';
+                 progressStatus.textContent = 'Idle. Please select a language first.';
+             }
+         });
+
+        // --- Event Listener for Image Upload (Trigger OCR) ---
+        imageUpload.addEventListener('change', async (event) => {
+             const file = event.target.files && event.target.files[0];
+             const currentLang = selectedLanguageCodeInput.value;
+
+             if (file && currentLang) {
+                 // Start processing immediately
+                 await processImage(file);
+             } else if (file && !currentLang) {
+                 // Should not happen if UI logic is correct, but handle anyway
+                 console.error("Image uploaded but no language selected!");
+                 progressStatus.textContent = 'Error: Select language before uploading!';
+                 progressStatus.classList.add('error');
+                 languageSearchInput.focus();
+                 imageUpload.value = null; // Clear the invalid upload
+             } else {
+                 // User cancelled file selection - do nothing, wait for next upload
+                 console.log("File selection cancelled or no file chosen.");
+                 // Optionally reset status if needed, but current status is likely okay
+                 // progressStatus.textContent = `Language: ${languageSearchInput.value}. Ready for image upload.`;
+             }
+         });
+
+        // --- Removed OSD related functions ---
+        // --- Removed processButton event listener ---
+
+    </script>
+
+</body>
+</html>

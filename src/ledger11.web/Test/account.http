@@ -1,0 +1,33 @@
+@host = localhost:5139
+
+###
+GET http://{{host}}/api/account/user
+
+###
+GET http://{{host}}/api/account/user
+Cookie: .AspNetCore.Identity.Application=CfDJ8Pmrsx2RsNlHnhpJKr8uxlHr2SnB8Yc0hBKvhsLQ0Tjt47g2bJhwhAyJPl3Hs_g7ebDrIUnw5RPkt6dk6qVwpaFFbYIx5XFTA5Z3QwbsbdwnBYWW0we3f6hdAXXVQtgLYi9VHaBYbctHknNd3Tl9jsIIpFLgW-Sl4s4GVr8cSJO35Cp1h3Q8HLbcON4NjojJiaUGU_IH7I-gfkngjIHWZLO_cH2UElE8MGlSFkXtBWRnznKAf0Q27bM_nK2gtqblPWijuBq3m901HhzL5UsEJ-e18v8gfrDH9J-n9da7eBPaTKgjccG-9Qp1lyuDlPFwlkQ_DUshVuP_t0yY7SFeLZPWjKgyUCA1ZURZWTr6B9vhsZWldAhD7GFK3tEdsc6gdJ1JXgrpOVRkNGG-NL81o5XcS4Sewa_oskQREZPkD8SAzgNodjmyMBGxUEfg36JoHieMk8fqsrz3Pn_ddTYiRgF5YAXsryT3Cw3-sT3XYRVf5BWY-ahXChqfQ6Ps7fgR_8pKmCsIWjAFKM45MbNE0Hzw5bN69Zlb4oxBORriFNzzby91B_TnUG46khGxqC9zwdgkBbU6uq363TTTbbSYknCaAhBt-9pN8UFziSD4t1d0P-XiNnwHUWY7Y1zuSkpbf9kz4u6T4gN1BuxfPuIRXqN4BZjTsiQaMXpoG947r5HAEmPBgxO99GmyZzwQzjbpk55cvkChw_myo0i1pctj4CWun6fwT0OPvpjeqAUCDEU5
+
+###
+GET http://{{host}}/api/account/user
+Cookie: .AspNetCore.Identity.Application=CfDJ8Pmrsx2RsNlHnhpJKr8uxlFA5mKxg9vijxC387msG69_NEFGtbte8-BIABWdIBOqSqXGHSNHo9bWWvI0K8jqlXSX5sHd4YJsSiS2gaGD6ChKFtBq8j1gE5OhZxVV_X6C3y-pbD-x-TI36YRaxGXxW1xi1pRgt3X3JRbqQfHSQ335_A6ysWtwPwGwMk2dzpyZV-mPSvQurHynIrashWhluNe2dOC4GV8w6_XwXby1Vuc5uyg78d1bMjLIJKPPvg0VWlT_RI468_AUT3rgLGNT4qGCPx5jV06OOKmU_lQg8PgaSgVU_7k8h0NNPq8JTq2KIFyRF-A_vRZAst5Z1M7OKyrXZSvz7nUlvJdCjO9oGkSsmxM39WthJ5bRLn1yB0LA1yHl-izbr-mpDCFl8BF73s8ouGsdLUxC7R8FJ1cVRK0joBE0kOLVsu9ny9Bi0ha0TurOb_Q8UJDAqTVCLTbsyrqgP8x1tKPwaMbHwlzoG6jXuelJvrmGAqOIgsrFtwG9YmN7x2xYNdnFy7O0_2XJr5alzN9VE0n0rYGVhbRBgBBuiaLVsk-BAqxUg3mpTVGDSuoWIOb7c4JHYP0n9Vsj3dQ1Id-bDXPtiuOvzP6u4AWRe7fg3-JFXGo5sykA0IS8m_sdPLTu1IXivYRxA0dzqDmw21Me0HYiH5yRNKgPhpNU4dYXKn8ZVM4yrcXtkD169KoKYJuDcB1Ejd9IlYXiVsX_CGlcSNIhlnEqCRNTShAkPO0T_OieL5iQ1O-71T4xMA
+
+###
+POST http://{{host}}/api/account/login
+Content-Type: application/json
+
+{
+  "username": "alice@example.com",
+  "password": "alice"
+}
+
+###
+POST http://{{host}}/api/account/login
+Content-Type: application/json
+
+{
+  "username": "bob@example.com",
+  "password": "bob"
+}
+
+###
+POST http://{{host}}/api/account/logout

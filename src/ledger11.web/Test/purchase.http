@@ -1,0 +1,23 @@
+@host = localhost:5139
+
+###
+POST http://{{host}}/api/purchases/parse
+Content-Type: application/json
+
+{
+  "query": "три бири за 10 лева",
+  "isreceipt": false
+}
+
+###
+
+### Upload an image file
+POST http://{{host}}/api/purchases/scan
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="imageFile"; filename="receipt.jpg"
+Content-Type: image/jpeg
+
+< ./receipt_01_medium.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--

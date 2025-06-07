@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Primary Meta Tags -->
+    <title>
+      Ledger Eleven - Simple Personal Expense Tracker & Budget Manager
+    </title>
+    <meta
+      name="description"
+      content="Ledger Eleven helps you track expenses effortlessly. Quick, easy personal finance management with intuitive budgeting tools. Start managing your money smarter today!"
+    />
+    <meta
+      name="keywords"
+      content="expense tracker, personal finance, budget manager, money management, financial tools, budgeting app, expense manager"
+    />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:title"
+      content="Ledger Eleven - Your Simple Personal Finance Solution"
+    />
+    <meta
+      property="og:description"
+      content="Take control of your spending with Ledger Eleven's intuitive expense tracking and budgeting tools."
+    />
+    <meta property="og:image" content="/img/og-image.jpeg" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Ledger Eleven - Smart Expense Tracking Made Simple"
+    />
+    <meta
+      name="twitter:description"
+      content="Manage your personal finances effortlessly with Ledger Eleven's user-friendly budget tracker."
+    />
+    <meta name="twitter:image" content="/img/twitter-card.jpeg" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Ledger Eleven",
+        "description": "Personal expense tracking and budget management application",
+        "image": "/img/logo.png",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Web",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body,
+      html {
+        height: 100%;
+        font-family: "Segoe UI", sans-serif;
+        background: linear-gradient(to right, #2d0057, #000000);
+        color: #fff;
+      }
+
+      .hero-wrapper {
+        display: flex;
+        flex-direction: row;
+        min-height: 100vh;
+        padding: 2rem;
+      }
+
+      .left-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: start;
+        align-items: flex-start;
+        padding: 2rem;
+      }
+
+      .left-content h1 {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+        color: #f2eaff;
+      }
+
+      .left-content p {
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+        color: #d2c5e8;
+      }
+
+      .cta-button {
+        background-color: #6a3dff;
+        color: #ffffff;
+        padding: 1rem 2rem;
+        font-size: 1.2rem;
+        border: none;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 14px rgba(106, 61, 255, 0.25);
+        position: relative;
+      }
+
+      .cta-button:hover {
+        background-color: #5e3dba;
+        box-shadow: 0 6px 20px rgba(94, 61, 186, 0.35);
+        transform: translateY(-1px);
+      }
+
+      .cta-button:focus {
+        outline: 3px solid rgba(255, 255, 255, 0.4);
+      }
+
+      .right-content {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+      }
+
+      .right-content .video-frame {
+        position: relative;
+        width: 100%;
+        max-width: 400px; /* You can adjust this max size */
+        aspect-ratio: 1179 / 2556;
+        background: #000;
+        border-radius: 40px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      }
+
+      .right-content video {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 0;
+      }
+
+      @media (max-width: 768px) {
+        .hero-wrapper {
+          flex-direction: column;
+          padding: 1rem;
+        }
+
+        .left-content {
+          align-items: center;
+          text-align: center;
+          padding: 1rem;
+        }
+
+        .left-content h1 {
+          font-size: 2.5rem;
+        }
+
+        .left-content p {
+          font-size: 1.2rem;
+        }
+
+        .cta-button {
+          padding: 0.75rem 1.5rem;
+        }
+      }
+
+      /* Features Section */
+      .features-section {
+        padding: 4rem 2rem;
+        margin: 2rem 0;
+      }
+
+      .features-section h2 {
+        text-align: center;
+        font-size: 2.5rem;
+        margin-bottom: 3rem;
+        color: #f2eaff;
+        position: relative;
+        padding-bottom: 1rem;
+      }
+
+      .features-section h2::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100px;
+        height: 3px;
+      }
+
+      .features-section ul {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0;
+        list-style: none;
+      }
+
+      .features-section li {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 2rem;
+        border-radius: 12px;
+        border: 1px solid rgba(176, 126, 255, 0.2);
+        transition: transform 0.3s ease;
+        position: relative;
+        margin-bottom: 0;
+      }
+
+      .features-section li:hover {
+        transform: translateY(-5px);
+      }
+
+      .features-section li::before {
+        content: "✓";
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        background: #4caf50;
+        color: white;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 30px;
+        margin-right: 1rem;
+        font-weight: bold;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .features-section {
+          padding: 3rem 1rem;
+        }
+
+        .features-section h2 {
+          font-size: 2rem;
+          margin-bottom: 2rem;
+        }
+
+        .features-section ul {
+          grid-template-columns: 1fr;
+        }
+
+        .features-section li {
+          padding: 1.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="hero-wrapper">
+      <div class="left-content">
+        <h1>Ledger Eleven: Personal Finance Management</h1>
+        <p>
+          Track expenses effortlessly with intuitive budgeting app. Take control
+          of your money with easy-to-use financial tools.
+        </p>
+        <a
+          href="/start"
+          class="cta-button"
+          aria-label="Start managing your expenses now"
+          >Start Free Today</a
+        >
+      </div>
+      <div class="right-content">
+        <div
+          class="video-frame"
+          role="img"
+          aria-label="Demonstration of Ledger Eleven expense tracking interface"
+        >
+          <video
+            id="demoVideo"
+            autoplay
+            muted
+            loop
+            playsinline
+            poster="/img/video-poster.webp"
+          >
+            <source src="/video/demo001.mp4" type="video/mp4" />
+            <track
+              label="English"
+              kind="captions"
+              srclang="en"
+              src="/video/captions.vtt"
+              default
+            />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      </div>
+    </div>
+
+    <section class="features-section" aria-labelledby="features-heading">
+      <h2 id="features-heading">Why Choose Ledger Eleven?</h2>
+      <ul>
+        <li>Instant expense tracking with one-tap input</li>
+        <li>Spending categorization</li>
+        <li>Cross-device synchronization</li>
+        <li>Budget progress updates</li>
+      </ul>
+    </section>
+
+    <script>
+      const video = document.getElementById("demoVideo");
+      if (video) {
+        video.playbackRate = 0.5;
+      }
+    </script>
+  </body>
+</html>

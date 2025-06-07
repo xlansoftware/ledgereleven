@@ -1,0 +1,46 @@
+@host = localhost:5139
+
+###
+POST http://{{host}}/api/chart/define-widget
+Content-Type: application/json
+
+{
+  "userDescription": "show me the purchases for the last 3 months"
+}
+
+###
+POST http://{{host}}/api/chart/new
+
+###
+GET http://{{host}}/api/chart/3
+
+# {
+#   "data": [
+#     {
+#       "Month": "2025-02",
+#       "TotalPurchases": 742.15
+#     },
+#     {
+#       "Month": "2025-03",
+#       "TotalPurchases": 3009.45
+#     },
+#     {
+#       "Month": "2025-04",
+#       "TotalPurchases": 1857.4399999999998
+#     },
+#     {
+#       "Month": "2025-05",
+#       "TotalPurchases": 4086.0099999999998
+#     }
+#   ],
+#   "params": "\n{\n  \"chartType\": \"Bar\",\n  \"title\": \"Purchases in the Last 3 Months\",\n  \"xAxisKey\": \"Month\",\n  \"yAxisKey\": \"TotalPurchases\",\n  \"data\": [],\n  \"color\": \"#4a90e2\"\n}\n"
+# }
+
+###
+POST http://{{host}}/api/chart/execute-widget
+Content-Type: application/json
+
+{
+  "sqlQuery": "\nSELECT Date(Date) as Date, SUM(Value) as TotalPurchases\nFROM Transactions\nWHERE Date >= date('now', '-3 months')\nGROUP BY Date(Date)\nORDER BY Date(Date)\n",
+  "widgetParamsJson": "\n{\n  \"chartType\": \"Line\",\n  \"title\": \"Purchases for the Last 3 Months\",\n  \"xAxisKey\": \"Date\",\n  \"yAxisKey\": \"TotalPurchases\",\n  \"data\": []\n}\n"
+}

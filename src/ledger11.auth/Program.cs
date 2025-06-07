@@ -1,0 +1,48 @@
+using ledger11.auth.Data;
+using ledger11.auth.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Basic login and account management
+builder.Services.AddAccountsSupport(builder.Configuration);
+// Ability to send emails for email confirmation, password reset, etc.
+builder.Services.AddEmailsSupport(builder.Configuration);
+// Expose the accounts via OpenID Connect
+builder.Services.AddAuthSupport(builder.Configuration);
+
+// Add services to the container.
+builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
+
+builder.Services.AddAuthorization();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
+}
+
+// app.UseHttpsRedirection();
+app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapStaticAssets();
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}")
+    .WithStaticAssets();
+
+app.MapRazorPages();
+
+await app.MigrateDatabaseAsync();
+
+app.Run();

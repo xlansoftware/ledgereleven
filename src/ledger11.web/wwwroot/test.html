@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Transaction Tester</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; }
+    input, button { margin: 0.3rem 0; display: block; padding: 0.3rem; }
+    table { border-collapse: collapse; margin-top: 1rem; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left; }
+    #toast {
+      background: #ffc;
+      color: #333;
+      padding: 0.5rem;
+      margin: 1rem 0;
+      border: 1px solid #cc0;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="userHeader">Loading user...</h1>
+
+  <div id="toast"></div>
+
+  <h2>Create Transaction</h2>
+  <input id="amount" type="number" placeholder="Amount" />
+  <input id="description" type="text" placeholder="Description" />
+  <input id="date" type="date" />
+  <input id="categoryId" type="number" placeholder="Category ID" />
+  <button onclick="createTransaction()">Create</button>
+
+  <h2>All Transactions</h2>
+  <button onclick="loadTransactions()">Refresh</button>
+  <table id="transactionTable">
+    <thead>
+      <tr><th>ID</th><th>Amount</th><th>Description</th><th>Date</th><th>Category</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    async function fetchWithAuth(url, options = {}) {
+      const res = await fetch(url, {
+        credentials: 'include', // Important: send cookies
+        ...options
+      });
+
+      if (res.status === 401) {
+        showToast('Unauthorized. Redirecting to login...');
+        setTimeout(() => window.location.href = '/Account/Login', 1500);
+        throw new Error('Unauthorized');
+      }
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err || `Error ${res.status}`);
+      }
+
+      return res;
+    }
+
+    async function createTransaction() {
+      try {
+        const payload = {
+          amount: parseFloat(document.getElementById('amount').value),
+          description: document.getElementById('description').value,
+          date: document.getElementById('date').value,
+          categoryId: parseInt(document.getElementById('categoryId').value)
+        };
+
+        const res = await fetchWithAuth('/api/transaction', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await res.json();
+        showToast('Transaction created successfully');
+        loadTransactions();
+      } catch (err) {
+        showToast(err.message);
+      }
+    }
+
+    async function loadTransactions() {
+      try {
+        const res = await fetchWithAuth('/api/transaction');
+        const transactions = await res.json();
+
+        const tbody = document.querySelector('#transactionTable tbody');
+        tbody.innerHTML = '';
+
+        transactions.forEach(t => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${t.id}</td>
+            <td>${t.amount}</td>
+            <td>${t.description}</td>
+            <td>${new Date(t.date).toLocaleDateString()}</td>
+            <td>${t.category?.name || t.categoryId}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (err) {
+        showToast('Failed to load transactions: ' + err.message);
+      }
+    }
+
+    async function loadUserInfo() {
+      try {
+        const res = await fetchWithAuth('/api/account/user');
+        const user = await res.json();
+        document.getElementById('userHeader').textContent = `Welcome, ${user.name}!`;
+      } catch (err) {
+        document.getElementById('userHeader').textContent = 'Not logged in';
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.style.display = 'block';
+      setTimeout(() => toast.style.display = 'none', 3000);
+    }
+
+    // Initialize
+    loadUserInfo();
+    loadTransactions();
+  </script>
+</body>
+</html>
