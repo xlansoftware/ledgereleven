@@ -24,6 +24,11 @@ dotnet tool install --global dotnet-ef
 npm run test
 ```
 
+```bash
+cd .devops/test/backend
+docker-compose run --build --rm app-test
+```
+
 ## Start
 
 ```bash
