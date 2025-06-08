@@ -99,6 +99,9 @@ public class UserSpaceService : IUserSpaceService
         if (user == null)
             throw new InvalidOperationException("No authenticated user.");
 
+        if (user.Id == Guid.Empty)
+            throw new Exception("User id is empty...");
+
         _logger.LogInformation($"Creating new space for {user.UserName} ...");
 
         // Create new space

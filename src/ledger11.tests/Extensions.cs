@@ -72,6 +72,10 @@ public static class TestExtesions
             options.EnableDetailedErrors();
         });
 
+        services.AddIdentity<ApplicationUser, IdentityRole<Guid>>()
+            .AddEntityFrameworkStores<AppDbContext>()
+            .AddDefaultTokenProviders();
+
         services.AddSingleton<IHttpContextAccessor>(MockHttpContextAcessor());
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IUserSpaceService, UserSpaceService>();

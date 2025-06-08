@@ -81,56 +81,43 @@ public class CurrentUserService : ICurrentUserService
         }
     }
 
-    private async Task<T> Retry<T>(int maxRetries, Func<Task<T>> action, int delayMs = 100)
-    {
-        int retries = 0;
-        while (true)
-        {
-            try
-            {
-                return await action();
-            }
-            catch (Microsoft.Data.Sqlite.SqliteException ex) when (ex.SqliteErrorCode == 5) // database locked
-            {
-                retries++;
-                if (retries > maxRetries)
-                    throw;
-
-                await Task.Delay(delayMs);
-            }
-        }
-    }
-
     public async Task<ApplicationUser> EnsureUser(ClaimsPrincipal claimsPrincipal)
     {
-        var idd = Guid.NewGuid().ToString("N");
-        // Do your user/login creation logic here
-        var externalUserId = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? claimsPrincipal.FindFirst("sub")?.Value;
-        if (externalUserId == null)
+        var email = claimsPrincipal.FindFirst(ClaimTypes.Email)?.Value
+            ?? claimsPrincipal.FindFirst("email")?.Value;
+        if (string.IsNullOrWhiteSpace(email))
         {
             DumpClaims(claimsPrincipal);
-            throw new Exception("'sub' claim is required");
+            throw new Exception("'email' claim is required");
         }
 
-        var provider = claimsPrincipal.FindFirst("auth_scheme")?.Value;
-        if (provider == null)
-        {
-            DumpClaims(claimsPrincipal);
-            throw new Exception("'auth_scheme' claim should be added by the handler");
-        }
-
-        var user = await _userManager.FindByLoginAsync(provider, externalUserId);
+        var user = await _userManager.FindByEmailAsync(email);
         if (user != null) return user;
 
         // Create new user
-        var email = claimsPrincipal.FindFirst(ClaimTypes.Email)?.Value;
-        var name = claimsPrincipal.FindFirst(ClaimTypes.Name)?.Value;
-        user = new ApplicationUser { UserName = name ?? email, Email = email ?? name };
-        await _userManager.CreateAsync(user);
-        await _userManager.AddLoginAsync(user, new UserLoginInfo(provider, externalUserId, provider));
+        var name = claimsPrincipal.FindFirst(ClaimTypes.Name)?.Value
+            ?? claimsPrincipal.FindFirst("name")?.Value;
+        user = new ApplicationUser { UserName = name ?? email, Email = email };
+        var result = await _userManager.CreateAsync(user);
+        if (!result.Succeeded)
+        {
+            // Check for unique constraint failure (DB-specific error message or code)
+            var isUniqueConstraintError = result.Errors.Any(e =>
+                e.Description.Contains("UNIQUE constraint failed", StringComparison.OrdinalIgnoreCase) ||
+                e.Code == "DuplicateUserName" || e.Code == "DuplicateEmail"
+            );
 
-        _logger.LogInformation($"Ensured user with id = {user.Id}");
+            if (isUniqueConstraintError)
+            {
+                // User was likely created by another process between Find and Create
+                user = await _userManager.FindByEmailAsync(email);
+                if (user != null) return user;
+            }
+
+            throw new Exception($"Create user failed: {string.Join("; ", result.Errors.Select(e => e.Description))}");
+        }
+
+        _logger.LogInformation($"User created for {email}, id = {user.Id}");
 
         return user;
     }

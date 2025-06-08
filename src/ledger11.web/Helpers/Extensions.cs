@@ -69,75 +69,69 @@ public static class Extensions
             options.DefaultScheme = "Cookies";
             options.DefaultChallengeScheme = "oidc";
         })
-            .AddCookie("Cookies", options =>
-            {
-                options.Cookie.SameSite = SameSiteMode.Lax;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-                options.Cookie.HttpOnly = true;
-                options.SlidingExpiration = true;
-            })
-            .AddOpenIdConnect("oidc", options =>
-            {
-                options.Authority = settings.Authority;
-                options.ClientId = settings.ClientId;
-                options.ClientSecret = settings.ClientSecret;
-                options.ResponseType = settings.ResponseType;
-                options.SaveTokens = true;
-                options.UseTokenLifetime = false;
-                options.RequireHttpsMetadata = !env.IsDevelopment();
-                options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        .AddCookie("Cookies", options =>
+        {
+            options.Cookie.SameSite = SameSiteMode.Lax;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.Cookie.HttpOnly = true;
+            options.SlidingExpiration = true;
+        })
+        .AddOpenIdConnect("oidc", options =>
+        {
+            options.Authority = settings.Authority;
+            options.ClientId = settings.ClientId;
+            options.ClientSecret = settings.ClientSecret;
+            options.ResponseType = settings.ResponseType;
+            options.SaveTokens = true;
+            options.UseTokenLifetime = false;
+            options.RequireHttpsMetadata = !env.IsDevelopment();
+            options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 
-                options.Scope.Clear();
-                foreach (var scope in (settings.Scope ?? "openid profile").Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            options.Scope.Clear();
+            foreach (var scope in (settings.Scope ?? "openid profile").Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            {
+                options.Scope.Add(scope);
+            }
+
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = settings.Authority,
+                ValidateAudience = true,
+                ValidAudience = settings.ClientId,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true
+            };
+
+            options.SignedOutCallbackPath = settings.SignedOutCallbackPath;
+            options.SignedOutRedirectUri = settings.PostLogoutRedirectUri;
+
+            options.Events.OnRedirectToIdentityProviderForSignOut = context =>
+            {
+                var idToken = context.Properties.GetTokenValue("id_token");
+                context.ProtocolMessage.IdTokenHint = idToken;
+                context.ProtocolMessage.PostLogoutRedirectUri = context.Properties.RedirectUri;
+                context.ProtocolMessage.State = Guid.NewGuid().ToString();
+                return Task.CompletedTask;
+            };
+
+            options.Events.OnTokenValidated = async context =>
+            {
+                var currentUserService = context.HttpContext.RequestServices.GetRequiredService<ICurrentUserService>();
+                var signInManager = context.HttpContext.RequestServices.GetRequiredService<SignInManager<ApplicationUser>>();
+
+                var claimsPrincipal = context.Principal;
+                if (claimsPrincipal == null)
                 {
-                    options.Scope.Add(scope);
+                    throw new Exception("Token contains no principal...");
                 }
 
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidIssuer = settings.Authority,
-                    ValidateAudience = true,
-                    ValidAudience = settings.ClientId,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true
-                };
+                var user = await currentUserService.EnsureUser(claimsPrincipal);
+                await signInManager.SignInAsync(user, isPersistent: true);
 
-                options.SignedOutCallbackPath = settings.SignedOutCallbackPath;
-                options.SignedOutRedirectUri = settings.PostLogoutRedirectUri;
-
-                options.Events.OnRedirectToIdentityProviderForSignOut = context =>
-                {
-                    var idToken = context.Properties.GetTokenValue("id_token");
-                    context.ProtocolMessage.IdTokenHint = idToken;
-                    context.ProtocolMessage.PostLogoutRedirectUri = context.Properties.RedirectUri;
-                    context.ProtocolMessage.State = Guid.NewGuid().ToString();
-                    return Task.CompletedTask;
-                };
-
-                options.Events.OnTokenValidated = async context =>
-                {
-                    // add the scheme name as part of the user's claims
-                    if (context.Principal?.Identity is ClaimsIdentity identity)
-                    {
-                        identity.AddClaim(new Claim("auth_scheme", context.Scheme.Name));
-                    }
-
-                    var currentUserService = context.HttpContext.RequestServices.GetRequiredService<ICurrentUserService>();
-                    var signInManager = context.HttpContext.RequestServices.GetRequiredService<SignInManager<ApplicationUser>>();
-
-                    var claimsPrincipal = context.Principal;
-                    if (claimsPrincipal == null)
-                    {
-                        throw new Exception("Token contains no principal...");
-                    }
-
-                    var user = await currentUserService.EnsureUser(claimsPrincipal);
-                    await signInManager.SignInAsync(user, isPersistent: true);
-
-                    logger.LogInformation($"Signed in user {user.Email} with scheme {context.Scheme.Name}");
-                };
-            });
+                logger.LogInformation($"Signed in user {user.Email} with scheme {context.Scheme.Name}");
+            };
+        });
 
         return services;
     }
