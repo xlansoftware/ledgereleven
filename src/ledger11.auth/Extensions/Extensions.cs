@@ -10,21 +10,24 @@ using Microsoft.IdentityModel.Tokens;
 
 public static class Extensions
 {
-    public static IServiceCollection AddAuthSupport(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddAuthSupport(this IHostApplicationBuilder builder)
     {
+        var services = builder.Services;
+        var configuration = builder.Configuration;
+        var env = builder.Environment;
+
         var key = services.AddSecurityKey(configuration);
         
         services.AddSingleton<SecurityKey>(key);
 
         var authority = configuration["Issuer"];
-        var requireHttpsMetadata = bool.TryParse(configuration["RequireHttpsMetadata"], out var https) && https;
         var clientId = configuration["Client:ClientId"] ?? Guid.NewGuid().ToString();
 
         services.AddAuthentication("Cookies")
             .AddCookie("Cookies")
             .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
             {
-                options.RequireHttpsMetadata = requireHttpsMetadata;
+                options.RequireHttpsMetadata = !env.IsDevelopment();
                 options.Authority = authority;
                 options.Audience = clientId;
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -41,8 +44,11 @@ public static class Extensions
         return services;
     }
 
-    public static IServiceCollection AddEmailsSupport(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddEmailsSupport(this IHostApplicationBuilder builder)
     {
+        var services = builder.Services;
+        var configuration = builder.Configuration;
+    
         services.AddOptions<SmtpConfig>()
             .BindConfiguration("Smtp")
             .ValidateDataAnnotations()
@@ -65,15 +71,22 @@ public static class Extensions
         return services;
     }
 
-    public static IServiceCollection AddAccountsSupport(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddAccountsSupport(this IHostApplicationBuilder builder)
     {
+        var services = builder.Services;
+        var configuration = builder.Configuration;
+        var env = builder.Environment;
+
+        var confirmAccounts = bool.Parse(configuration["EmailFeatureFlags:ConfirmAccounts"] ?? "true");
+
         var connectionString = configuration.GetConnectionString("DefaultConnection");
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlite(connectionString));
 
         services.Configure<IdentityOptions>(options =>
         {
-            options.SignIn.RequireConfirmedAccount = true;
+            options.SignIn.RequireConfirmedEmail = confirmAccounts;
+            options.SignIn.RequireConfirmedAccount = confirmAccounts;
 
             // Password settings
             options.Password.RequireDigit = false;

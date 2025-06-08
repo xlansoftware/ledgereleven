@@ -21,7 +21,7 @@ public class OpenIdConnectSettings
     public string ResponseType { get; set; } = "code";
 
     [Required]
-    public string Scope { get; set; } = "openid profile";
+    public string Scope { get; set; } = "openid profile email";
 
     [Required]
     public string PostLogoutRedirectUri { get; set; } = "/";
@@ -30,7 +30,7 @@ public class OpenIdConnectSettings
     public string SignedOutCallbackPath { get; set; } = "/signedout-callback";
 }
 
-public static class Extensions
+public static class AuthenticationExtensions
 {
     public static IServiceCollection AddAuthentication(this IHostApplicationBuilder builder)
     {
@@ -88,7 +88,7 @@ public static class Extensions
             options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 
             options.Scope.Clear();
-            foreach (var scope in (settings.Scope ?? "openid profile").Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            foreach (var scope in (settings.Scope ?? "openid profile email").Split(' ', StringSplitOptions.RemoveEmptyEntries))
             {
                 options.Scope.Add(scope);
             }

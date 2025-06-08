@@ -6,11 +6,11 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // Basic login and account management
-builder.Services.AddAccountsSupport(builder.Configuration);
-// Ability to send emails for email confirmation, password reset, etc.
-builder.Services.AddEmailsSupport(builder.Configuration);
+builder.AddAccountsSupport();
 // Expose the accounts via OpenID Connect
-builder.Services.AddAuthSupport(builder.Configuration);
+builder.AddAuthSupport();
+// Ability to send emails for email confirmation, password reset, etc.
+builder.AddEmailsSupport();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
