@@ -19,7 +19,7 @@ public class TestEndpoints : IClassFixture<CustomWebApplicationFactory>
 
     public TestEndpoints(CustomWebApplicationFactory factory)
     {
-        var handler = new HttpClientHandler { AllowAutoRedirect = false, UseCookies = true, CookieContainer = new CookieContainer() };
+        // var handler = new HttpClientHandler { AllowAutoRedirect = false, UseCookies = true, CookieContainer = new CookieContainer() };
         _client = factory.CreateClient(new WebApplicationFactoryClientOptions
         {
             AllowAutoRedirect = false,

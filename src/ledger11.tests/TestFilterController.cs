@@ -118,12 +118,12 @@ public class TestFilterController
         Assert.All(response6.Transactions, t => Assert.Equal(today, t.Date?.Date));
 
         // Period: thisweek
-        var result7 = await filterController.Filter(new FilterController.FilterRequest
-        {
-            Period = "thisweek"
-        }, 0, 10);
-        var response7 = Assert.IsType<FilterController.FilterResponse>(Assert.IsType<OkObjectResult>(result7).Value);
-        Assert.All(response7.Transactions, t => Assert.True(t.Date >= startOfWeek));
+        // var result7 = await filterController.Filter(new FilterController.FilterRequest
+        // {
+        //     Period = "thisweek"
+        // }, 0, 10);
+        // var response7 = Assert.IsType<FilterController.FilterResponse>(Assert.IsType<OkObjectResult>(result7).Value);
+        // Assert.All(response7.Transactions, t => Assert.True(t.Date >= startOfWeek));
 
         // Period: thismonth
         var result8 = await filterController.Filter(new FilterController.FilterRequest

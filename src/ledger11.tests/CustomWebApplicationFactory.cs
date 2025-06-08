@@ -12,7 +12,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<ledger11.web.Pr
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.UseEnvironment("Production");
+        builder.UseEnvironment("Development");
 
         _tempPath = new TempPath();
 
@@ -23,7 +23,8 @@ public class CustomWebApplicationFactory : WebApplicationFactory<ledger11.web.Pr
                 ["Logging:LogLevel:Default"] = "Warning",
                 ["Logging:LogLevel:Microsoft.AspNetCore"] = "Warning",
                 ["AppConfig:DataPath"] = _tempPath.Path,
-                ["AppConfig:Pooling"] = "false"
+                ["AppConfig:Pooling"] = "false",
+                ["Authentication:oidc:Authority"] = "",
             };
 
             configBuilder.AddInMemoryCollection(config);

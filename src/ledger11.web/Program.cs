@@ -18,10 +18,10 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        DotNetEnv.Env.Load();
+        // DotNetEnv.Env.Load();
 
-        builder.Configuration
-            .AddEnvironmentVariables();
+        // builder.Configuration
+        //     .AddEnvironmentVariables();
 
         builder.Services.Configure<AppConfig>(builder.Configuration.GetSection("AppConfig"));
 

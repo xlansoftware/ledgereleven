@@ -10,7 +10,7 @@ Personal expense tracker
 nvm install --lts
 nvm use --lts
 npm i
-cd src/leger11.client
+cd src/ledger11.client
 npm i --legacy-peer-deps
 ```
 

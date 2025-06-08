@@ -28,6 +28,8 @@ public static class TestExtesions
         var claims = new[]
         {
             new Claim("sub", "abc123"),
+            new Claim("email", "abc123@example.com"),
+            new Claim("name", "abc123@example.com"),
             new Claim("iss", "https://myprovider.com"),
             new Claim("auth_scheme", "Google") // if you added this
         };
