@@ -118,6 +118,7 @@ public class TestFilterController
         Assert.All(response6.Transactions, t => Assert.Equal(today, t.Date?.Date));
 
         // Period: thisweek
+        //TODO: Fix this
         // var result7 = await filterController.Filter(new FilterController.FilterRequest
         // {
         //     Period = "thisweek"
