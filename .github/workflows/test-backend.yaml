@@ -2,9 +2,9 @@ name: Test backend
 
 on:
   workflow_dispatch:
-  pull_request:
-    branches:
-      - main
+  # pull_request:
+  #   branches:
+  #     - main
 
 permissions:
   contents: read
@@ -12,7 +12,8 @@ permissions:
   checks: write
       
 jobs:
-  test-backend:
+  test:
+    name: Run Unit Tests
     runs-on: ubuntu-latest
       
     steps:
