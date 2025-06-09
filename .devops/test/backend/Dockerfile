@@ -10,4 +10,4 @@ COPY ledger11.tests/ledger11.tests.csproj ledger11.tests/
 COPY ledger11.cli/ledger11.cli.csproj ledger11.cli/
 RUN dotnet restore
 COPY . .
-CMD dotnet test --logger "trx;LogFileName=/app/test-results/test-results.trx"
+CMD ["dotnet", "test", "--logger", "trx;LogFileName=/app/test-results/test-results.trx"]

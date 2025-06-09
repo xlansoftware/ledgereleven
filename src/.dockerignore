@@ -1,9 +1,9 @@
 # Build artifacts
-bin/
-obj/
-TestResults/
-out/
-build/
+**/bin/
+**/obj/
+**/TestResults/
+**/out/
+**/build/
 
 # .NET cache and local dbs
 *.db
@@ -17,13 +17,13 @@ build/
 *.userosscache
 *.sln.docstates
 *.vcxproj.user
-.idea/
-.vscode/
+**/.idea/
+**/.vscode/
 *.code-workspace
 
 # Package manager cache
-node_modules/
-packages/
+**/node_modules/
+**/packages/
 *.nupkg
 *.snupkg
 
@@ -43,4 +43,4 @@ ehthumbs.db
 desktop.ini
 
 # Test output mounted via volume
-test-results/
+**/test-results/
