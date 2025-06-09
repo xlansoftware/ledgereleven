@@ -55,7 +55,7 @@ jobs:
         with:
           context: ./src
           file: ./.devops/build/Dockerfile.ledger-eleven-auth-server
-          # push: true
+          push: true
           tags: |
             ghcr.io/xlansoftware/ledger-eleven-auth-server:latest
             ghcr.io/xlansoftware/ledger-eleven-auth-server:${{ steps.get_tag.outputs.tag }}
@@ -67,7 +67,7 @@ jobs:
         with:
           context: ./src
           file: ./.devops/build/Dockerfile.ledger-eleven-app
-          # push: true
+          push: true
           tags: |
             ghcr.io/xlansoftware/ledger-eleven-app:latest
             ghcr.io/xlansoftware/ledger-eleven-app:${{ steps.get_tag.outputs.tag }}
