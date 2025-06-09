@@ -1,0 +1,56 @@
+name: Build and Publish Ledger Eleven Images
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'  # e.g., v1.0.0
+
+  workflow_dispatch:  # allow manual trigger
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set tag name
+        id: get_tag
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          else
+            TAG="latest"
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Build and push auth-server image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./auth-server
+          push: true
+          tags: |
+            ghcr.io/xlansoftware/ledger-eleven-auth-server:latest
+            ghcr.io/xlansoftware/ledger-eleven-auth-server:${{ steps.get_tag.outputs.tag }}
+
+      - name: Build and push app image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app
+          push: true
+          tags: |
+            ghcr.io/xlansoftware/ledger-eleven-app:latest
+            ghcr.io/xlansoftware/ledger-eleven-app:${{ steps.get_tag.outputs.tag }}
