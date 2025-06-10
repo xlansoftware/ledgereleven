@@ -9,6 +9,7 @@ using ledger11.model.Data;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.HttpOverrides;
 
 namespace ledger11.web;
 
@@ -80,6 +81,11 @@ public class Program
         builder.Services.AddHttpClient();
 
         var app = builder.Build();
+
+        app.UseForwardedHeaders(new ForwardedHeadersOptions
+        {
+            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+        });
 
         var appConfig = app.Services.GetRequiredService<IOptions<AppConfig>>().Value;
         Console.WriteLine($"Effective DataPath: {appConfig.DataPath}");
