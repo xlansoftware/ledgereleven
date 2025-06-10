@@ -84,9 +84,14 @@ public class Program
 
         app.UseForwardedHeaders(new ForwardedHeadersOptions
         {
-            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+            KnownNetworks = {
+                new IPNetwork(System.Net.IPAddress.Parse("10.0.0.0"), 8),
+                new IPNetwork(System.Net.IPAddress.Parse("172.0.0.0"), 8),
+                new IPNetwork(System.Net.IPAddress.Parse("192.168.0.0"), 16)
+            }
         });
-
+        
         var appConfig = app.Services.GetRequiredService<IOptions<AppConfig>>().Value;
         Console.WriteLine($"Effective DataPath: {appConfig.DataPath}");
 
