@@ -6,6 +6,7 @@ using ledger11.web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
 
 namespace ledger11.web.Controllers;
 
@@ -81,6 +82,7 @@ public class HomeController : Controller
 
     public async Task<IActionResult> SignOutAll()
     {
+        await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
         return SignOut(
@@ -88,7 +90,6 @@ public class HomeController : Controller
             {
                 RedirectUri = Url.Action("Index", "Home")
             },
-            CookieAuthenticationDefaults.AuthenticationScheme,
             "oidc");
     }
 
