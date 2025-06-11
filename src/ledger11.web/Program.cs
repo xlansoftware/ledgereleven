@@ -57,6 +57,8 @@ public class Program
 
         builder.Services.AddHttpClient<IChatGptService, ChatGptService>();
 
+        builder.AddOpenTelemetry();
+
         // Add services to the container.
         builder.Services.AddControllersWithViews();
 
@@ -113,6 +115,8 @@ public class Program
 
         // app.UseHttpsRedirection();
         app.UseRouting();
+
+        app.UseOpenTelemetryPrometheusScrapingEndpoint();
 
         app.UseCors("ReactApp");
 
