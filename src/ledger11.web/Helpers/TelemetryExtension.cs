@@ -33,19 +33,6 @@ public static class TelemetryExtensions
                     .AddProcessInstrumentation()
                     .AddPrometheusExporter()
                     ;
-            })
-            .WithTracing(tracing =>
-            {
-                tracing
-                    .SetResourceBuilder(resourceBuilder)
-                    .AddAspNetCoreInstrumentation()
-                    .AddHttpClientInstrumentation()
-                    .AddJaegerExporter(options =>
-                    {
-                        options.AgentHost = "localhost";
-                        options.AgentPort = 6831;
-                    })
-                    ;
             });
 
 
