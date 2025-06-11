@@ -6,6 +6,7 @@ using ledger11.web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
 
 namespace ledger11.web.Controllers;
 
@@ -20,8 +21,37 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
+
         return View();
     }
+
+    #if DEBUG
+    public IActionResult CheckHeaders()
+    {
+        var result = new
+        {
+            // Original values
+            OriginalHost = HttpContext.Request.Host.Value,
+            OriginalScheme = HttpContext.Request.Scheme,
+            OriginalRemoteIp = HttpContext.Connection.RemoteIpAddress?.ToString(),
+
+            // Forwarded values
+            ForwardedHost = HttpContext.Request.Headers["X-Forwarded-Host"],
+            ForwardedProto = HttpContext.Request.Headers["X-Forwarded-Proto"],
+            ForwardedFor = HttpContext.Request.Headers["X-Forwarded-For"],
+
+            // What ASP.NET Core actually sees after middleware processing
+            ResolvedHost = HttpContext.Request.Host.Value,
+            ResolvedScheme = HttpContext.Request.Scheme,
+            ResolvedRemoteIp = HttpContext.Connection.RemoteIpAddress?.ToString(),
+
+            // Cookies
+            Cookies = HttpContext.Request.Cookies.ToDictionary(c => c.Key, c => c.Value)
+        };
+
+        return Json(result);
+    }
+    #endif
 
     public IActionResult Privacy()
     {
@@ -50,17 +80,19 @@ public class HomeController : Controller
         return LocalRedirect(redirectUrl);
     }
 
-    public IActionResult SignOutAll()
+    public async Task<IActionResult> SignOutAll()
     {
+        await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
         return SignOut(
             new AuthenticationProperties
             {
                 RedirectUri = Url.Action("Index", "Home")
             },
-            CookieAuthenticationDefaults.AuthenticationScheme,
             "oidc");
     }
-    
+
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {

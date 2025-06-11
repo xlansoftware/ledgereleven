@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using ledger11.auth.Data;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 [Route("")]
 public class AuthController : Controller
@@ -76,6 +77,7 @@ public class AuthController : Controller
     public async Task<IActionResult> Logout(string? id_token_hint = null, string? post_logout_redirect_uri = null, string? state = null)
     {
         await _signInManager.SignOutAsync();
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
         // Optional: validate the id_token_hint if needed
 
