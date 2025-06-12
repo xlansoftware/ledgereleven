@@ -78,6 +78,49 @@
         flex-direction: row;
         min-height: 100vh;
         padding: 2rem;
+        position: relative;
+      }
+
+      .badge-wrapper {
+        display: flex;
+      }
+      
+      .beta-badge {
+        position: absolute;
+        top: 2rem;
+        right: 2rem;
+        background-color: #ff6b35;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 2px 10px rgba(255, 107, 53, 0.3);
+        z-index: 10;
+      }
+
+      .github-link {
+        position: absolute;
+        bottom: 2rem;
+        left: 2rem;
+        color: #d2c5e8;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: color 0.3s ease;
+      }
+
+      .github-link:hover {
+        color: #ffffff;
+        text-decoration: underline;
+      }
+
+      .github-icon {
+        width: 20px;
+        height: 20px;
       }
 
       .left-content {
@@ -87,6 +130,7 @@
         justify-content: start;
         align-items: flex-start;
         padding: 2rem;
+        position: relative;
       }
 
       .left-content h1 {
@@ -156,6 +200,19 @@
         .hero-wrapper {
           flex-direction: column;
           padding: 1rem;
+        }
+
+        .beta-badge {
+          top: 1rem;
+          right: 1rem;
+          font-size: 0.8rem;
+        }
+
+        .github-link {
+          position: static;
+          margin-top: 1.3rem;
+          margin-left: 0.5rem;
+          align-self: flex-start;
         }
 
         .left-content {
@@ -262,6 +319,18 @@
     </style>
   </head>
   <body>
+    <div class="badge-wrapper">      
+      <!-- Beta Badge -->
+      <div class="beta-badge">Beta</div>
+      
+      <!-- GitHub Link -->
+      <a href="https://github.com/xlansoftware/ledgereleven" class="github-link" aria-label="View project on GitHub">
+        <svg class="github-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+        </svg>
+        View on GitHub
+      </a>
+    </div>
     <div class="hero-wrapper">
       <div class="left-content">
         <h1>Ledger Eleven: Personal Finance Management</h1>
@@ -291,13 +360,6 @@
             poster="/img/video-poster.webp"
           >
             <source src="/video/demo001.mp4" type="video/mp4" />
-            <track
-              label="English"
-              kind="captions"
-              srclang="en"
-              src="/video/captions.vtt"
-              default
-            />
             Your browser does not support the video tag.
           </video>
         </div>
@@ -311,6 +373,7 @@
         <li>Spending categorization</li>
         <li>Cross-device synchronization</li>
         <li>Budget progress updates</li>
+        <li>Open-source and transparent</li>
       </ul>
     </section>
 

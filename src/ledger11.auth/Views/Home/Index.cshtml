@@ -3,6 +3,15 @@
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    @if (User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        <h1>Welcome, @User.Identity.Name!</h1>
+        <a href="https://ledgereleven.com/app" class="w-20 mt-5 btn btn-lg btn-primary">Open the Ledger</a>
+    }
+    else
+    {
+        <h1>Welcome!</h1>
+        <p>You are not logged in.</p>
+        <a class="w-20 mt-5 btn btn-lg btn-primary" id="login" asp-area="Identity" asp-page="/Account/Login">Login</a>
+    }
 </div>

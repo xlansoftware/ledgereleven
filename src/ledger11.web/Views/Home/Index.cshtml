@@ -1,132 +1,17 @@
-﻿@using Microsoft.AspNetCore.Identity
-@inject SignInManager<ledger11.model.Data.ApplicationUser> SignInManager
-
-@{
-    ViewData["Title"] = "Welcome to Ledger";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+﻿@{
+    ViewData["Title"] = "Home Page";
 }
 
-<style>
-    html {
-        scroll-behavior: smooth;
-    }
-
-    .hero-section {
-        padding: 5rem 1rem;
-        background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
-        text-align: center;
-    }
-
-    .hero-section h1 {
-        font-size: 3rem;
-        font-weight: bold;
-        margin-bottom: 1rem;
-    }
-
-    .hero-section p {
-        font-size: 1.25rem;
-        color: #555;
-    }
-
-    .feature-section {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        align-items: center;
-        gap: 2rem;
-        padding: 4rem 2rem;
-        background-color: #ffffff;
-        opacity: 0;
-        transform: translateY(30px);
-        transition: all 0.6s ease-out;
-    }
-
-    .feature-section:nth-child(even) {
-        background-color: #f8f9fa;
-        flex-direction: row-reverse;
-    }
-
-    .feature-section.visible {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    .screenshot-placeholder {
-        width: 220px;
-        height: 440px;
-        background-color: #e0e0e0;
-        border-radius: 1rem;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #888;
-        font-size: 1rem;
-        text-align: center;
-    }
-
-    .feature-text {
-        max-width: 500px;
-    }
-
-    .feature-title {
-        font-size: 1.75rem;
-        font-weight: bold;
-        margin-bottom: 1rem;
-    }
-
-    .feature-description {
-        font-size: 1.1rem;
-        color: #555;
-    }
-
-    .cta-section {
-        text-align: center;
-        padding: 3rem 1rem;
-    }
-
-    .cta-button {
-        padding: 1rem 2rem;
-        font-size: 1.2rem;
-        border-radius: 999px;
-        border: none;
-        background-color: #007bff;
-        color: white;
-        transition: background-color 0.3s;
-    }
-
-    .cta-button:hover {
-        background-color: #0056b3;
-    }
-</style>
-
-<div class="cta-section">
-    @if (!SignInManager.IsSignedIn(User))
+<div class="text-center">
+    @if (User.Identity != null && User.Identity.IsAuthenticated)
     {
-        <a href="/app" class="cta-button">Start Here</a>
+        <h1>Welcome, @User.Identity.Name!</h1>
+        <a href="/app" class="w-20 mt-5 btn btn-lg btn-primary">Open the Ledger</a>
     }
     else
     {
-        <a href="/app" class="cta-button">Go to Ledger</a>
+        <h1>Welcome!</h1>
+        <p>You are not logged in.</p>
+        <a class="w-20 mt-5 btn btn-lg btn-primary" id="login" href="https://auth.ledgereleven.com/Identity/Account/Login">Login</a>
     }
 </div>
-
-@section Scripts {
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                }
-            });
-        }, {
-            threshold: 0.1
-        });
-
-        document.querySelectorAll('.feature-section').forEach(section => {
-            observer.observe(section);
-        });
-    });
-</script>
-}
