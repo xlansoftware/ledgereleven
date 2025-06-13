@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { BarChart, Bar, XAxis, CartesianGrid, YAxis, BarProps, Cell, LabelList } from "recharts";
+import { BarChart, Bar, XAxis, CartesianGrid, YAxis, BarProps, LabelList } from "recharts";
 import { formatCurrency } from "@/lib/utils";
 import { Category } from "@/lib/types";
 import { getIcon } from "@/lib/getIcon";
@@ -92,7 +92,6 @@ const CustomBarWithIcon = ({
   height,
   fill,
   icon,
-  value,
 }: BarProps & {
   value: number
   icon?: string
