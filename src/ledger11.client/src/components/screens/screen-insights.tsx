@@ -6,7 +6,7 @@ import { Category } from "@/lib/types";
 import DonutSkeleton from "../DonutSkeleton";
 import { Button } from "../ui/button";
 import { PlusCircleIcon } from "lucide-react";
-// import { IncomeComponent } from "../widgets/IncomeComponent";
+import { IncomeComponent } from "../widgets/IncomeComponent";
 
 export default function Insights() {
   const { categories, loadCategories } = useCategoryStore();
@@ -36,7 +36,7 @@ export default function Insights() {
     );
   }, [categories.length, loadCategories]);
 
-  const { expense } = data ?? {};
+  const { expense, income } = data ?? {};
 
   const noExpenses =
     !expense ||
@@ -62,14 +62,15 @@ export default function Insights() {
         ([key, value]) =>
           value && (
             <div key={key} className="mb-4">
-              <InsightComponent data={value} title={key} categories={colors} />
-              {/* {income && income[key] && (
-                <IncomeComponent
-                  data={income[key]}
-                  title={key}
-                  categories={colors}
-                />
-              )} */}
+              <InsightComponent data={value} title={key} categories={colors}>
+                {income && income[key] && (
+                  <IncomeComponent
+                    data={income[key]}
+                    title={key}
+                    categories={colors}
+                  />
+                )}
+              </InsightComponent>
             </div>
           )
       )}

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { ReactNode } from "react";
 import {
   Label,
   PieChart,
@@ -17,12 +17,14 @@ export interface InsightComponentProps {
   data: Record<string, number>;
   title: string;
   categories: Record<string, Category>;
+  children?: ReactNode;
 }
 
 export const InsightComponent: React.FC<InsightComponentProps> = ({
   data,
   title,
   categories,
+  children
 }) => {
   // Prepare data for the Pie chart
   const chartData = Object.entries(data).map(([name, value]) => ({
@@ -56,7 +58,7 @@ export const InsightComponent: React.FC<InsightComponentProps> = ({
       {chartData.length === 0 ? (
         <p className="text-muted-foreground text-center">&nbsp;</p>
       ) : (
-        <div className="relative h-64 w-full flex justify-center items-center">
+        <div className="relative h-64 w-full flex flex-row justify-center items-center">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Tooltip
@@ -122,6 +124,7 @@ export const InsightComponent: React.FC<InsightComponentProps> = ({
               </Pie>
             </PieChart>
           </ResponsiveContainer>
+          {children}
         </div>
       )}
     </div>
