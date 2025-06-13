@@ -45,7 +45,10 @@ export default function AppLayout() {
 
   return (
     <div className="flex flex-col bg-background h-full">
-      {currentPath === "/login" || currentPath === "/identity/account/Login" ? null : <Header currentPath={currentPath} />}
+      {currentPath === "/login" ||
+      currentPath === "/identity/account/Login" ? null : (
+        <Header currentPath={currentPath} />
+      )}
 
       <main className="flex-1 container mx-auto py-4 h-full overflow-hidden">
         <Suspense
@@ -66,7 +69,14 @@ export default function AppLayout() {
             <Route path="/edit-widget" element={<EditWidgetScreen />} />
           </Routes>
         </Suspense>
-        <Toaster richColors />
+        <Toaster
+          richColors
+          toastOptions={{
+            classNames: {
+              title: "!text-xl !font-bold",
+            },
+          }}
+        />
       </main>
     </div>
   );
