@@ -7,9 +7,10 @@ import { CategoryPicker } from "../category/CategoryPicker";
 import { Category } from "@/lib/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import { showSuccess } from "../success";
 
 export default function AddScreen() {
-  const { addTransaction, removeTransaction } = useTransactionStore();
+  const { addTransaction } = useTransactionStore();
   const { categories, loadCategories } = useCategoryStore();
   const refInput = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState("");
@@ -46,27 +47,28 @@ export default function AddScreen() {
       //   category: "Food"
       // }],
     })
-      .then((id) => {
+      .then(() => {
         // reset controls
         setValue("");
         setNotes("");
-        toast.success(`Added ${value} to ${selectedCategory?.name}`, {
-          action: {
-            label: "Undo",
-            onClick: () => {
-              toast.dismiss();
-              removeTransaction(id)
-                .then(() => {
-                  toast.success(
-                    `Removed ${value} from ${selectedCategory?.name}`
-                  );
-                })
-                .catch((error) => {
-                  console.error("Error removing transaction:", error);
-                });
-            },
-          },
-        });
+        showSuccess();
+        // toast.success(`Added ${value} to ${selectedCategory?.name}`, {
+        //   action: {
+        //     label: "Undo",
+        //     onClick: () => {
+        //       toast.dismiss();
+        //       removeTransaction(id)
+        //         .then(() => {
+        //           toast.success(
+        //             `Removed ${value} from ${selectedCategory?.name}`
+        //           );
+        //         })
+        //         .catch((error) => {
+        //           console.error("Error removing transaction:", error);
+        //         });
+        //     },
+        //   },
+        // });
       })
       .catch((error) => {
         console.error("Error adding transaction:", error);
