@@ -26,7 +26,7 @@ export const InsightComponent: React.FC<InsightComponentProps> = ({
   altData,
   title,
   categories,
-  children
+  children,
 }) => {
   // Prepare data for the Pie chart
   const chartData = Object.entries(data).map(([name, value]) => ({
@@ -36,18 +36,23 @@ export const InsightComponent: React.FC<InsightComponentProps> = ({
     icon: getIcon(categories[name]?.icon),
   }));
 
-  const altChartData = altData && Object.entries(altData).map(([name, value]) => ({
-    name,
-    value,
-    color: categories[name]?.color || "#8884d8",
-    icon: getIcon(categories[name]?.icon),
-  }));
+  const altChartData =
+    altData &&
+    Object.entries(altData).map(([name, value]) => ({
+      name,
+      value,
+      color: categories[name]?.color || "#8884d8",
+      icon: getIcon(categories[name]?.icon),
+    }));
 
   // Calculate the total value
   const totalValue = chartData.reduce((sum, entry) => sum + entry.value, 0);
+  const altTotalValue = altChartData
+    ? altChartData.reduce((sum, entry) => sum + entry.value, 0)
+    : 0;
 
   // Define radii for the donut shape
-//   const outerRadius = 80; // Adjust as needed
+  //   const outerRadius = 80; // Adjust as needed
   const innerRadius = altChartData ? 80 : 60; // Adjust to control the donut thickness
   const altInnnerRadius = 50;
   const altSize = 20;
@@ -63,6 +68,37 @@ export const InsightComponent: React.FC<InsightComponentProps> = ({
     lastYear: "Last Year",
     total: "All Time",
   };
+
+  const Title = ({ viewBox }: { viewBox: { cx: number, cy: number }}) => (
+    <text
+      x={viewBox.cx}
+      y={viewBox.cy}
+      textAnchor="middle"
+      dominantBaseline="middle"
+    >
+      <tspan
+        x={viewBox.cx}
+        y={viewBox.cy}
+        className="fill-foreground text-3xl font-bold"
+      >
+        {formatCurrency(totalValue, 0)}
+      </tspan>
+      <tspan
+        x={viewBox.cx}
+        y={(viewBox.cy || 0) + 24}
+        className="fill-muted-foreground"
+      >
+        {formatCurrency(altTotalValue, 0)}
+      </tspan>
+      <tspan
+        x={viewBox.cx}
+        y={(viewBox.cy || 0) + 24}
+        className="fill-muted-foreground"
+      >
+        {charTitle[title]}
+      </tspan>
+    </text>
+  );
 
   return (
     <div>
@@ -125,34 +161,11 @@ export const InsightComponent: React.FC<InsightComponentProps> = ({
                 <Label
                   content={({ viewBox }) => {
                     if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                      return (
-                        <text
-                          x={viewBox.cx}
-                          y={viewBox.cy}
-                          textAnchor="middle"
-                          dominantBaseline="middle"
-                        >
-                          <tspan
-                            x={viewBox.cx}
-                            y={viewBox.cy}
-                            className="fill-foreground text-3xl font-bold"
-                          >
-                            {formatCurrency(totalValue, 0)}
-                          </tspan>
-                          <tspan
-                            x={viewBox.cx}
-                            y={(viewBox.cy || 0) + 24}
-                            className="fill-muted-foreground"
-                          >
-                            {charTitle[title]}
-                          </tspan>
-                        </text>
-                      );
+                      return <Title viewBox={viewBox as unknown as { cx: number, cy: number }} />;
                     }
                   }}
                 />
               </Pie>
-
             </PieChart>
           </ResponsiveContainer>
           {children}
