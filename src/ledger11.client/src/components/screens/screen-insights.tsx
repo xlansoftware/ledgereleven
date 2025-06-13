@@ -4,8 +4,8 @@ import { InsightComponent } from "../widgets/InsightComponent";
 import { useCategoryStore } from "@/lib/store-category";
 import { Category } from "@/lib/types";
 import DonutSkeleton from "../DonutSkeleton";
-import { Button } from "../ui/button";
-import { PlusCircleIcon } from "lucide-react";
+// import { Button } from "../ui/button";
+// import { PlusCircleIcon } from "lucide-react";
 import { IncomeComponent } from "../widgets/IncomeComponent";
 
 export default function Insights() {
@@ -47,12 +47,12 @@ export default function Insights() {
 
   return (
     <div className="relative">
-      <Button
+      {/* <Button
         className="fixed top-16 right-4 z-50 w-12 h-12 flex items-center justify-center"
         variant={"ghost"}
       >
         <PlusCircleIcon className="w-16 h-16" />
-      </Button>
+      </Button> */}
       {noExpenses && (
         <div className="flex items-center justify-center pt-16">
           No expenses.

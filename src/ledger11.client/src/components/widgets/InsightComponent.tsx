@@ -15,6 +15,7 @@ import { getIcon } from "@/lib/getIcon";
 
 export interface InsightComponentProps {
   data: Record<string, number>;
+  altData?: Record<string, number>;
   title: string;
   categories: Record<string, Category>;
   children?: ReactNode;
@@ -22,6 +23,7 @@ export interface InsightComponentProps {
 
 export const InsightComponent: React.FC<InsightComponentProps> = ({
   data,
+  altData,
   title,
   categories,
   children
@@ -34,12 +36,21 @@ export const InsightComponent: React.FC<InsightComponentProps> = ({
     icon: getIcon(categories[name]?.icon),
   }));
 
+  const altChartData = altData && Object.entries(altData).map(([name, value]) => ({
+    name,
+    value,
+    color: categories[name]?.color || "#8884d8",
+    icon: getIcon(categories[name]?.icon),
+  }));
+
   // Calculate the total value
   const totalValue = chartData.reduce((sum, entry) => sum + entry.value, 0);
 
   // Define radii for the donut shape
 //   const outerRadius = 80; // Adjust as needed
-  const innerRadius = 60; // Adjust to control the donut thickness
+  const innerRadius = altChartData ? 80 : 60; // Adjust to control the donut thickness
+  const altInnnerRadius = 50;
+  const altSize = 20;
 
   const charTitle: Record<string, string> = {
     today: "Today",
@@ -58,12 +69,31 @@ export const InsightComponent: React.FC<InsightComponentProps> = ({
       {chartData.length === 0 ? (
         <p className="text-muted-foreground text-center">&nbsp;</p>
       ) : (
-        <div className="relative h-64 w-full flex flex-row justify-center items-center">
+        <div className="relative h-64 w-full flex flex-row ">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
+            <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
               <Tooltip
                 formatter={(value: number, name: string) => [`${value}`, name]} // Basic tooltip formatting
               />
+
+              {altChartData && (
+                <Pie
+                  isAnimationActive={false}
+                  data={altChartData}
+                  dataKey="value"
+                  nameKey="name"
+                  // cx="50%"
+                  // cy="50%"
+                  outerRadius={altInnnerRadius + altSize}
+                  innerRadius={altInnnerRadius}
+                  paddingAngle={5}
+                >
+                  {altChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+              )}
+
               <Pie
                 isAnimationActive={false}
                 label={({ cx, cy, midAngle, outerRadius, icon }) => {
@@ -122,6 +152,7 @@ export const InsightComponent: React.FC<InsightComponentProps> = ({
                   }}
                 />
               </Pie>
+
             </PieChart>
           </ResponsiveContainer>
           {children}
