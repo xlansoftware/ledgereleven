@@ -4,8 +4,9 @@ import { InsightComponent } from "../widgets/InsightComponent";
 import { useCategoryStore } from "@/lib/store-category";
 import { Category } from "@/lib/types";
 import DonutSkeleton from "../DonutSkeleton";
-import { Button } from "../ui/button";
-import { PlusCircleIcon } from "lucide-react";
+// import { Button } from "../ui/button";
+// import { PlusCircleIcon } from "lucide-react";
+import { IncomeComponent } from "../widgets/IncomeComponent";
 
 export default function Insights() {
   const { categories, loadCategories } = useCategoryStore();
@@ -13,10 +14,7 @@ export default function Insights() {
     acc[category.name] = category;
     return acc;
   }, {} as Record<string, Category>);
-  const [data, setData] = useState<Record<
-    string,
-    Record<string, number>
-  > | null>(null);
+  const [data, setData] = useState<TotalByPeriodByCategory | null>(null);
 
   useEffect(() => {
     if (categories.length === 0) {
@@ -38,44 +36,54 @@ export default function Insights() {
     );
   }, [categories.length, loadCategories]);
 
-  const noRecords =
-    data &&
-    Object.keys(data).reduce(
-      (acc, key) => acc + Object.keys(data[key]).length,
+  const { expense, income } = data ?? {};
+
+  const noExpenses =
+    !expense ||
+    Object.keys(expense).reduce(
+      (acc, key) => acc + Object.keys(expense[key]).length,
       0
     ) === 0;
 
   return (
     <div className="relative">
-      <Button
+      {/* <Button
         className="fixed top-16 right-4 z-50 w-12 h-12 flex items-center justify-center"
         variant={"ghost"}
       >
         <PlusCircleIcon className="w-16 h-16" />
-      </Button>
-      {noRecords && (
+      </Button> */}
+      {noExpenses && (
         <div className="flex items-center justify-center pt-16">
-          No records.
+          No expenses.
         </div>
       )}
-      {data && Object.keys(data).length > 0 ? (
-        Object.entries(data).map(
-          ([key, value]) =>
-            value && (
-              <div key={key} className="mb-4">
-                <InsightComponent
-                  data={value}
-                  title={key}
-                  categories={colors}
-                />
-              </div>
-            )
-        )
-      ) : (
+      {Object.entries(expense || {}).map(
+        ([key, value]) =>
+          value && (
+            <div key={key} className="mb-4">
+              <InsightComponent data={value} title={key} categories={colors}>
+                {income && income[key] && (
+                  <IncomeComponent
+                    data={income[key]}
+                    title={key}
+                    categories={colors}
+                  />
+                )}
+              </InsightComponent>
+            </div>
+          )
+      )}
+      {data === null && (
         <div className="flex items-center justify-center pt-16">
           <DonutSkeleton size={220} thickness={32} />
         </div>
       )}
     </div>
   );
+}
+
+interface TotalByPeriodByCategory {
+  income: Record<string, Record<string, number>>;
+  expense: Record<string, Record<string, number>>;
 }

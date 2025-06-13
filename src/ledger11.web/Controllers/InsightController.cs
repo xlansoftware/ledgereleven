@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using ledger11.model.Data;
 using ledger11.service;
 using TimeZoneConverter;
+using Microsoft.Extensions.Options;
 
 namespace ledger11.web.Controllers;
 
@@ -13,15 +14,19 @@ namespace ledger11.web.Controllers;
 [Route("api/[controller]")]
 public class InsightController : ControllerBase
 {
+    private readonly ILogger<InsightController> _logger;
     private readonly ICurrentLedgerService _currentLedger;
 
-    public InsightController(ICurrentLedgerService currentLedger)
+    public InsightController(
+        ILogger<InsightController> logger,
+        ICurrentLedgerService currentLedger)
     {
+        _logger = logger;
         _currentLedger = currentLedger;
     }
 
     [HttpGet("{timeZoneId?}")]
-    public async Task<ActionResult<Dictionary<string, Dictionary<string, decimal>>>> GetCategorySums(string timeZoneId = "Europe/Paris")
+    public async Task<ActionResult> TotalByPeriodByCategory(string timeZoneId = "Europe/Paris")
     {
         using var db = await _currentLedger.GetLedgerDbContextAsync();
 
@@ -47,7 +52,7 @@ public class InsightController : ControllerBase
         var startOfMonth = new DateTime(now.Year, now.Month, 1);
         var startOfYear = new DateTime(now.Year, 1, 1);
 
-        var result = new Dictionary<string, Dictionary<string, decimal>>
+        var newSet = () => new Dictionary<string, Dictionary<string, decimal>>
         {
             ["today"] = new(),
             ["yesterday"] = new(),
@@ -60,6 +65,9 @@ public class InsightController : ControllerBase
             ["total"] = new(),
         };
 
+        var expense = newSet();
+        var income = newSet();
+
         await foreach (var transaction in db.Transactions
             .Include(t => t.Category)
             .Include(t => t.TransactionDetails)
@@ -68,6 +76,8 @@ public class InsightController : ControllerBase
         {
             var utcDate = transaction.Date;
             if (utcDate == null) continue;
+
+            // _logger.LogInformation($"Processing transaction ID: {transaction.Id}, Date: {transaction.Date}, Value: {transaction.Value}");
 
             // Convert each UTC transaction time to local time
             var localDate = TimeZoneInfo.ConvertTimeFromUtc(utcDate.Value, timeZone);
@@ -82,23 +92,28 @@ public class InsightController : ControllerBase
 
                     foreach (var bucket in buckets)
                     {
-                        AddToBucket(result[bucket], category, value);
+                        AddToBucket((value < decimal.Zero ? income : expense)[bucket], category, Math.Abs(value));
                     }
                 }
             }
             else
             {
                 var value = transaction.Value;
+
                 var category = transaction.Category?.Name ?? "Uncategorized";
 
                 foreach (var bucket in buckets)
                 {
-                    AddToBucket(result[bucket], category, value);
+                    AddToBucket((value < decimal.Zero ? income : expense)[bucket], category, Math.Abs(value));
                 }
             }
         }
 
-        return Ok(result);
+        return Ok(new TotalByPeriodByCategoryResult()
+        {
+            Income = income,
+            Expense = expense
+        });
     }
 
     private static List<string> GetRelevantBuckets(
@@ -144,4 +159,10 @@ public class InsightController : ControllerBase
             bucket[category] = value;
     }
 
+}
+
+public class TotalByPeriodByCategoryResult
+{
+    public Dictionary<string, Dictionary<string, decimal>> Expense { get; set; } = new();
+    public Dictionary<string, Dictionary<string, decimal>> Income { get; set; } = new();
 }
