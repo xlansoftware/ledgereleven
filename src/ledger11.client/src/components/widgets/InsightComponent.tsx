@@ -26,7 +26,7 @@ export const InsightComponent: React.FC<InsightComponentProps> = ({
   altData,
   title,
   categories,
-  children
+  children,
 }) => {
   // Prepare data for the Pie chart
   const chartData = Object.entries(data).map(([name, value]) => ({
@@ -36,20 +36,30 @@ export const InsightComponent: React.FC<InsightComponentProps> = ({
     icon: getIcon(categories[name]?.icon),
   }));
 
-  const altChartData = altData && Object.entries(altData).map(([name, value]) => ({
-    name,
-    value,
-    color: categories[name]?.color || "#8884d8",
-    icon: getIcon(categories[name]?.icon),
-  }));
+  const altChartData =
+    altData &&
+    Object.entries(altData).map(([name, value]) => ({
+      name,
+      value,
+      color: categories[name]?.color || "#8884d8",
+      icon: getIcon(categories[name]?.icon),
+    }));
 
   // Calculate the total value
   const totalValue = chartData.reduce((sum, entry) => sum + entry.value, 0);
+  const altTotalValue = altChartData
+    ? altChartData.reduce((sum, entry) => sum + entry.value, 0)
+    : 0;
+
+  const { startAngle, endAngle, altStartAngle, altEndAngle } = computeAngles(
+    totalValue,
+    altTotalValue
+  );
 
   // Define radii for the donut shape
-//   const outerRadius = 80; // Adjust as needed
-  const innerRadius = altChartData ? 80 : 60; // Adjust to control the donut thickness
-  const altInnnerRadius = 50;
+  //   const outerRadius = 80; // Adjust as needed
+  const innerRadius = altTotalValue == 0 ? 60 : 70; // Adjust to control the donut thickness
+  const altInnnerRadius = 60;
   const altSize = 20;
 
   const charTitle: Record<string, string> = {
@@ -62,6 +72,74 @@ export const InsightComponent: React.FC<InsightComponentProps> = ({
     thisYear: "This Year",
     lastYear: "Last Year",
     total: "All Time",
+  };
+
+  const DoubleTitle = ({
+    viewBox,
+  }: {
+    viewBox: { cx: number; cy: number };
+  }) => (
+    <text
+      x={viewBox.cx}
+      y={viewBox.cy}
+      textAnchor="middle"
+      dominantBaseline="middle"
+    >
+      <tspan
+        x={viewBox.cx}
+        y={(viewBox.cy || 0) - 12}
+        className="fill-foreground text-3xl font-bold"
+      >
+        {formatCurrency(totalValue, 0)}
+      </tspan>
+      <tspan
+        x={viewBox.cx}
+        y={(viewBox.cy || 0) + 12}
+        className="fill-muted-foreground text-l font-bold"
+      >
+        ({formatCurrency(altTotalValue, 0)})
+      </tspan>
+      <tspan
+        x={viewBox.cx}
+        y={(viewBox.cy || 0) + 36}
+        className="fill-muted-foreground"
+      >
+        {charTitle[title]}
+      </tspan>
+    </text>
+  );
+
+  const Title = ({ viewBox }: { viewBox: { cx: number; cy: number } }) => (
+    <text
+      x={viewBox.cx}
+      y={viewBox.cy}
+      textAnchor="middle"
+      dominantBaseline="middle"
+    >
+      <tspan
+        x={viewBox.cx}
+        y={viewBox.cy}
+        className="fill-foreground text-3xl font-bold"
+      >
+        {formatCurrency(totalValue, 0)}
+      </tspan>
+      <tspan
+        x={viewBox.cx}
+        y={(viewBox.cy || 0) + 24}
+        className="fill-muted-foreground"
+      >
+        {charTitle[title]}
+      </tspan>
+    </text>
+  );
+
+  const cellLabel = ({ cx, cy, midAngle, outerRadius, icon }: { cx: number, cy: number, midAngle: number, outerRadius: number, icon: unknown }) => {
+    const RADIAN = Math.PI / 180;
+    const x = cx + (outerRadius + 20) * Math.cos(-midAngle * RADIAN);
+    const y = cy + (outerRadius + 20) * Math.sin(-midAngle * RADIAN);
+
+    const Icon = icon as React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
+    return <Icon x={x - 10} y={y - 10} width="20" height="20" />;
   };
 
   return (
@@ -79,9 +157,12 @@ export const InsightComponent: React.FC<InsightComponentProps> = ({
               {altChartData && (
                 <Pie
                   isAnimationActive={false}
+                  label={cellLabel}
                   data={altChartData}
                   dataKey="value"
                   nameKey="name"
+                  startAngle={altStartAngle}
+                  endAngle={altEndAngle}
                   // cx="50%"
                   // cy="50%"
                   outerRadius={altInnnerRadius + altSize}
@@ -96,22 +177,13 @@ export const InsightComponent: React.FC<InsightComponentProps> = ({
 
               <Pie
                 isAnimationActive={false}
-                label={({ cx, cy, midAngle, outerRadius, icon }) => {
-                  const RADIAN = Math.PI / 180;
-                  const x =
-                    cx + (outerRadius + 20) * Math.cos(-midAngle * RADIAN);
-                  const y =
-                    cy + (outerRadius + 20) * Math.sin(-midAngle * RADIAN);
-
-                  const Icon = icon as React.FunctionComponent<
-                    React.SVGProps<SVGSVGElement>
-                  >;
-                  return <Icon x={x - 10} y={y - 10} width="20" height="20" />;
-                }}
+                label={cellLabel}
                 labelLine={false}
                 data={chartData}
                 dataKey="value"
                 nameKey="name"
+                startAngle={startAngle}
+                endAngle={endAngle}
                 cx="50%" // Center horizontally
                 cy="50%" // Center vertically
                 //   outerRadius={outerRadius}
@@ -125,34 +197,23 @@ export const InsightComponent: React.FC<InsightComponentProps> = ({
                 <Label
                   content={({ viewBox }) => {
                     if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                      return (
-                        <text
-                          x={viewBox.cx}
-                          y={viewBox.cy}
-                          textAnchor="middle"
-                          dominantBaseline="middle"
-                        >
-                          <tspan
-                            x={viewBox.cx}
-                            y={viewBox.cy}
-                            className="fill-foreground text-3xl font-bold"
-                          >
-                            {formatCurrency(totalValue, 0)}
-                          </tspan>
-                          <tspan
-                            x={viewBox.cx}
-                            y={(viewBox.cy || 0) + 24}
-                            className="fill-muted-foreground"
-                          >
-                            {charTitle[title]}
-                          </tspan>
-                        </text>
+                      return altTotalValue === 0 ? (
+                        <Title
+                          viewBox={
+                            viewBox as unknown as { cx: number; cy: number }
+                          }
+                        />
+                      ) : (
+                        <DoubleTitle
+                          viewBox={
+                            viewBox as unknown as { cx: number; cy: number }
+                          }
+                        />
                       );
                     }
                   }}
                 />
               </Pie>
-
             </PieChart>
           </ResponsiveContainer>
           {children}
@@ -161,3 +222,22 @@ export const InsightComponent: React.FC<InsightComponentProps> = ({
     </div>
   );
 };
+
+// Compute the chart angles
+// the size of the arc is proportional to the proportion value/altValue
+function computeAngles(
+  value: number,
+  altValue: number
+): {
+  startAngle: number;
+  endAngle: number;
+  altStartAngle: number;
+  altEndAngle: number;
+} {
+  const totalValue = value + altValue;
+  const startAngle = 0;
+  const endAngle = (value / totalValue) * 360;
+  const altStartAngle = endAngle + 5;
+  const altEndAngle = altStartAngle + (altValue / totalValue) * 360 - 10;
+  return { startAngle, endAngle, altStartAngle, altEndAngle };
+}
