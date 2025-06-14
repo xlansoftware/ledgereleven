@@ -12,5 +12,4 @@ services:
     volumes:
       - ./data:/data
       - ./data:/root/.aspnet/DataProtection-Keys
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
     # restart: unless-stopped

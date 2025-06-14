@@ -7,9 +7,12 @@ import { CategoryPicker } from "../category/CategoryPicker";
 import { Category } from "@/lib/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import { useSuccessOverlay } from "@/components/success";
+
+const audio = new Audio("/sounds/success.mp3")
 
 export default function AddScreen() {
-  const { addTransaction, removeTransaction } = useTransactionStore();
+  const { addTransaction } = useTransactionStore();
   const { categories, loadCategories } = useCategoryStore();
   const refInput = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState("");
@@ -17,6 +20,8 @@ export default function AddScreen() {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
     categories[0] || null
   );
+
+  const { showSuccess } = useSuccessOverlay();
 
   useEffect(() => {
     if (categories.length === 0) {
@@ -26,61 +31,50 @@ export default function AddScreen() {
     }
   }, [categories, loadCategories]);
 
-  const handleAdd = (e?: React.FormEvent) => {
+  const handleAdd = async (e?: React.FormEvent) => {
     e?.preventDefault();
 
-    // disable controls
-    addTransaction({
-      value: parseFloat(value),
-      categoryId: selectedCategory?.id,
-      notes,
-      // transactionDetails: [{
-      //   value: 10,
-      //   description: "bread",
-      //   quantity: 1,
-      //   category: "Food"
-      // }, {
-      //   value: 20,
-      //   description: "beer",
-      //   quantity: 3,
-      //   category: "Food"
-      // }],
-    })
-      .then((id) => {
-        // reset controls
-        setValue("");
-        setNotes("");
-        toast.success(`Added ${value} to ${selectedCategory?.name}`, {
-          action: {
-            label: "Undo",
-            onClick: () => {
-              toast.dismiss();
-              removeTransaction(id)
-                .then(() => {
-                  toast.success(
-                    `Removed ${value} from ${selectedCategory?.name}`
-                  );
-                })
-                .catch((error) => {
-                  console.error("Error removing transaction:", error);
-                });
-            },
-          },
-        });
-      })
-      .catch((error) => {
-        console.error("Error adding transaction:", error);
-        toast.error("Error adding transaction");
-      })
-      .finally(() => {
-        // re-enable controls
-        refInput.current?.focus();
+    if (!value) return;
+
+    try {
+      // disable controls
+      await addTransaction({
+        value: parseFloat(value),
+        categoryId: selectedCategory?.id,
+        notes,
+        // transactionDetails: [{
+        //   value: 10,
+        //   description: "bread",
+        //   quantity: 1,
+        //   category: "Food"
+        // }, {
+        //   value: 20,
+        //   description: "beer",
+        //   quantity: 3,
+        //   category: "Food"
+        // }],
       });
+      // reset controls
+      setValue("");
+      setNotes("");
+
+      audio.play().catch(e => console.warn("Playback blocked:", e));
+
+      await showSuccess({ playSound: false });
+    } catch (error) {
+      console.error("Error adding transaction:", error);
+      toast.error("Error adding transaction");
+    }
+
+    refInput.current?.focus();
   };
 
   return (
     <div className="flex flex-col gap-4 h-full justify-between">
-      <form onSubmit={handleAdd} className="flex flex-col items-center gap-2 px-4 pt-1">
+      <form
+        onSubmit={handleAdd}
+        className="flex flex-col items-center gap-2 px-4 pt-1"
+      >
         <div className="flex flex-row gap-2 items-center w-full">
           <Input
             ref={refInput}

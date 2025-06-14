@@ -50,8 +50,14 @@ export default function ScanScreen() {
     //   total_paid: "42",
     //   category: 'Pets',
     // };
-    const receipt = await parsePurchaseRecords(description);
-    saveParsedRecords(receipt);
+    try
+    {
+      const receipt = await parsePurchaseRecords(description);
+      saveParsedRecords(receipt);
+    } catch (e: unknown) {
+      // error instanceof Error ? error : new Error(String(error))
+      toast.error(`Cound not do it: ${e}`);
+    }
   };
 
   return (
