@@ -14,6 +14,7 @@ using Microsoft.Extensions.Options;
 using System.Text.Json;
 using System.Collections.Concurrent;
 using ledger11.auth.Services;
+using Microsoft.AspNetCore.RateLimiting;
 
 [Route("")]
 public class AuthController : Controller
@@ -126,6 +127,7 @@ public class AuthController : Controller
     }
 
     // Step 3: Handle /authorize
+    [EnableRateLimiting("TokenPolicy")]
     [HttpGet("authorize")]
     public async Task<IActionResult> Authorize(string response_type, string client_id, string redirect_uri, string scope, string state, string nonce)
     {
@@ -174,6 +176,7 @@ public class AuthController : Controller
     }
 
     // Step 4: Handle /token
+    [EnableRateLimiting("TokenPolicy")]
     [HttpPost("token")]
     public async Task<IActionResult> Token([FromForm] TokenRequest request)
     {

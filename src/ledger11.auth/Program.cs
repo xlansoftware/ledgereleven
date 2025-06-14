@@ -34,6 +34,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.UseRateLimiter();
+
 // app.UseHttpsRedirection();
 app.UseRouting();
 
