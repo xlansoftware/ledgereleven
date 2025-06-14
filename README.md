@@ -53,3 +53,10 @@ sqlite3
 .open <db file name>
 .tabes
 ```
+
+## Convert wav to mp3
+
+```bash
+sudo apt install ffmpeg
+ffmpeg -i input.wav output.mp3
+```

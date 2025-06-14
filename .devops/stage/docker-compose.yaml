@@ -1,0 +1,23 @@
+services:
+
+  cloudflaretunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    environment:
+      - TUNNEL_TOKEN=$APP_TUNNEL_TOKEN
+    command: tunnel --no-autoupdate run
+  
+  app:
+    build:
+      context: ../../src
+      dockerfile: ../.devops/build/Dockerfile.ledger-eleven-app
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - AppConfig__DataPath=/data
+      - AppConfig__AI_API_KEY=$AI_API_KEY
+      - AppConfig__AI_API_URL=$AI_API_URL
+      - AppConfig__AI_MODEL=$AI_MODEL
+    volumes:
+      - $APP_DATA_PATH:/data
+      - $APP_DATA_PATH:/root/.aspnet/DataProtection-Keys
+    restart: unless-stopped

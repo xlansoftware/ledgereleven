@@ -9,6 +9,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { useSuccessOverlay } from "@/components/success";
 
+const audio = new Audio("/sounds/success.mp3")
+
 export default function AddScreen() {
   const { addTransaction } = useTransactionStore();
   const { categories, loadCategories } = useCategoryStore();
@@ -29,59 +31,42 @@ export default function AddScreen() {
     }
   }, [categories, loadCategories]);
 
-  const handleAdd = (e?: React.FormEvent) => {
+  const handleAdd = async (e?: React.FormEvent) => {
     e?.preventDefault();
 
     if (!value) return;
 
-    // disable controls
-    addTransaction({
-      value: parseFloat(value),
-      categoryId: selectedCategory?.id,
-      notes,
-      // transactionDetails: [{
-      //   value: 10,
-      //   description: "bread",
-      //   quantity: 1,
-      //   category: "Food"
-      // }, {
-      //   value: 20,
-      //   description: "beer",
-      //   quantity: 3,
-      //   category: "Food"
-      // }],
-    })
-      .then(() => {
-        // reset controls
-        setValue("");
-        setNotes("");
-        showSuccess({ });
-        // toast.success(`Added ${value} to ${selectedCategory?.name}`, {
-        //   action: {
-        //     label: "Undo",
-        //     onClick: () => {
-        //       toast.dismiss();
-        //       removeTransaction(id)
-        //         .then(() => {
-        //           toast.success(
-        //             `Removed ${value} from ${selectedCategory?.name}`
-        //           );
-        //         })
-        //         .catch((error) => {
-        //           console.error("Error removing transaction:", error);
-        //         });
-        //     },
-        //   },
-        // });
-      })
-      .catch((error) => {
-        console.error("Error adding transaction:", error);
-        toast.error("Error adding transaction");
-      })
-      .finally(() => {
-        // re-enable controls
-        refInput.current?.focus();
+    try {
+      // disable controls
+      await addTransaction({
+        value: parseFloat(value),
+        categoryId: selectedCategory?.id,
+        notes,
+        // transactionDetails: [{
+        //   value: 10,
+        //   description: "bread",
+        //   quantity: 1,
+        //   category: "Food"
+        // }, {
+        //   value: 20,
+        //   description: "beer",
+        //   quantity: 3,
+        //   category: "Food"
+        // }],
       });
+      // reset controls
+      setValue("");
+      setNotes("");
+
+      audio.play().catch(e => console.warn("Playback blocked:", e));
+
+      await showSuccess({ playSound: false });
+    } catch (error) {
+      console.error("Error adding transaction:", error);
+      toast.error("Error adding transaction");
+    }
+
+    refInput.current?.focus();
   };
 
   return (

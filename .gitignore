@@ -488,3 +488,5 @@ $RECYCLE.BIN/
 /.devops/deploy/data
 
 bundle-stats.html
+
+.devops/stage/data
