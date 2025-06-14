@@ -9,7 +9,6 @@ import SpacesScreen from "./screens/screen-spaces";
 import DonutSkeleton from "./DonutSkeleton";
 import ResponsiveScreens from "@/components/responsive/ResponsiveScreens";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { SuccessOverlayProvider } from "./success";
 
 // Use React.lazy to dynamically import the screen components:
 const ScanScreen = lazy(() => import("@/components/screens/screen-scan"));
@@ -70,7 +69,6 @@ export default function AppLayout() {
             <Route path="/edit-widget" element={<EditWidgetScreen />} />
           </Routes>
         </Suspense>
-        <SuccessOverlayProvider />
         <Toaster
           richColors
           toastOptions={{

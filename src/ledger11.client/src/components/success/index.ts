@@ -1,2 +1,1 @@
-export { SuccessOverlayProvider } from "./SuccessOverlayProvider"
-export { showSuccess } from "./showSuccess"
+export { SuccessOverlayProvider, useSuccessOverlay } from "./SuccessOverlayContext"

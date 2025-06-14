@@ -7,7 +7,7 @@ import { CategoryPicker } from "../category/CategoryPicker";
 import { Category } from "@/lib/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { showSuccess } from "../success";
+import { useSuccessOverlay } from "@/components/success";
 
 export default function AddScreen() {
   const { addTransaction } = useTransactionStore();
@@ -19,6 +19,8 @@ export default function AddScreen() {
     categories[0] || null
   );
 
+  const { showSuccess } = useSuccessOverlay();
+
   useEffect(() => {
     if (categories.length === 0) {
       loadCategories().catch((error) => {
@@ -29,6 +31,8 @@ export default function AddScreen() {
 
   const handleAdd = (e?: React.FormEvent) => {
     e?.preventDefault();
+
+    if (!value) return;
 
     // disable controls
     addTransaction({
@@ -51,7 +55,7 @@ export default function AddScreen() {
         // reset controls
         setValue("");
         setNotes("");
-        showSuccess();
+        showSuccess({ });
         // toast.success(`Added ${value} to ${selectedCategory?.name}`, {
         //   action: {
         //     label: "Undo",
@@ -82,7 +86,10 @@ export default function AddScreen() {
 
   return (
     <div className="flex flex-col gap-4 h-full justify-between">
-      <form onSubmit={handleAdd} className="flex flex-col items-center gap-2 px-4 pt-1">
+      <form
+        onSubmit={handleAdd}
+        className="flex flex-col items-center gap-2 px-4 pt-1"
+      >
         <div className="flex flex-row gap-2 items-center w-full">
           <Input
             ref={refInput}

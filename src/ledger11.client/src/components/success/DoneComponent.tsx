@@ -2,14 +2,34 @@ import { useEffect } from "react"
 import { createPortal } from "react-dom"
 import { motion } from "framer-motion"
 
-export function DoneComponent({ onComplete }: { onComplete?: () => void }) {
+export interface DoneComponentProps {
+  duration?: number
+  waitAfter?: number
+  playSound?: boolean
+  onComplete?: () => void
+}
+
+export function DoneComponent({
+  duration = 500,
+  waitAfter = 500,
+  playSound = true,
+  onComplete,
+}: DoneComponentProps) {
   useEffect(() => {
+    if (playSound) {
+      const audio = new Audio("/sounds/success.wav")
+      audio.play().catch((e) => {
+        console.warn("Could not play success sound:", e)
+      })
+    }
+
+    const totalTime = duration + waitAfter
     const timeout = setTimeout(() => {
       onComplete?.()
-    }, 2000)
+    }, totalTime)
 
     return () => clearTimeout(timeout)
-  }, [onComplete])
+  }, [duration, waitAfter, playSound, onComplete])
 
   return createPortal(
     <motion.div
@@ -23,7 +43,7 @@ export function DoneComponent({ onComplete }: { onComplete?: () => void }) {
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         exit={{ scale: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20, duration: duration / 1000 }}
       >
         <motion.svg
           xmlns="http://www.w3.org/2000/svg"
@@ -34,7 +54,7 @@ export function DoneComponent({ onComplete }: { onComplete?: () => void }) {
           strokeWidth="2"
           initial={{ pathLength: 0 }}
           animate={{ pathLength: 1 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: duration / 1000 }}
         >
           <path d="M5 13l4 4L19 7" />
         </motion.svg>
