@@ -3,15 +3,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using ledger11.auth.Models;
 using Microsoft.AspNetCore.Identity;
 using ledger11.auth.Data;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Extensions.Options;
+using System.Text.Json;
+using System.Collections.Concurrent;
 
 [Route("")]
 public class AuthController : Controller
@@ -21,56 +22,24 @@ public class AuthController : Controller
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<AuthController> _logger;
-    private readonly IConfiguration _config;
-    private readonly SecurityKey _key;
-
+    private readonly AuthConfig _config;
     private readonly ApplicationDbContext _db;
+    private readonly ITokenService _tokenService;
 
     public AuthController(
-        ApplicationDbContext db,
-        IConfiguration config,
+        IOptions<AuthConfig> configOptions,
         ILogger<AuthController> logger,
+        ApplicationDbContext db,
         SignInManager<ApplicationUser> signInManager,
         UserManager<ApplicationUser> userManager,
-        SecurityKey key)
+        ITokenService tokenService)
     {
-        _key = key ?? throw new ArgumentNullException(nameof(key));
+        _config = configOptions.Value;
         _logger = logger;
-        _logger.LogInformation("AuthController initialized");
-        _config = config;
+        _db = db;
         _signInManager = signInManager;
         _userManager = userManager;
-        _db = db;
-    }
-
-    // Step 1: Login UI
-    [HttpGet("login")]
-    public IActionResult Login(string returnUrl = "/")
-    {
-        ViewBag.ReturnUrl = returnUrl;
-        return View();
-    }
-
-    [HttpPost("login")]
-    public async Task<IActionResult> Login(string username, string password, string returnUrl = "/")
-    {
-        //TODO: var user = _userService.Authenticate(username, password);
-        if (username == "test" && password == "password")
-        {
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, username),
-                new Claim("sub", username)
-            };
-
-            var identity = new ClaimsIdentity(claims, "Cookies");
-            await HttpContext.SignInAsync("Cookies", new ClaimsPrincipal(identity));
-
-            return Redirect(returnUrl);
-        }
-
-        ViewBag.Error = "Invalid credentials";
-        return View();
+        _tokenService = tokenService;
     }
 
     [HttpGet("logout")]
@@ -84,7 +53,7 @@ public class AuthController : Controller
         // Validate post_logout_redirect_uri
         if (!string.IsNullOrEmpty(post_logout_redirect_uri))
         {
-            var allowedUris = _config.GetSection("AllowedPostLogoutRedirectUris").Get<string[]>() ?? Array.Empty<string>();
+            var allowedUris = _config.AllowedPostLogoutRedirectUris;
 
             if (allowedUris.Contains(post_logout_redirect_uri))
             {
@@ -97,7 +66,7 @@ public class AuthController : Controller
             }
         }
 
-        var clientUrl = _config["Client:ClientUrl"];
+        var clientUrl = _config.ClientUrl;
         if (!string.IsNullOrEmpty(clientUrl))
         {
             return Redirect(clientUrl);
@@ -109,7 +78,7 @@ public class AuthController : Controller
     [HttpGet(".well-known/openid-configuration")]
     public IActionResult OidcMetadata()
     {
-        var issuer = _config["Issuer"];
+        var issuer = _config.Issuer;
         var allowedUris = GetAllowedPostLogoutRedirectUris();
         return Json(new
         {
@@ -158,7 +127,7 @@ public class AuthController : Controller
     [HttpGet("authorize")]
     public async Task<IActionResult> Authorize(string response_type, string client_id, string redirect_uri, string scope, string state, string nonce)
     {
-        if (_config["Client:ClientId"] != client_id)
+        if (_config.ClientId != client_id)
             return BadRequest("Unknown client");
 
         if (!IsValidRedirectUri(redirect_uri))
@@ -210,7 +179,7 @@ public class AuthController : Controller
             return BadRequest(new { error = "invalid_request" });
 
         // Validate client credentials
-        if (_config["Client:ClientId"] != request.client_id)
+        if (_config.ClientId != request.client_id)
         {
             return BadRequest(new
             {
@@ -219,7 +188,7 @@ public class AuthController : Controller
             });
         }
 
-        if (_config["Client:ClientSecret"] != request.client_secret)
+        if (_config.ClientSecret != request.client_secret)
         {
             return Unauthorized(new
             {
@@ -268,7 +237,7 @@ public class AuthController : Controller
         refreshToken.RevokedAt = DateTime.UtcNow;
 
         var now = DateTimeOffset.UtcNow;
-        var issuer = _config["Issuer"]!;
+        var issuer = _config.Issuer;
         var username = refreshToken.Username;
         var clientId = refreshToken.ClientId;
 
@@ -288,14 +257,14 @@ public class AuthController : Controller
             Email = user.Email ?? string.Empty
         };
 
-        var accessToken = CreateAccessToken(issuer, clientId, requestInfo, now, _key);
-        var idToken = CreateIdToken(issuer, clientId, requestInfo, "", now, _key);
+        var accessToken = _tokenService.CreateAccessToken(requestInfo);
+        var idToken = _tokenService.CreateIdToken(requestInfo, "");
 
         return Json(new
         {
             access_token = accessToken,
             token_type = "Bearer",
-            expires_in = 300,
+            expires_in = _config.RefreshTokenLifetimeDays * 60,
             id_token = idToken,
             refresh_token = newRefreshToken.Token
         });
@@ -321,11 +290,8 @@ public class AuthController : Controller
             });
         }
 
-        var issuer = _config["Issuer"] ?? throw new InvalidOperationException("Issuer not configured");
-        var now = DateTimeOffset.UtcNow;
-
-        var accessToken = CreateAccessToken(issuer, request.client_id, requestInfo, now, _key);
-        var idToken = CreateIdToken(issuer, request.client_id, requestInfo, requestInfo.Nonce, now, _key);
+        var accessToken = _tokenService.CreateAccessToken(requestInfo);
+        var idToken = _tokenService.CreateIdToken(requestInfo, requestInfo.Nonce);
 
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
         // var deviceId = request.device_id; // Optional: add to TokenRequest model if applicable
@@ -336,84 +302,10 @@ public class AuthController : Controller
         {
             access_token = accessToken,
             token_type = "Bearer",
-            expires_in = 300, // 5 minutes
+            expires_in = _config.AccessTokenLifetimeMinutes, // 5 minutes
             id_token = idToken,
             refresh_token = refreshToken.Token
         });
-    }
-
-    private string CreateAccessToken(
-        string issuer,
-        string audience,
-        AuthRequestInfo requestInfo,
-        DateTimeOffset now,
-        SecurityKey key)
-    {
-        var claims = new[]
-        {
-            new Claim("sub", requestInfo.UserId),
-            new Claim("name", requestInfo.Username),
-            new Claim("email", requestInfo.Email),
-            new Claim(ClaimTypes.Name, requestInfo.Username),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim(JwtRegisteredClaimNames.Iat, now.ToUnixTimeSeconds().ToString()),
-            new Claim(JwtRegisteredClaimNames.Nbf, now.ToUnixTimeSeconds().ToString()),
-            new Claim(JwtRegisteredClaimNames.Exp, now.AddMinutes(5).ToUnixTimeSeconds().ToString()),
-        };
-
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(claims),
-            IssuedAt = now.UtcDateTime,
-            NotBefore = now.UtcDateTime,
-            Expires = now.UtcDateTime.AddMinutes(5),
-            SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.RsaSha256),
-            Issuer = issuer,
-            Audience = audience
-        };
-
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
-    }
-
-    private string CreateIdToken(
-        string issuer,
-        string audience,
-        AuthRequestInfo requestInfo,
-        string nonce,
-        DateTimeOffset now,
-        SecurityKey key)
-    {
-        var claims = new[]
-        {
-            new Claim("sub", requestInfo.UserId),
-            new Claim("name", requestInfo.Username),
-            new Claim("email", requestInfo.Email),
-            new Claim(ClaimTypes.Name, requestInfo.Username),
-            new Claim(JwtRegisteredClaimNames.Iss, issuer),
-            new Claim(JwtRegisteredClaimNames.Aud, audience),
-            new Claim(JwtRegisteredClaimNames.Iat, now.ToUnixTimeSeconds().ToString()),
-            new Claim(JwtRegisteredClaimNames.Nbf, now.ToUnixTimeSeconds().ToString()),
-            new Claim(JwtRegisteredClaimNames.Exp, now.AddMinutes(5).ToUnixTimeSeconds().ToString()),
-            new Claim(JwtRegisteredClaimNames.Nonce, nonce),
-            new Claim(JwtRegisteredClaimNames.AuthTime, now.ToUnixTimeSeconds().ToString()),
-        };
-
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(claims),
-            IssuedAt = now.UtcDateTime,
-            NotBefore = now.UtcDateTime,
-            Expires = now.UtcDateTime.AddMinutes(5),
-            SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.RsaSha256),
-            Issuer = issuer,
-            Audience = audience
-        };
-
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
     }
 
     private async Task<RefreshToken> CreateRefreshTokenAsync(string username, string clientId, string? ipAddress = null, string? deviceId = null)
@@ -424,7 +316,7 @@ public class AuthController : Controller
             Username = username,
             ClientId = clientId,
             CreatedAt = DateTime.UtcNow,
-            Expiry = DateTime.UtcNow.AddDays(30),
+            Expiry = DateTime.UtcNow.AddDays(_config.RefreshTokenLifetimeDays),
             Revoked = false,
             IpAddress = ipAddress,
             DeviceId = deviceId
@@ -451,23 +343,12 @@ public class AuthController : Controller
         });
     }
 
-    private record AuthRequestInfo
-    {
-        public string UserId { get; set; } = default!;
-        public string ClientId { get; init; } = default!;
-        public string RedirectUri { get; init; } = default!;
-        public string Username { get; init; } = default!;
-        public string Email { get; init; } = default!;
-        public string State { get; init; } = default!;
-        public string Nonce { get; init; } = default!;
-    }
-
     private bool IsValidRedirectUri(string redirectUri)
     {
         if (string.IsNullOrEmpty(redirectUri))
             return false;
 
-        var clientUrl = _config["Client:ClientUrl"];
+        var clientUrl = _config.ClientUrl;
         if (string.IsNullOrEmpty(clientUrl))
             return false;
 
@@ -476,16 +357,16 @@ public class AuthController : Controller
 
         var uri = new Uri(redirectUri);
 
-        var allowedRedirectUris = _config.GetSection("Client:RedirectUris").Get<List<string>>() ?? new List<string>();
+        var allowedRedirectUris = _config.RedirectUris;
         return allowedRedirectUris.Contains(uri.AbsolutePath, StringComparer.OrdinalIgnoreCase);
     }
 
     private List<string>? GetAllowedPostLogoutRedirectUris()
     {
-        var clientUrl = _config["Client:ClientUrl"];
+        var clientUrl = _config.ClientUrl;
         if (string.IsNullOrEmpty(clientUrl))
             return null;
-        return (_config.GetSection("AllowedPostLogoutRedirectUris").Get<List<string>>() ?? new List<string>())
+        return _config.AllowedPostLogoutRedirectUris
             .Select(x => $"{clientUrl}{x}").ToList();
     }
 
@@ -496,11 +377,11 @@ public class AuthController : Controller
     {
         var key = HttpContext.RequestServices.GetRequiredService<SecurityKey>();
 
-        var issuer = _config["Issuer"];
+        var issuer = _config.Issuer;
         if (string.IsNullOrEmpty(issuer))
             return BadRequest("Issuer not configured");
 
-        var clientId = _config["Client:ClientId"] ?? "client_id";
+        var clientId = _config.ClientId ?? "client_id";
         var claims = new[]
         {
             new Claim("sub", username),
