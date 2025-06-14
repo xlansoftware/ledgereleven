@@ -13,12 +13,12 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 using System.Collections.Concurrent;
+using ledger11.auth.Services;
 
 [Route("")]
 public class AuthController : Controller
 {
-    private static ConcurrentDictionary<string, AuthRequestInfo> _authRequests = new();
-
+    private readonly IAuthCodeStore _authCodeStore;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<AuthController> _logger;
@@ -32,7 +32,8 @@ public class AuthController : Controller
         ApplicationDbContext db,
         SignInManager<ApplicationUser> signInManager,
         UserManager<ApplicationUser> userManager,
-        ITokenService tokenService)
+        ITokenService tokenService,
+        IAuthCodeStore authCodeStore)
     {
         _config = configOptions.Value;
         _logger = logger;
@@ -40,6 +41,7 @@ public class AuthController : Controller
         _signInManager = signInManager;
         _userManager = userManager;
         _tokenService = tokenService;
+        _authCodeStore = authCodeStore;
     }
 
     [HttpGet("logout")]
@@ -140,7 +142,7 @@ public class AuthController : Controller
             {
                 // Generate a dummy code and store context
                 var code = Guid.NewGuid().ToString("N");
-                _authRequests[code] = new AuthRequestInfo
+                _authCodeStore.Store(code, new AuthRequestInfo
                 {
                     UserId = user.Id.ToString("N"),
                     ClientId = client_id,
@@ -149,7 +151,7 @@ public class AuthController : Controller
                     Email = user.Email ?? string.Empty,
                     State = state,
                     Nonce = nonce
-                };
+                });
 
                 return Redirect($"{redirect_uri}?code={code}&state={state}");
 
@@ -272,7 +274,7 @@ public class AuthController : Controller
 
     private async Task<IActionResult> HandleAuthCodeAsync(TokenRequest request)
     {
-        if (request.grant_type != "authorization_code" || request.code == null || !_authRequests.TryRemove(request.code, out var requestInfo))
+        if (request.grant_type != "authorization_code" || request.code == null || !_authCodeStore.TryRetrieve(request.code, out var requestInfo))
         {
             return BadRequest(new
             {
@@ -281,7 +283,7 @@ public class AuthController : Controller
             });
         }
 
-        if (requestInfo.ClientId != request.client_id || requestInfo.RedirectUri != request.redirect_uri)
+        if (requestInfo == null || requestInfo.ClientId != request.client_id || requestInfo.RedirectUri != request.redirect_uri)
         {
             return BadRequest(new
             {

@@ -43,6 +43,7 @@ public static class Extensions
 
         services.Configure<AuthConfig>(builder.Configuration.GetSection("AuthConfig"));
         services.AddSingleton<ITokenService, TokenService>();
+        services.AddSingleton<IAuthCodeStore, InMemoryAuthCodeStore>();
 
         return services;
     }
