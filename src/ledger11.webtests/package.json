@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "pw": "playwright",
+    "test": "playwright test --output=./test-results --reporter=list"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

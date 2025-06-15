@@ -1,7 +1,7 @@
 import { request, expect } from "playwright/test";
 
-export const APP_URL = "http://localhost:5139/";
-export const AUTH_URL = "http://localhost:5001/";
+export const APP_URL = process.env.APP_URL || "http://localhost:5139/";
+export const AUTH_URL = process.env.AUTH_URL || "http://localhost:5001/";
 
 export async function assertTestMode() {
     const apiContext = await request.newContext()

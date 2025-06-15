@@ -490,3 +490,4 @@ $RECYCLE.BIN/
 bundle-stats.html
 
 .devops/stage/data
+.devops/test/web/data

@@ -1,0 +1,61 @@
+services:
+
+  auth:
+    build:
+      context: ../../../src
+      dockerfile: ../.devops/build/Dockerfile.ledger-eleven-auth-server
+    # image: ghcr.io/xlansoftware/ledger-eleven-auth-server:latest
+    environment:
+      - ASPNETCORE_URLS=http://0.0.0.0:80
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Logging__LogLevel__Default=Information
+      - Logging__LogLevel__Microsoft.AspNetCore=Information
+      # - Logging__LogLevel__Microsoft.AspNetCore.Routing.EndpointMiddleware=Warning
+
+      - ConnectionStrings__DefaultConnection=Data Source=/data/auth.db
+      - RsaKeyPath=/data/rsa_key.xml
+      - AuthConfig__Issuer=http://auth/
+      - AuthConfig__ClientId=testclientid
+      - AuthConfig__ClientSecret=testclientsecret
+      - AuthConfig__ClientUrl=http://app/
+
+      - EmailFeatureFlags__ConfirmAccounts=false
+      - EmailFeatureFlags__EnableEmailTestMode=true
+
+    volumes:
+      - ./data:/data
+      - ./data:/root/.aspnet/DataProtection-Keys
+    
+  app:
+    build:
+      context: ../../../src
+      dockerfile: ../.devops/build/Dockerfile.ledger-eleven-app
+    # image: ghcr.io/xlansoftware/ledger-eleven-app:latest
+    environment:
+      - ASPNETCORE_URLS=http://0.0.0.0:80
+      - ASPNETCORE_ENVIRONMENT=Development
+      - AppConfig__DataPath=/data
+      - Authentication__oidc__Authority=http://auth/
+      - Authentication__oidc__ClientId=testclientid
+      - Authentication__oidc__ClientSecret=testclientsecret
+      - Authentication__oidc__ResponseType=code
+      - Authentication__oidc__Scope=openid profile email
+      - Authentication__oidc__PostLogoutRedirectUri=http://app/
+      - Authentication__oidc__SignedOutCallbackPath=/signedout-callback
+
+    volumes:
+      - ./data:/data
+      - ./data:/root/.aspnet/DataProtection-Keys
+
+  test:
+    build:
+      context: ../../../src
+      dockerfile: ../.devops/test/web/Dockerfile
+    depends_on:
+      - auth
+      - app
+    environment:
+      AUTH_URL: http://auth/
+      APP_URL: http://app/
+    volumes:
+      - ./test-results:/src/test-results
