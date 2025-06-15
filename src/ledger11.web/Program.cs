@@ -67,6 +67,7 @@ public class Program
         // Configure CORS
         if (builder.Environment.IsDevelopment())
         {
+            Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("ReactApp", policy =>

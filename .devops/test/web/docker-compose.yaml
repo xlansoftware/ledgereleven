@@ -14,7 +14,7 @@ services:
 
       - ConnectionStrings__DefaultConnection=Data Source=/data/auth.db
       - RsaKeyPath=/data/rsa_key.xml
-      - AuthConfig__Issuer=http://auth/
+      - AuthConfig__Issuer=http://auth
       - AuthConfig__ClientId=testclientid
       - AuthConfig__ClientSecret=testclientsecret
       - AuthConfig__ClientUrl=http://ledgerapp/
@@ -38,7 +38,7 @@ services:
       - Logging__LogLevel__Microsoft.AspNetCore=Information
       - Logging__LogLevel__Microsoft.AspNetCore.Routing.EndpointMiddleware=Information
       - AppConfig__DataPath=/data
-      - Authentication__oidc__Authority=http://auth/
+      - Authentication__oidc__Authority=http://auth
       - Authentication__oidc__ClientId=testclientid
       - Authentication__oidc__ClientSecret=testclientsecret
       - Authentication__oidc__ResponseType=code

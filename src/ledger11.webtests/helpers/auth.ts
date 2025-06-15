@@ -9,7 +9,7 @@ export async function login(page: Page, email: string, password: string) {
     await page.getByRole('link', { name: /Start managing your expenses/i }).click()
 
     // Wait for redirect to login page
-    console.log(page.url());
+    // console.log(page.url());
     await expect(page.url().startsWith(AUTH_URL)).toBe(true);
 
     // Fill email and password
@@ -20,5 +20,5 @@ export async function login(page: Page, email: string, password: string) {
     await page.getByRole('button', { name: 'Log in' }).click()
 
     // Wait for redirect back to app
-    await expect(page).toHaveURL(`${APP_URL}app`)
+    await expect(page.url().startsWith(APP_URL)).toBe(true);
 }

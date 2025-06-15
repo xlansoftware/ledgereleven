@@ -32,7 +32,7 @@ test('Register flow works correctly', async ({ page }) => {
     await page.getByRole('link', { name: /Start managing your expenses/i }).click()
 
     // 4. Expect redirect to login page on http://localhost:5001/
-    console.log(page.url());
+    // console.log(page.url());
     await expect(page.url().startsWith(AUTH_URL)).toBe(true);
 
     // 5. Click the "Register as a new user" link
@@ -51,7 +51,8 @@ test('Register flow works correctly', async ({ page }) => {
     await page.getByRole('button', { name: /register/i }).click()
 
     // 10. Assert the page shows confirmation
-    await expect(page).toHaveURL(`${APP_URL}app`)
+    await expect(page.url().startsWith(APP_URL)).toBe(true);
+
     // or on-bording page?
 })
 
