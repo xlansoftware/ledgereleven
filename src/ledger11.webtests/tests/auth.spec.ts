@@ -1,14 +1,18 @@
-import { test, expect, request } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 import { APP_URL, assertTestMode, AUTH_URL, createTestUser } from '../helpers/tools';
-import { extractLinks } from '../helpers/links';
 import { login } from '../helpers/auth';
 
 test('has title', async ({ page }) => {
-  await page.goto(AUTH_URL);
+  console.log('AUTH_URL:', AUTH_URL);
+  console.log('APP_URL:', APP_URL);
 
-  // Expect a title "to contain" a substring.
+  await page.goto(AUTH_URL);
   await expect(page).toHaveTitle(/Ledger Eleven/);
+
+  await page.goto(APP_URL);
+  await expect(page).toHaveTitle(/Ledger Eleven/);
+
 });
 
 test('Register flow works correctly', async ({ page }) => {
@@ -28,6 +32,7 @@ test('Register flow works correctly', async ({ page }) => {
     await page.getByRole('link', { name: /Start managing your expenses/i }).click()
 
     // 4. Expect redirect to login page on http://localhost:5001/
+    console.log(page.url());
     await expect(page.url().startsWith(AUTH_URL)).toBe(true);
 
     // 5. Click the "Register as a new user" link

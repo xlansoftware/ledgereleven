@@ -9,6 +9,7 @@ export async function login(page: Page, email: string, password: string) {
     await page.getByRole('link', { name: /Start managing your expenses/i }).click()
 
     // Wait for redirect to login page
+    console.log(page.url());
     await expect(page.url().startsWith(AUTH_URL)).toBe(true);
 
     // Fill email and password
