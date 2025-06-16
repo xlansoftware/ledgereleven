@@ -491,3 +491,6 @@ bundle-stats.html
 
 .devops/stage/data
 .devops/test/web/data
+
+.devops/test/web/certs/*.key
+.devops/test/web/certs/*.crt

@@ -19,6 +19,11 @@ export async function login(page: Page, email: string, password: string) {
     // Click login button
     await page.getByRole('button', { name: 'Log in' }).click()
 
+    // Wait for final URL after all redirects
+    // console.log(page.url());
+    await page.waitForURL(`${APP_URL}app`);
+
     // Wait for redirect back to app
-    await expect(page.url().startsWith(APP_URL)).toBe(true);
+    // console.log(page.url());
+    await expect(page).toHaveURL(`${APP_URL}app`);
 }

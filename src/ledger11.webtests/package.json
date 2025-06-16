@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "pw": "playwright",
-    "test": "playwright test --no-sandbox --output=./test-results --reporter=list"
+    "test": "playwright test --output=./test-results --reporter=list"
   },
   "keywords": [],
   "author": "",
