@@ -2,9 +2,8 @@ name: Build and Publish Ledger Eleven Images
 
 on:
   push:
-    branches:
-      - main
-      - feature/workflow
+    # branches:
+    #   - main
     tags:
       - 'v*'
       - 'test-*'
