@@ -1,4 +1,4 @@
-name: Test backend
+name: Test frontend
 
 on:
   workflow_dispatch:
