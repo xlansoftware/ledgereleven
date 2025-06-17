@@ -16,19 +16,21 @@ public class AuthMetadataController : Controller
     [HttpGet("openid-configuration")]
     public IActionResult OidcMetadata()
     {
-        var issuer = _config.Issuer;
+        if (!Uri.TryCreate(_config.Issuer, UriKind.Absolute, out var issuer))
+            return BadRequest("Invalid issuer URL in configuration.");
+
         return Json(new
         {
-            issuer,
-            authorization_endpoint = $"{issuer}/authorize",
-            token_endpoint = $"{issuer}/token",
-            userinfo_endpoint = $"{issuer}/userinfo",
-            end_session_endpoint = $"{issuer}/logout",
+            issuer = issuer.ToString(),
+            authorization_endpoint = new Uri(issuer, "authorize").ToString(),
+            token_endpoint = new Uri(issuer, "token").ToString(),
+            userinfo_endpoint = new Uri(issuer, "userinfo").ToString(),
+            end_session_endpoint = new Uri(issuer, "logout").ToString(),
             post_logout_redirect_uris = _config.AllowedPostLogoutRedirectUris,
             frontchannel_logout_supported = true,
             backchannel_logout_supported = true,
             frontchannel_logout_session_supported = true,
-            jwks_uri = $"{issuer}/.well-known/jwks.json",
+            jwks_uri = new Uri(issuer, ".well-known/jwks.json").ToString(),
             id_token_signing_alg_values_supported = new[] { "RS256" }
         });
     }
