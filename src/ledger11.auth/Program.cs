@@ -18,6 +18,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
 builder.Services.AddAuthorization();
+builder.Services.AddMemoryCache();
 
 var app = builder.Build();
 
