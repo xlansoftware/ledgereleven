@@ -20,6 +20,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Make script executable
+        working-directory: ./.devops/test/web/certs
+        run: chmod +x generate-test-certificates.sh
+
+      - name: Generate self-host certificates
+        working-directory: ./.devops/test/web/certs
+        run: ./generate-test-certificates.sh
+
       - name: Build and test
         working-directory: ./.devops/test/web
         run: docker compose run --build --rm test
