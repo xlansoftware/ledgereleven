@@ -1,0 +1,21 @@
+{
+  "name": "ledger11.webtests",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "pw": "playwright",
+    "test": "playwright test --output=./test-results --reporter=list"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.53.0",
+    "@types/node": "^24.0.1"
+  },
+  "dependencies": {
+    "node-html-parser": "^7.0.1"
+  }
+}

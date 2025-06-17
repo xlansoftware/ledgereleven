@@ -1,0 +1,78 @@
+services:
+
+  auth:
+    build:
+      context: ../../../src
+      dockerfile: ../.devops/build/Dockerfile.ledger-eleven-auth-server
+    # image: ghcr.io/xlansoftware/ledger-eleven-auth-server:latest
+    environment:
+      - ASPNETCORE_URLS=https://0.0.0.0:443
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/auth.pfx
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Logging__LogLevel__Default=Information
+      - Logging__LogLevel__Microsoft.AspNetCore=Information
+      - Logging__LogLevel__Microsoft.AspNetCore.Routing.EndpointMiddleware=Information
+
+      - ConnectionStrings__DefaultConnection=Data Source=/data/auth.db
+      - RsaKeyPath=/data/rsa_key.xml
+      - AuthConfig__Issuer=https://auth
+      - AuthConfig__ClientId=testclientid
+      - AuthConfig__ClientSecret=testclientsecret
+      - AuthConfig__ClientUrl=https://ledgerapp/
+      - AuthConfig__AllowedPostLogoutRedirectUris=https://ledgerapp/signedout-callback
+
+      - EmailFeatureFlags__ConfirmAccounts=false
+      - EmailFeatureFlags__EnableEmailTestMode=true
+
+    volumes:
+      - ./certs/auth.pfx:/https/auth.pfx:ro
+      - ./data:/data
+      - ./certs/auth.crt:/usr/local/share/ca-certificates/auth.crt:ro
+      - ./certs/ledgerapp.crt:/usr/local/share/ca-certificates/ledgerapp.crt:ro
+    entrypoint: ["sh", "-c"]
+    command: ["update-ca-certificates && dotnet ledger11.auth.dll"]
+    
+  ledgerapp:
+    build:
+      context: ../../../src
+      dockerfile: ../.devops/build/Dockerfile.ledger-eleven-app
+    # image: ghcr.io/xlansoftware/ledger-eleven-app:latest
+    environment:
+      - ASPNETCORE_URLS=https://0.0.0.0:443
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/ledgerapp.pfx
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Logging__LogLevel__Default=Information
+      - Logging__LogLevel__Microsoft.AspNetCore=Information
+      - Logging__LogLevel__Microsoft.AspNetCore.Routing.EndpointMiddleware=Information
+      - AppConfig__DataPath=/data
+      - Authentication__oidc__Authority=https://auth
+      - Authentication__oidc__ClientId=testclientid
+      - Authentication__oidc__ClientSecret=testclientsecret
+      - Authentication__oidc__ResponseType=code
+      - Authentication__oidc__Scope=openid profile email
+      - Authentication__oidc__PostLogoutRedirectUri=https://ledgerapp/
+      - Authentication__oidc__SignedOutCallbackPath=/signedout-callback
+
+    volumes:
+      - ./certs/ledgerapp.pfx:/https/ledgerapp.pfx:ro
+      - ./data:/data
+      - ./certs/auth.crt:/usr/local/share/ca-certificates/auth.crt:ro
+      - ./certs/ledgerapp.crt:/usr/local/share/ca-certificates/ledgerapp.crt:ro
+    entrypoint: ["sh", "-c"]
+    command: ["update-ca-certificates && dotnet ledger11.web.dll"]
+
+  test:
+    build:
+      context: ../../../src
+      dockerfile: ../.devops/test/web/Dockerfile
+    depends_on:
+      - auth
+      - ledgerapp
+    environment:
+      AUTH_URL: https://auth/
+      APP_URL: https://ledgerapp/
+    volumes:
+      - ./test-results:/src/test-results
+      - ./certs:/usr/local/share/ca-certificates:ro

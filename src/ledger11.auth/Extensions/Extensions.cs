@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Threading.RateLimiting;
 using ledger11.auth.Data;
 using ledger11.auth.Models;
 using ledger11.auth.Services;
@@ -17,7 +18,7 @@ public static class Extensions
         var env = builder.Environment;
 
         var key = services.AddSecurityKey(configuration);
-        
+
         services.AddSingleton<SecurityKey>(key);
 
         var authority = configuration["Issuer"];
@@ -41,6 +42,29 @@ public static class Extensions
                 };
             });
 
+        services.Configure<AuthConfig>(builder.Configuration.GetSection("AuthConfig"));
+        services.AddSingleton<ITokenService, TokenService>();
+        services.AddSingleton<IAuthCodeStore, InMemoryAuthCodeStore>();
+
+        // Register rate limiting policy using RateLimitPartition helper
+        services.AddRateLimiter(options =>
+        {
+            options.AddPolicy("TokenPolicy", context =>
+            {
+                var ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+                return RateLimitPartition.GetFixedWindowLimiter(ip, key =>
+                    new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 5, // Allow 5 requests
+                        Window = TimeSpan.FromMinutes(1), // In 1 minute
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0,
+                        AutoReplenishment = false // Important for optimal performance
+                    });
+            });
+        });
+
         return services;
     }
 
@@ -48,7 +72,7 @@ public static class Extensions
     {
         var services = builder.Services;
         var configuration = builder.Configuration;
-    
+
         services.AddOptions<SmtpConfig>()
             .BindConfiguration("Smtp")
             .ValidateDataAnnotations()
@@ -109,4 +133,5 @@ public static class Extensions
 
         return services;
     }
+
 }
