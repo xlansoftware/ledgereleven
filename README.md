@@ -24,10 +24,31 @@ dotnet tool install --global dotnet-ef
 npm run test
 ```
 
+Run the backend tests locally:
+
+```bash
+cd src
+dotnet test
+```
+
+Run the backend tests in a container:
+
 ```bash
 cd .devops/test/backend
 docker-compose run --build --rm app-test
 ```
+
+Run the frontend test in a container.
+
+```bash
+cd .devops/test/web/certs
+./generate-test-certificates.sh
+cd ..
+docker-compose run --build --rm test
+```
+
+Run the frontend
+
 
 ## Start
 
