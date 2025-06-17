@@ -94,6 +94,10 @@ public static class Tools
 
     public static string DataPath(ILogger? logger, string path)
     {
+        logger?.LogTrace($"--data = {path}");
+        logger?.LogTrace($"AppContext.BaseDirectory = {AppContext.BaseDirectory}");
+        logger?.LogTrace($"Environment.CurrentDirectory = {Environment.CurrentDirectory}");
+
         if (string.IsNullOrWhiteSpace(path))
         {
             if (File.Exists(Path.Combine(AppContext.BaseDirectory, "appsettings.json")))
@@ -106,7 +110,7 @@ public static class Tools
             }
             else
             {
-                throw new Exception("The default location has not appsettings.json. Use --data option to proveide path to the db files or appsettings.json file.");
+                throw new Exception("The default location has no appsettings.json. Use --data option to proveide path to the db files or appsettings.json file.");
             }
 
             logger?.LogTrace($"Using data path {path} ...");
@@ -118,6 +122,8 @@ public static class Tools
         {
             return path;
         }
+
+        logger?.LogTrace($"Found appsettings.json at {configFile} ...");
 
         var config = new ConfigurationBuilder()
             .SetBasePath(path)
@@ -132,4 +138,16 @@ public static class Tools
 
         return result;
     }
+
+    public static ILogger CreateConsoleLogger(LogLevel level, string name)
+    {
+        var loggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder
+                .AddConsole()
+                .SetMinimumLevel(level);
+        });
+        return loggerFactory.CreateLogger(name);
+    }
+
 }
