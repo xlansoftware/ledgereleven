@@ -49,7 +49,7 @@ test('Register flow works correctly', async ({ page }) => {
     await page.getByRole('button', { name: /register/i }).click()
 
     // 10. Assert the page shows confirmation
-    // console.log(page.url());
+    console.log(`3: ${page.url()}`);
     await expect(page.url().startsWith(APP_URL)).toBe(true);
 
     // or start a on-bording process?
