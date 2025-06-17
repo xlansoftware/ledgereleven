@@ -20,6 +20,7 @@ services:
       - AuthConfig__ClientId=testclientid
       - AuthConfig__ClientSecret=testclientsecret
       - AuthConfig__ClientUrl=https://ledgerapp/
+      - AuthConfig__AllowedPostLogoutRedirectUris=https://ledgerapp/signedout-callback
 
       - EmailFeatureFlags__ConfirmAccounts=false
       - EmailFeatureFlags__EnableEmailTestMode=true
