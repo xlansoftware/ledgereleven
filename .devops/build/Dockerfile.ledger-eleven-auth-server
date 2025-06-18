@@ -1,8 +1,21 @@
+# Declare build arguments at the top (global scope)
+ARG VERSION=1.0.0
+ARG COMMIT_HASH=unknown
+ARG BUILD_DATE="1970-01-01T00:00:00Z"
+
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+# Redeclare ARGs in each stage where needed
+ARG VERSION
+ARG COMMIT_HASH
+ARG BUILD_DATE
 WORKDIR /app
 EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+# Redeclare ARGs in each stage where needed
+ARG VERSION
+ARG COMMIT_HASH
+ARG BUILD_DATE
 WORKDIR /src
 COPY ledger11.sln ./
 COPY ledger11.auth/ledger11.auth.csproj ledger11.auth/
@@ -15,12 +28,33 @@ COPY ledger11.cli/ledger11.cli.csproj ledger11.cli/
 RUN dotnet restore
 COPY . .
 WORKDIR /src/ledger11.auth
-RUN dotnet publish -c Release -o /app/publish
+# Pass version info to the publish command
+RUN dotnet publish -c Release -o /app/publish \
+    /p:Version=${VERSION} \
+    /p:InformationalVersion=${VERSION}+${COMMIT_HASH} \
+    /p:SourceRevisionId=${COMMIT_HASH}
 WORKDIR /src/ledger11.cli
-RUN dotnet publish -c Release --self-contained true /p:PublishSingleFile=true -o /app/cli
+RUN dotnet publish -c Release --self-contained true /p:PublishSingleFile=true -o /app/cli \
+    /p:Version=${VERSION} \
+    /p:InformationalVersion=${VERSION}+${COMMIT_HASH}
 
 FROM base AS final
+# Redeclare ARGs in final stage for labels
+ARG VERSION
+ARG COMMIT_HASH
+ARG BUILD_DATE
+# Add standard OCI image labels
+LABEL org.opencontainers.image.version=${VERSION}
+LABEL org.opencontainers.image.revision=${COMMIT_HASH}
+LABEL org.opencontainers.image.created=${BUILD_DATE}
+
 WORKDIR /app
 COPY --from=build /app/publish .
 COPY --from=build /app/cli .
+
+# Create version info file
+RUN echo "Version: $VERSION" > /app/version.txt && \
+    echo "Commit: $COMMIT_HASH" >> /app/version.txt && \
+    echo "Built: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> /app/version.txt
+
 ENTRYPOINT ["dotnet", "ledger11.auth.dll"]
