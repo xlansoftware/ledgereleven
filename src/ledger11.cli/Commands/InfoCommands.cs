@@ -20,20 +20,23 @@ public static class InfoCommands
         command.AddGlobalOption(logLevelOption);
         command.AddGlobalOption(dataOption);
 
-        command.SetHandler((data, logLevel) =>
+        command.SetHandler((data, logLevel) => 
         {
-            var consoleLogger = Tools.CreateConsoleLogger(logLevel, "InfoCommand");
-            var dataPath = Tools.DataPath(consoleLogger, data);
+            Tools.Catch(() =>
+            { 
+                var consoleLogger = Tools.CreateConsoleLogger(logLevel, "InfoCommand");
+                var dataPath = Tools.DataPath(consoleLogger, data);
 
-            var host = Tools.CreateHost(logLevel, dataPath);
-            using var scope = host.Services.CreateScope();
-            var services = scope.ServiceProvider;
+                var host = Tools.CreateHost(logLevel, dataPath);
+                using var scope = host.Services.CreateScope();
+                var services = scope.ServiceProvider;
 
-            var logger = services.GetRequiredService<ILogger<Program>>();
-            Console.WriteLine("Info command executed.");
+                var logger = services.GetRequiredService<ILogger<Program>>();
+
+                Console.WriteLine($"Data path = {dataPath}");
+                Console.WriteLine("Info command executed.");
+            });
             
-            return Task.CompletedTask;
-
         }, dataOption, logLevelOption);
 
         rootCommand.AddCommand(command);

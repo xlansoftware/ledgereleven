@@ -13,6 +13,8 @@ namespace ledger11.cli;
 
 public static class Tools
 {
+    public static int ExitCode = 0;
+
     public static Option<string> DataOption => new Option<string>("--data", description: "Data folder") { IsRequired = false };
     public static Option<LogLevel> LogLevelOption => new Option<LogLevel>(
         name: "--log-level",
@@ -136,7 +138,7 @@ public static class Tools
             throw new Exception($"Path {path} has appsettings.json, but it has no setting for AppConfig:DataPath...");
         }
 
-        return result;
+        return Path.GetFullPath(result, path);
     }
 
     public static ILogger CreateConsoleLogger(LogLevel level, string name)
@@ -148,6 +150,33 @@ public static class Tools
                 .SetMinimumLevel(level);
         });
         return loggerFactory.CreateLogger(name);
+    }
+
+    public static Task Catch(Func<Task> action)
+    {
+        try
+        {
+            return action();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(ex.Message);
+            Tools.ExitCode = 1;
+            return Task.CompletedTask;
+        }
+    }
+
+    public static void Catch(Action action)
+    {
+        try
+        {
+            action();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(ex.Message);
+            Tools.ExitCode = 1;
+        }
     }
 
 }
