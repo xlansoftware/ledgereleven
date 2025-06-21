@@ -111,7 +111,7 @@ export const useCategoryStore = create<CategoryStoreState>()(
       },
     }),
     {
-      name: "expense-tracker-category-storage",
+      name: "ledger11-category-storage",
       skipHydration: true,
     }
   )

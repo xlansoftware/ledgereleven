@@ -17,22 +17,25 @@ public interface IUserSpaceService
     Task SetCurrentSpaceAsync(Guid id);
     Task DeleteSpaceAsync(Guid id);
     Task<List<Space>> GetAvailableSpacesAsync();
-    Task ShareSpaceWithAsync(string targetUserEmail);
+    Task ShareSpaceWithAsync(Guid spaceId, string targetUserEmail);
 }
 
 public class UserSpaceService : IUserSpaceService
 {
     private readonly ILogger<UserSpaceService> _logger;
     private readonly AppDbContext _dbContext;
+    private readonly UserManager<ApplicationUser> _userManager;
     private readonly ICurrentUserService _currentUserService;
     public UserSpaceService(
         ILogger<UserSpaceService> logger,
         AppDbContext dbContext,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        UserManager<ApplicationUser> userManager)
     {
         _logger = logger;
         _dbContext = dbContext;
         _currentUserService = currentUserService;
+        _userManager = userManager;
     }
 
     public async Task<Space?> GetUserSpaceAsync()
@@ -244,18 +247,15 @@ public class UserSpaceService : IUserSpaceService
         return membership.Space;
     }
 
-    public async Task ShareSpaceWithAsync(string targetUserEmail)
+    public async Task ShareSpaceWithAsync(Guid spaceId, string targetUserEmail)
     {
         var currentUser = await _currentUserService.GetCurrentUserAsync();
         if (currentUser == null)
             throw new InvalidOperationException("No authenticated user.");
 
-        if (currentUser.CurrentSpaceId == null)
-            throw new InvalidOperationException("Current user has no active space.");
-
         var space = await _dbContext.Spaces
             .Include(s => s.Members)
-            .FirstOrDefaultAsync(s => s.Id == currentUser.CurrentSpaceId);
+            .FirstOrDefaultAsync(s => s.Id == spaceId);
 
         if (space == null)
             throw new InvalidOperationException("Space not found.");
@@ -266,8 +266,7 @@ public class UserSpaceService : IUserSpaceService
         if (currentMembership?.AccessLevel != AccessLevel.Owner)
             throw new UnauthorizedAccessException("Only the owner can share the space.");
 
-        targetUserEmail = targetUserEmail.ToLower();
-        var targetUser = await _dbContext.Users.FirstOrDefaultAsync((user) => user.NormalizedEmail == targetUserEmail);
+        var targetUser = await _userManager.FindByEmailAsync(targetUserEmail);
         if (targetUser == null)
             throw new InvalidOperationException("Target user not found.");
 

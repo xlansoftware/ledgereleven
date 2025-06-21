@@ -23,11 +23,12 @@ public static class TestExtesions
         }
     }
 
+    private static readonly Guid userId = Guid.NewGuid();
     private static IHttpContextAccessor MockHttpContextAcessor()
     {
         var claims = new[]
         {
-            new Claim("sub", "abc123"),
+            new Claim("sub", userId.ToString("N")),
             new Claim("email", "abc123@example.com"),
             new Claim("name", "abc123@example.com"),
             new Claim("iss", "https://myprovider.com"),

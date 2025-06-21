@@ -10,4 +10,5 @@ public class SpaceDto
     public decimal? TotalValue { get; set; } = null;
     public int? CountTransactions { get; set; } = null;
     public int? CountCategories { get; set; } = null;
+    public List<string?> Members { get; set; } = [];
 }

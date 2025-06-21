@@ -16,7 +16,7 @@ const useSettingsStore = create<SettingsState>()(
       getPreferredReceiptLanguage: () => get().preferredReceiptLanguage,
     }),
     {
-      name: "expense-tracker-settings",
+      name: "ledger11-settings",
     }
   )
 );

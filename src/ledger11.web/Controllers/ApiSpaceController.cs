@@ -17,15 +17,18 @@ public class ApiSpaceController : ControllerBase
     private readonly ILogger<ApiSpaceController> _logger;
     private readonly IUserSpaceService _userSpace;
     private readonly ICurrentLedgerService _currentLedgerService;
+    private readonly AppDbContext _appDbContext;
 
     public ApiSpaceController(
         ILogger<ApiSpaceController> logger,
         IUserSpaceService userSpace,
-        ICurrentLedgerService currentLedgerService)
+        ICurrentLedgerService currentLedgerService,
+        AppDbContext appDbContext)
     {
         _logger = logger;
         _userSpace = userSpace;
         _currentLedgerService = currentLedgerService;
+        _appDbContext = appDbContext;
     }
 
     // GET: api/space
@@ -75,6 +78,17 @@ public class ApiSpaceController : ControllerBase
                     // number of transactions and categories will be null
                     _logger.LogTrace(ex, "Error processing details info for space {SpaceId}", space.Id);
                 }
+
+                var members = await _appDbContext.SpaceMembers
+                    .Include(m => m.User)
+                    .Where(m => m.SpaceId == space.Id)
+                    .Select(m => m.User.Email)
+                    .ToListAsync();
+                if (members != null)
+                {
+                    space.Members = members;
+                }
+
             }
         }
         else
@@ -155,6 +169,28 @@ public class ApiSpaceController : ControllerBase
     {
         await _userSpace.SetCurrentSpaceAsync(id);
         return Ok();
+    }
+
+    // POST: api/space/share
+    [HttpPost("share")]
+    public async Task<IActionResult> Share([FromBody] ShareSpaceRequestDto request)
+    {
+        if (request == null || request.SpaceId == Guid.Empty || string.IsNullOrWhiteSpace(request.Email))
+        {
+            return BadRequest("Invalid share request.");
+        }
+
+        try
+        {
+            await _userSpace.ShareSpaceWithAsync(request.SpaceId, request.Email);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sharing space {SpaceId} with {Email}", request.SpaceId, request.Email);
+            return BadRequest("The space could not be shared...");
+        }
+    
+        return Ok("Space shared successfully.");
     }
 
     private async Task CopyCategoriesAsync(LedgerDbContext from, LedgerDbContext to)

@@ -102,7 +102,7 @@ export const useSpaceStore = create<SpaceStoreState>()(
       },
     }),
     {
-      name: "expense-tracker-spaces-storage",
+      name: "ledger11-spaces-storage",
       skipHydration: true,
     }
   )
