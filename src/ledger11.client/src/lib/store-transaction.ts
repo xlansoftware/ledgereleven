@@ -143,7 +143,7 @@ export const useTransactionStore = create<TransactionStoreState>()(
       },
     }),
     {
-      name: "transaction-store",
+      name: "ledger11-transaction-store",
       skipHydration: true,
     }
   )

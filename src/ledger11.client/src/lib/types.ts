@@ -53,6 +53,7 @@ export interface Space {
   countTransactions?: number;
   countCategories?: number;
   totalValue?: number;
+  members?: string[]; // User emails of members in the space
 }
 
 export interface FilterRequest {

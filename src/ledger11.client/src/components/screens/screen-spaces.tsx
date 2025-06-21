@@ -14,6 +14,7 @@ import ConfirmMenuItem from "../history/ConfirmMenuItem";
 import { Space } from "@/lib/types";
 import SpaceEditForm from "../space/SpaceEditForm";
 import SpaceRow from "../space/SpaceRow";
+import { fetchWithAuth } from "@/api";
 
 export default function SpacesScreen() {
   const {
@@ -67,6 +68,28 @@ export default function SpacesScreen() {
       toast.error("Failed to update space");
       console.error(err);
     }
+  };
+
+  const handheleShare = async (spaceId: string, email: string) => {
+    console.log("Sharing space", spaceId, "with", email);
+    if (!spaceId || !email) {
+      return;
+    }
+
+    await fetchWithAuth('/api/space/share', {
+      method: 'POST',
+      body: JSON.stringify({ spaceId, email }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    toast.success("Done!");
+
+    await loadSpaces(true); // Reload spaces to reflect changes
+
+    // Reset sharing state
+    setSharingSpaceId(null);
   };
 
   return (
@@ -139,11 +162,7 @@ export default function SpacesScreen() {
 
       <ShareSpaceDialog
         spaceId={sharingSpaceId || ""}
-        onShare={(spaceId, email) => {
-          console.log("Sharing space", spaceId, "with", email);
-          toast.success("Shared!");
-          setSharingSpaceId(null);
-        }}
+        onShare={handheleShare}
         onCancel={() => {
           setSharingSpaceId(null);
         }}

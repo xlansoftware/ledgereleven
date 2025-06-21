@@ -45,6 +45,11 @@ export default function SpaceRow({ className, space, onClick }: SpaceRowProps) {
             <span>Transactions: {space.countTransactions}</span>
           )}
         </div>
+        <div className="pl-4 text-sm text-muted-foreground flex flex-row gap-2 overflow-hidden">
+          Members: {space.members?.length
+            ? space.members.join(", ")
+            : "No members"}
+        </div>
       </div>
     </div>
   );

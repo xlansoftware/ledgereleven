@@ -1,5 +1,4 @@
 export const tesseractLanguages = {
-    // ... (Keep the curated list) ...
     "afr": "Afrikaans", "amh": "Amharic", "ara": "Arabic", "asm": "Assamese", "aze": "Azerbaijani",
     "aze_cyrl": "Azerbaijani - Cyrillic", "bel": "Belarusian", "ben": "Bengali", "bod": "Tibetan",
     "bos": "Bosnian", "bre": "Breton", "bul": "Bulgarian", "cat": "Catalan; Valencian", "ceb": "Cebuano",

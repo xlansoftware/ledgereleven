@@ -79,14 +79,14 @@ public class ApiSpaceController : ControllerBase
                     _logger.LogTrace(ex, "Error processing details info for space {SpaceId}", space.Id);
                 }
 
-                var x = await _appDbContext.SpaceMembers
+                var members = await _appDbContext.SpaceMembers
                     .Include(m => m.User)
                     .Where(m => m.SpaceId == space.Id)
                     .Select(m => m.User.Email)
                     .ToListAsync();
-                if (x != null)
+                if (members != null)
                 {
-                    space.Members = x;
+                    space.Members = members;
                 }
 
             }
@@ -171,6 +171,8 @@ public class ApiSpaceController : ControllerBase
         return Ok();
     }
 
+    // POST: api/space/share
+    [HttpPost("share")]
     public async Task<IActionResult> Share([FromBody] ShareSpaceRequestDto request)
     {
         if (request == null || request.SpaceId == Guid.Empty || string.IsNullOrWhiteSpace(request.Email))
@@ -178,7 +180,16 @@ public class ApiSpaceController : ControllerBase
             return BadRequest("Invalid share request.");
         }
 
-        await _userSpace.ShareSpaceWithAsync(request.SpaceId, request.Email);
+        try
+        {
+            await _userSpace.ShareSpaceWithAsync(request.SpaceId, request.Email);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sharing space {SpaceId} with {Email}", request.SpaceId, request.Email);
+            return BadRequest("The space could not be shared...");
+        }
+    
         return Ok("Space shared successfully.");
     }
 
