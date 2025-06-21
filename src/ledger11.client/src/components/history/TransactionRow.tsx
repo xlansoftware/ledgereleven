@@ -60,9 +60,9 @@ export default function TransactionRow({
               </div>
             )}
           </div>
-          <div className="pl-2 pt-1 pb-1 flex-grow flex items-start justify-between">
+          <div className="pl-2 pt-1 pb-1 flex-grow flex items-start justify-between overflow-hidden">
             <div
-              className="flex items-start gap-2 cursor-pointer"
+              className="flex items-start gap-2 cursor-pointer truncate"
               onClick={() => hasDetails && setExpandedDetails(!expandedDetails)}
             >
               <div className="flex flex-row gap-2 items-center">
@@ -71,12 +71,14 @@ export default function TransactionRow({
                     <div className="font-medium">{title}</div>
                     <Badge variant="secondary">{countItems}</Badge>
                   </div>
-
-                  <div className="text-sm text-muted-foreground">
-                    {transaction.user ? `${transaction.user} • ` : ""}
-                    {formatDate(transaction.date!)}
+                  <div className="flex flex-wrap gap-x-2 text-sm text-muted-foreground overflow-hidden">
+                    <div className="truncate overflow-hidden text-ellipsis whitespace-nowrap">
+                      {transaction.user}
+                    </div>
+                    <div className="truncate overflow-hidden text-ellipsis whitespace-nowrap">
+                      {formatDate(transaction.date!)}
+                    </div>
                   </div>
-
                   <div className="text-sm text-muted-foreground">
                     {category}
                   </div>
@@ -84,7 +86,7 @@ export default function TransactionRow({
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <div className="text-right">
                 <div className="font-bold">
                   {transaction.value
