@@ -29,42 +29,44 @@ public static class GenerateCommands
 
         command.SetHandler(async (data, logLevel, email, count) =>
         {
-            var dataPath = Tools.DataPath(null, data);
-            // Console.WriteLine(dataPath);
+            await Tools.Catch(async () =>
+            {
+                var dataPath = Tools.DataPath(null, data);
 
-            var host = Tools.CreateHost(logLevel, dataPath);
-            using var scope = host.Services.CreateScope();
-            var services = scope.ServiceProvider;
+                var host = Tools.CreateHost(logLevel, dataPath);
+                using var scope = host.Services.CreateScope();
+                var services = scope.ServiceProvider;
 
-            var logger = services.GetRequiredService<ILogger<Program>>();
+                var logger = services.GetRequiredService<ILogger<Program>>();
 
-            var dbContext = services.GetRequiredService<AppDbContext>();
-            var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+                var dbContext = services.GetRequiredService<AppDbContext>();
+                var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
-            var user = await userManager.FindByEmailAsync(email);
-            if (user == null)
-                throw new Exception($"User {email} is not present.");
+                var user = await userManager.FindByEmailAsync(email);
+                if (user == null)
+                    throw new Exception($"User {email} is not present.");
 
-            if (user.CurrentSpaceId == null)
-                throw new Exception($"User {email} has not current space.");
+                if (user.CurrentSpaceId == null)
+                    throw new Exception($"User {email} has not current space.");
 
-            var space = await dbContext.Spaces.FirstOrDefaultAsync((s => s.Id == user.CurrentSpaceId));
-            if (space == null)
-                throw new Exception($"User {email} has not current space.");
+                var space = await dbContext.Spaces.FirstOrDefaultAsync((s => s.Id == user.CurrentSpaceId));
+                if (space == null)
+                    throw new Exception($"User {email} has not current space.");
 
-            logger.LogInformation($"Creating {count} records in {space.Name} for user {user.UserName} ...");
+                logger.LogInformation($"Creating {count} records in {space.Name} for user {user.UserName} ...");
 
-            logger.LogTrace($"Using data path {dataPath}");
-            var dbPath = Path.Combine(dataPath, $"space-{CurrentLedgerService.SanitizeFileName(space.Id.ToString())}.db");
-            var optionsBuilder = new DbContextOptionsBuilder<LedgerDbContext>()
-                .UseSqlite($"Data Source={dbPath};Pooling=false");
+                logger.LogTrace($"Using data path {dataPath}");
+                var dbPath = Path.Combine(dataPath, $"space-{CurrentLedgerService.SanitizeFileName(space.Id.ToString())}.db");
+                var optionsBuilder = new DbContextOptionsBuilder<LedgerDbContext>()
+                    .UseSqlite($"Data Source={dbPath};Pooling=false");
 
-            var context = new LedgerDbContext(optionsBuilder.Options);
-            await CurrentLedgerService.InitializeDbAsync(context);
+                var context = new LedgerDbContext(optionsBuilder.Options);
+                await CurrentLedgerService.InitializeDbAsync(context);
 
-            await Generate(context, count);
+                await Generate(context, count);
 
-            Console.WriteLine("Done.");
+                Console.WriteLine("Done.");
+            });
 
         }, dataOption, logLevelOption, emailOption, countOption);
 

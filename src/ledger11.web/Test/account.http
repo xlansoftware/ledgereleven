@@ -1,6 +1,9 @@
 @host = localhost:5139
 
 ###
+GET http://{{host}}/api/version
+
+###
 GET http://{{host}}/api/account/user
 
 ###

@@ -6,6 +6,8 @@ var rootCommand = new RootCommand("ledger11 CLI tool");
 rootCommand.AddListUsersComand();
 rootCommand.AddCreateUserComand();
 rootCommand.AddGenerateComand();
+rootCommand.AddInfoComand();
+rootCommand.AddTestUpgradeComand();
 
-// Run the CLI
-return await rootCommand.InvokeAsync(args);
+var result = await rootCommand.InvokeAsync(args);
+return Tools.ExitCode != 0 ? Tools.ExitCode : result;

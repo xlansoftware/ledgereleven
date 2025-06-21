@@ -29,7 +29,8 @@ public static class UserCommands
             var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
             var users = await userManager.Users.ToListAsync();
-            foreach (var user in users) {
+            foreach (var user in users)
+            {
                 Console.WriteLine($"{user.Email}");
             }
 
@@ -57,35 +58,38 @@ public static class UserCommands
 
         createUserCommand.SetHandler(async (logLevel, data, email, password) =>
         {
-            var host = Tools.CreateHost(logLevel, data);
-            using var scope = host.Services.CreateScope();
-            var services = scope.ServiceProvider;
-
-            var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-
-            var user = await userManager.FindByEmailAsync(email);
-            if (user == null)
+            await Tools.Catch(async () =>
             {
-                var newUser = new ApplicationUser { Email = email, UserName = email, EmailConfirmed = true };
-                var result = await userManager.CreateAsync(newUser, password);
+                var host = Tools.CreateHost(logLevel, data);
+                using var scope = host.Services.CreateScope();
+                var services = scope.ServiceProvider;
 
-                if (result.Succeeded)
+                var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+
+                var user = await userManager.FindByEmailAsync(email);
+                if (user == null)
                 {
-                    Console.WriteLine("User created successfully.");
+                    var newUser = new ApplicationUser { Email = email, UserName = email, EmailConfirmed = true };
+                    var result = await userManager.CreateAsync(newUser, password);
 
-                    var space = await services.CreateSpaceAsync(newUser, "Ledger");
-                    Console.WriteLine($"User space {space.Name} for user {newUser.Email} created successfully.");
+                    if (result.Succeeded)
+                    {
+                        Console.WriteLine("User created successfully.");
+
+                        var space = await services.CreateSpaceAsync(newUser, "Ledger");
+                        Console.WriteLine($"User space {space.Name} for user {newUser.Email} created successfully.");
+                    }
+                    else
+                    {
+                        foreach (var error in result.Errors)
+                            Console.WriteLine($"Error: {error.Description}");
+                    }
                 }
                 else
                 {
-                    foreach (var error in result.Errors)
-                        Console.WriteLine($"Error: {error.Description}");
+                    Console.WriteLine("User already exists.");
                 }
-            }
-            else
-            {
-                Console.WriteLine("User already exists.");
-            }
+            });
 
         }, logLevelOption, dataOption, emailOption, passwordOption);
 

@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { count, downloadUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,6 +32,7 @@ import { useSpaceStore } from "@/lib/store-space";
 import { useTransactionStore } from "@/lib/store-transaction";
 import { fetchWithAuth } from "@/api";
 import { useConfirmDialog } from "../dialog/ConfirmDialogContext";
+import useVersion from "@/hooks/useVersion";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -42,6 +43,8 @@ export default function Settings() {
   const { confirm } = useConfirmDialog();
 
   const [isImporting, setIsImporting] = useState(false);
+
+  const { appVersion } = useVersion();
 
   useEffect(() => {
     loadSpaces();
@@ -302,10 +305,27 @@ export default function Settings() {
           </CardContent>
           <CardFooter>
             <div className="text-sm text-muted-foreground">
-              You have {count(current?.countTransactions, "record", "records")} stored.
+              You have {count(current?.countTransactions, "record", "records")}{" "}
+              stored.
             </div>
           </CardFooter>
         </Card>
+
+        {appVersion && (
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-sm text-muted-foreground">
+                Version: {appVersion.version}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Commit: {appVersion.commit}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Built: {appVersion.built}
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

@@ -10,7 +10,9 @@ Personal expense tracker
 nvm install --lts
 nvm use --lts
 npm i
-cd src/ledger11.client
+cd ./src/ledger11.client
+npm i --legacy-peer-deps
+cd ./src/ledger11.playwright
 npm i --legacy-peer-deps
 ```
 
@@ -24,31 +26,52 @@ dotnet tool install --global dotnet-ef
 npm run test
 ```
 
-Run the backend tests locally:
+### Run the backend tests locally
 
 ```bash
 cd src
 dotnet test
 ```
 
-Run the backend tests in a container:
+### Run the backend tests in a container
 
 ```bash
 cd .devops/test/backend
 docker-compose run --build --rm app-test
 ```
 
-Run the frontend test in a container.
+### Run the frontend tests in a container
 
 ```bash
+# generate self-sign certificates
 cd .devops/test/web/certs
 ./generate-test-certificates.sh
 cd ..
+# start the tests
 docker-compose run --build --rm test
 ```
 
-Run the frontend
+### Run the frontend tests locally:
 
+By default, the backend (```ledger11.web``` project) is configured to use "single-user mode". Uncomment the "Authentication" config in the ```application.json``` file to enable the OpenID connect authentication.
+
+```bash
+# start the auth server
+cd ./src/ledger11.auth
+dotnet run
+```
+Leave it running and open another terminal window for the backend:
+```bash
+# start the backend
+cd ./src/ledger11.web
+dotnet run
+```
+Leave it running and open another terminal for the playwright tests
+```bash
+# start the playwright tests
+cd ./src/ledger11.webtests
+npx playwright test
+```
 
 ## Start
 

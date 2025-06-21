@@ -13,6 +13,8 @@ namespace ledger11.cli;
 
 public static class Tools
 {
+    public static int ExitCode = 0;
+
     public static Option<string> DataOption => new Option<string>("--data", description: "Data folder") { IsRequired = false };
     public static Option<LogLevel> LogLevelOption => new Option<LogLevel>(
         name: "--log-level",
@@ -94,6 +96,10 @@ public static class Tools
 
     public static string DataPath(ILogger? logger, string path)
     {
+        logger?.LogTrace($"--data = {path}");
+        logger?.LogTrace($"AppContext.BaseDirectory = {AppContext.BaseDirectory}");
+        logger?.LogTrace($"Environment.CurrentDirectory = {Environment.CurrentDirectory}");
+
         if (string.IsNullOrWhiteSpace(path))
         {
             if (File.Exists(Path.Combine(AppContext.BaseDirectory, "appsettings.json")))
@@ -106,7 +112,7 @@ public static class Tools
             }
             else
             {
-                throw new Exception("The default location has not appsettings.json. Use --data option to proveide path to the db files or appsettings.json file.");
+                throw new Exception("The default location has no appsettings.json. Use --data option to proveide path to the db files or appsettings.json file.");
             }
 
             logger?.LogTrace($"Using data path {path} ...");
@@ -119,6 +125,8 @@ public static class Tools
             return path;
         }
 
+        logger?.LogTrace($"Found appsettings.json at {configFile} ...");
+
         var config = new ConfigurationBuilder()
             .SetBasePath(path)
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
@@ -130,6 +138,45 @@ public static class Tools
             throw new Exception($"Path {path} has appsettings.json, but it has no setting for AppConfig:DataPath...");
         }
 
-        return result;
+        return Path.GetFullPath(result, path);
     }
+
+    public static ILogger CreateConsoleLogger(LogLevel level, string name)
+    {
+        var loggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder
+                .AddConsole()
+                .SetMinimumLevel(level);
+        });
+        return loggerFactory.CreateLogger(name);
+    }
+
+    public static Task Catch(Func<Task> action)
+    {
+        try
+        {
+            return action();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(ex.Message);
+            Tools.ExitCode = 1;
+            return Task.CompletedTask;
+        }
+    }
+
+    public static void Catch(Action action)
+    {
+        try
+        {
+            action();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(ex.Message);
+            Tools.ExitCode = 1;
+        }
+    }
+
 }

@@ -8,7 +8,7 @@ public class SingleUserAuthHandler : AuthenticationHandler<AuthenticationSchemeO
 {
     private readonly TimeProvider _timeProvider;
 
-    private readonly string _name = "TessaSterling";
+    private readonly string _name = "tessa.sterling@xlansoftware.com";
     private readonly string _email = "tessa.sterling@xlansoftware.com";
     private readonly Guid _id = Guid.Parse("a7d3f8b2-4c1e-4f5a-9e6d-3b8c2a1f4e5d");
 
