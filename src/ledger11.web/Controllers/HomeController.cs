@@ -12,11 +12,14 @@ namespace ledger11.web.Controllers;
 
 public class HomeController : Controller
 {
+    private readonly IHostEnvironment _hostEnvironment;
+
     private readonly ILogger<HomeController> _logger;
 
-    public HomeController(ILogger<HomeController> logger, AppDbContext appDbContext)
+    public HomeController(ILogger<HomeController> logger, IHostEnvironment hostEnvironment)
     {
         _logger = logger;
+        _hostEnvironment = hostEnvironment;
     }
 
     public IActionResult Index()
@@ -25,7 +28,34 @@ public class HomeController : Controller
         return View();
     }
 
-    #if DEBUG
+    [HttpGet("/api/version")]
+    public async Task<IActionResult> Version()
+    {
+        var filePath = Path.Combine(_hostEnvironment.ContentRootPath, "version.txt");
+
+        if (!System.IO.File.Exists(filePath))
+        {
+            return NotFound("Version file not found.");
+        }
+
+        var lines = await System.IO.File.ReadAllLinesAsync(filePath);
+        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var line in lines)
+        {
+            var parts = line.Split(':', 2);
+            if (parts.Length == 2)
+            {
+                var key = parts[0].Trim().ToLower();  // normalize keys to lowercase
+                var value = parts[1].Trim();
+                result[key] = value;
+            }
+        }
+
+        return Ok(result);
+    }
+
+#if DEBUG
     public IActionResult CheckHeaders()
     {
         var result = new
@@ -51,7 +81,7 @@ public class HomeController : Controller
 
         return Json(result);
     }
-    #endif
+#endif
 
     public IActionResult Privacy()
     {
