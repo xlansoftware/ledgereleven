@@ -139,7 +139,8 @@ export default function SpacesScreen() {
 
       <ShareSpaceDialog
         spaceId={sharingSpaceId || ""}
-        onShare={() => {
+        onShare={(spaceId, email) => {
+          console.log("Sharing space", spaceId, "with", email);
           toast.success("Shared!");
           setSharingSpaceId(null);
         }}

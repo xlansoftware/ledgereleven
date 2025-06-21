@@ -8,6 +8,9 @@ using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
+using ledger11.data;
+using Microsoft.EntityFrameworkCore;
 
 namespace ledger11.tests;
 
@@ -92,7 +95,7 @@ public class TestApiSpace
         var deleteLastResult = await controller.Delete(list.Current!.Id);
         var okLastDelete = Assert.IsType<OkObjectResult>(deleteLastResult);
         var lastList = Assert.IsType<SpaceListResponseDto>(okLastDelete.Value);
-        
+
         // if the last space is deleted, a new one is automatically created and assigned
         lastList.Current.Should().NotBeNull();
         lastList.Spaces.Should().HaveCountGreaterThan(0);
@@ -159,5 +162,77 @@ public class TestApiSpace
         var listData = Assert.IsType<SpaceListResponseDto>(okList.Value);
         listData.Current.Should().NotBeNull();
         listData.Current?.Id.Should().Be(space.Id);
+    }
+
+    [Fact]
+    public async Task Test_Share()
+    {
+        // Arrange
+        using var serviceProvider = await TestExtesions.MockLedgerServiceProviderAsync("xuser1");
+        var dbContext = serviceProvider.GetRequiredService<AppDbContext>();
+
+        // Create another user
+        var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var otherUser = new ApplicationUser
+        {
+            UserName = "otheremail@example.com",
+            Email = "otheremail@example.com"
+        };
+        var createUserResult = await userManager.CreateAsync(otherUser);
+        Assert.True(createUserResult.Succeeded, "Failed to create other user");
+        var otherUserId = otherUser.Id;
+
+        Console.WriteLine($"Created other user: {otherUser.UserName} ({otherUserId})");
+        foreach (var user in dbContext.Users)
+        {
+            Console.WriteLine($"User: {user.UserName} ({user.Id})");
+        }
+
+        var controller = ActivatorUtilities.CreateInstance<ApiSpaceController>(serviceProvider);
+
+        // Get the id of the current space
+        var list = await controller.List();
+        var okList = Assert.IsType<OkObjectResult>(list);
+        var listData = Assert.IsType<SpaceListResponseDto>(okList.Value);
+        var currentSpaceId = listData.Current?.Id ?? Guid.Empty;
+        Assert.NotEqual(Guid.Empty, currentSpaceId);
+        Assert.NotEmpty(listData.Spaces);
+
+        // Share the space with the other user
+        var shareRequest = new ShareSpaceRequestDto
+        {
+            SpaceId = currentSpaceId,
+            Email = otherUser.Email
+        };
+
+        var shareResult = await controller.Share(shareRequest);
+        Assert.IsType<OkObjectResult>(shareResult);
+
+        // Verify the other user has access to the space
+        var sharedSpace = await dbContext.Spaces.FindAsync(currentSpaceId);
+        Assert.NotNull(sharedSpace);
+        Assert.Contains(sharedSpace.Members, m => m.UserId == otherUserId && m.AccessLevel == AccessLevel.Editor);
+        Console.WriteLine($"Space '{sharedSpace.Name}' shared with {otherUser.UserName} ({otherUserId})");
+        var sharedSpaces = await dbContext.SpaceMembers
+            .Where(m => m.UserId == otherUserId)
+            .Select(m => m.Space)
+            .ToListAsync();
+        Assert.Contains(sharedSpaces, s => s.Id == currentSpaceId);
+        Console.WriteLine($"Other user has access to shared space: {sharedSpaces.Count} spaces found.");
+        foreach (var space in sharedSpaces)
+        {
+            Console.WriteLine($"Shared Space: {space.Name} ({space.Id})");
+        }
+        Assert.NotEmpty(sharedSpaces);
+
+        // Check via list
+        var list2 = await controller.List(includeDetails: true);
+        var okList2 = Assert.IsType<OkObjectResult>(list2);
+        var listData2 = Assert.IsType<SpaceListResponseDto>(okList2.Value);
+        Assert.NotEmpty(listData.Spaces);
+        // assert listData.Spaces[0].Members has member otherUser.Email 
+        Assert.NotEmpty(listData2.Spaces[0].Members);
+        Assert.Contains(listData2.Spaces[0].Members, m => m == otherUser.Email);
+
     }
 }
