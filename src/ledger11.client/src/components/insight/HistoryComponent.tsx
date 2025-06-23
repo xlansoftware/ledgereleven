@@ -4,7 +4,7 @@ import { useCategoryStore } from "@/lib/store-category";
 import { Category } from "@/lib/types";
 import BarChartComponent from "@/components/insight/BarChartComponent";
 import HorizontalBarChartComponent from "./HorizontalBarChartComponent";
-import { formatCurrency } from "@/lib/utils";
+// import { formatCurrency } from "@/lib/utils";
 
 export interface HistoryRecord {
   date: string;
