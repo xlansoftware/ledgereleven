@@ -44,3 +44,7 @@ Content-Type: application/json
   "sqlQuery": "\nSELECT Date(Date) as Date, SUM(Value) as TotalPurchases\nFROM Transactions\nWHERE Date >= date('now', '-3 months')\nGROUP BY Date(Date)\nORDER BY Date(Date)\n",
   "widgetParamsJson": "\n{\n  \"chartType\": \"Line\",\n  \"title\": \"Purchases for the Last 3 Months\",\n  \"xAxisKey\": \"Date\",\n  \"yAxisKey\": \"TotalPurchases\",\n  \"data\": []\n}\n"
 }
+
+###
+GET http://{{host}}/api/insight/history
+

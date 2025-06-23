@@ -101,7 +101,7 @@ public class InsightController : ControllerBase
         return value >= decimal.Zero;
     }
 
-    [HttpGet("bars/{timeZoneId?}")]
+    [HttpGet("history/{timeZoneId?}")]
     public async Task<IActionResult> History(string timeZoneId = "Europe/Paris")
     {
         using var db = await _currentLedger.GetLedgerDbContextAsync();
@@ -126,15 +126,15 @@ public class InsightController : ControllerBase
 
             // Ensure we have a dictionary for each day
             var dateKey = date.ToString("yyyy-MM-dd");
-            AddToHistoryRecord(result.Day, dateKey, value, category);
+            AddToHistoryRecord(result.Dayly, dateKey, value, category);
 
             // Handle week
             var weekKey = $"{date.Year}-W{CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(date, CalendarWeekRule.FirstDay, DayOfWeek.Monday):D2}";
-            AddToHistoryRecord(result.Week, weekKey, value, category);
+            AddToHistoryRecord(result.Weekly, weekKey, value, category);
             
             // Handle month
             var monthKey = $"{date.Year}-{date.Month:D2}";
-            AddToHistoryRecord(result.Month, monthKey, value, category);
+            AddToHistoryRecord(result.Monthly, monthKey, value, category);
         });
 
         return Ok(result);
@@ -266,7 +266,7 @@ public class HistoryRecord
 
 public class HistoryResult
 {
-    public List<HistoryRecord> Month = new();
-    public List<HistoryRecord> Week = new();
-    public List<HistoryRecord> Day = new();
+    public List<HistoryRecord> Monthly { get; set; } = new();
+    public List<HistoryRecord> Weekly { get; set; } = new();
+    public List<HistoryRecord> Dayly { get; set; } = new();
 }
