@@ -77,13 +77,13 @@ public class InsightController : ControllerBase
 
             foreach (var bucket in buckets)
             {
-                if (value < decimal.Zero)
+                if (IsExpense(value))
                 {
                     AddToBucket(expense[bucket], category, Math.Abs(value));
                 }
                 else
                 {
-                    AddToBucket(income[bucket], category, value);
+                    AddToBucket(income[bucket], category, Math.Abs(value));
                 }
             }
         });
@@ -93,6 +93,12 @@ public class InsightController : ControllerBase
             Income = income,
             Expense = expense
         });
+    }
+
+    private bool IsExpense(decimal value)
+    {
+        //TODO: This should be configurable
+        return value >= decimal.Zero;
     }
 
     [HttpGet("bars/{timeZoneId?}")]
