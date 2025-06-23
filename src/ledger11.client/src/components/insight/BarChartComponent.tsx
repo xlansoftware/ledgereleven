@@ -10,7 +10,9 @@ import {
   XAxis,
   ResponsiveContainer,
   LabelList,
+  Tooltip,
 } from "recharts";
+import { formatCurrency } from "@/lib/utils";
 
 
 interface BarChartComponentProps {
@@ -30,7 +32,11 @@ export default function BarChartComponent({
   return (
     <ChartContainer config={{}}>
       <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data}>
+        <BarChart data={data} className="pt-5">
+          <Tooltip
+            formatter={(value: number, name: string) => [`${value}`, name]}
+          />
+
           <CartesianGrid vertical={false} />
           <XAxis
             dataKey="date"
@@ -46,10 +52,9 @@ export default function BarChartComponent({
             radius={4}
           >
             <LabelList
-              position="top"
-              offset={12}
+              position="center"
               className="fill-foreground"
-              fontSize={12}
+              content={({ value }) => formatCurrency(Number(value), 2)}
             />
           </Bar>
         </BarChart>

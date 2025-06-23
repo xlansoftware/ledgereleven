@@ -3,6 +3,8 @@ import { fetchWithAuth } from "@/api";
 import { useCategoryStore } from "@/lib/store-category";
 import { Category } from "@/lib/types";
 import BarChartComponent from "@/components/insight/BarChartComponent";
+import HorizontalBarChartComponent from "./HorizontalBarChartComponent";
+import { formatCurrency } from "@/lib/utils";
 
 export interface HistoryRecord {
   date: string;
@@ -14,6 +16,14 @@ export interface HistoryResult {
   monthly: HistoryRecord[];
   weekly: HistoryRecord[];
   dayly: HistoryRecord[];
+}
+
+function ChartTitle({ title }: { title: string }) {
+  return (
+    <h3 className="text-lg font-semibold text-gray-900 dark:text-white w-full text-center">
+      {title}
+    </h3>
+  );
 }
 
 export default function HistoryComponent() {
@@ -46,12 +56,20 @@ export default function HistoryComponent() {
 
   const { dayly, weekly, monthly } = data ?? {};
 
+  const cleanValues = (data: HistoryRecord[]) => {
+    data.forEach((item) => {
+      item.value = Math.round(item.value);
+    })
+    return data;
+  };
+
   return (
     <div className="relative">
       {dayly && (
         <div className="m-4">
+          <ChartTitle title="Last 7 days" />
           <BarChartComponent
-            data={dayly.slice(-7)}
+            data={cleanValues(dayly.slice(-7))}
             title="Daily"
             categories={colors}
           />
@@ -59,18 +77,19 @@ export default function HistoryComponent() {
       )}
       {weekly && (
         <div className="m-4">
-          <BarChartComponent
-            data={weekly.slice(-7)}
+          <ChartTitle title="Last 7 weeks" />
+          <HorizontalBarChartComponent
+            data={cleanValues(weekly.slice(-7).reverse())}
             title="Weekly"
             categories={colors}
           />
-          <div>Last 7 weeks</div>
         </div>
       )}
       {monthly && (
         <div className="m-4">
-          <BarChartComponent
-            data={monthly.slice(-12)}
+          <ChartTitle title="Last 12 months" />
+          <HorizontalBarChartComponent
+            data={cleanValues(monthly.slice(-12).reverse())}
             title="Monthly"
             categories={colors}
           />
