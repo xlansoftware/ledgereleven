@@ -25,6 +25,17 @@ public static class Extensions
         var authority = configuration["Issuer"];
         var clientId = configuration["Client:ClientId"] ?? Guid.NewGuid().ToString();
 
+        // Create logger instance
+        using var loggerFactory = LoggerFactory.Create(loggingBuilder =>
+        {
+            loggingBuilder
+                .AddConsole()
+                .AddDebug()
+                .SetMinimumLevel(LogLevel.Information);
+        });
+
+        var logger = loggerFactory.CreateLogger("Authentication");
+
         services.AddAuthentication("Cookies")
             .AddCookie("Cookies")
             .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
@@ -42,7 +53,7 @@ public static class Extensions
                     ValidateLifetime = true
                 };
             })
-            .AddMultiProviderAuthentication(builder.Configuration);
+            .AddMultiProviderAuthentication(builder.Configuration, logger);
 
         services.Configure<AuthConfig>(builder.Configuration.GetSection("AuthConfig"));
         services.AddSingleton<ITokenService, TokenService>();
