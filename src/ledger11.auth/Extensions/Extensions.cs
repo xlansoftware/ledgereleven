@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Threading.RateLimiting;
 using ledger11.auth.Data;
+using ledger11.auth.Extensions;
 using ledger11.auth.Models;
 using ledger11.auth.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -40,7 +41,8 @@ public static class Extensions
                     ValidateIssuerSigningKey = true,
                     ValidateLifetime = true
                 };
-            });
+            })
+            .AddMultiProviderAuthentication(builder.Configuration);
 
         services.Configure<AuthConfig>(builder.Configuration.GetSection("AuthConfig"));
         services.AddSingleton<ITokenService, TokenService>();

@@ -13,6 +13,7 @@ builder.AddAuthSupport();
 // Ability to send emails for email confirmation, password reset, etc.
 builder.AddEmailsSupport();
 
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
