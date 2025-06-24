@@ -22,17 +22,25 @@ public static class UserCommands
 
         listUsersCommand.SetHandler(async (data, logLevel) =>
         {
-            var host = Tools.CreateHost(logLevel, data);
-            using var scope = host.Services.CreateScope();
-            var services = scope.ServiceProvider;
-
-            var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-
-            var users = await userManager.Users.ToListAsync();
-            foreach (var user in users)
+            await Tools.Catch(async () =>
             {
-                Console.WriteLine($"{user.Email}");
-            }
+
+                var consoleLogger = Tools.CreateConsoleLogger(logLevel, "list-users");
+                var dataPath = Tools.DataPath(consoleLogger, data);
+
+                var host = Tools.CreateHost(logLevel, dataPath);
+
+                using var scope = host.Services.CreateScope();
+                var services = scope.ServiceProvider;
+
+                var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+
+                var users = await userManager.Users.ToListAsync();
+                foreach (var user in users)
+                {
+                    Console.WriteLine($"{user.Email}");
+                }
+            });
 
         }, dataOption, logLevelOption);
 

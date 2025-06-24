@@ -1,15 +1,7 @@
 @host = localhost:5139
 
 ###
-GET http://{{host}}/api/insight
-X-Requested-With: XMLHttpRequest
-
-###
 GET http://{{host}}/api/transaction
-X-Requested-With: XMLHttpRequest
-
-###
-POST http://{{host}}/api/transaction/generate?count=10000
 X-Requested-With: XMLHttpRequest
 
 ###

@@ -6,6 +6,8 @@ using ledger11.model.Data;
 using ledger11.service;
 using TimeZoneConverter;
 using Microsoft.Extensions.Options;
+using ledger11.data;
+using System.Globalization;
 
 namespace ledger11.web.Controllers;
 
@@ -68,52 +70,74 @@ public class InsightController : ControllerBase
         var expense = newSet();
         var income = newSet();
 
-        await foreach (var transaction in db.Transactions
-            .Include(t => t.Category)
-            .Include(t => t.TransactionDetails)
-            .ThenInclude(td => td.Category)
-            .AsAsyncEnumerable())
+        // Scan all transactions and categorize them by period and categor
+        await Scan(db, timeZone, (value, category, localDate) =>
         {
-            var utcDate = transaction.Date;
-            if (utcDate == null) continue;
-
-            // _logger.LogInformation($"Processing transaction ID: {transaction.Id}, Date: {transaction.Date}, Value: {transaction.Value}");
-
-            // Convert each UTC transaction time to local time
-            var localDate = TimeZoneInfo.ConvertTimeFromUtc(utcDate.Value, timeZone);
             var buckets = GetRelevantBuckets(localDate, today, startOfWeek, startOfMonth, startOfYear);
 
-            if (transaction.TransactionDetails != null && transaction.TransactionDetails.Any())
+            foreach (var bucket in buckets)
             {
-                foreach (var detail in transaction.TransactionDetails)
+                if (IsExpense(value))
                 {
-                    var value = detail.Value;
-                    var category = detail.Category?.Name ?? "Uncategorized";
-
-                    foreach (var bucket in buckets)
-                    {
-                        AddToBucket((value < decimal.Zero ? income : expense)[bucket], category, Math.Abs(value));
-                    }
+                    AddToBucket(expense[bucket], category, Math.Abs(value));
+                }
+                else
+                {
+                    AddToBucket(income[bucket], category, Math.Abs(value));
                 }
             }
-            else
-            {
-                var value = transaction.Value;
-
-                var category = transaction.Category?.Name ?? "Uncategorized";
-
-                foreach (var bucket in buckets)
-                {
-                    AddToBucket((value < decimal.Zero ? income : expense)[bucket], category, Math.Abs(value));
-                }
-            }
-        }
+        });
 
         return Ok(new TotalByPeriodByCategoryResult()
         {
             Income = income,
             Expense = expense
         });
+    }
+
+    private bool IsExpense(decimal value)
+    {
+        //TODO: This should be configurable
+        return value >= decimal.Zero;
+    }
+
+    [HttpGet("history/{timeZoneId?}")]
+    public async Task<IActionResult> History(string timeZoneId = "Europe/Paris")
+    {
+        using var db = await _currentLedger.GetLedgerDbContextAsync();
+
+        TimeZoneInfo timeZone;
+        try
+        {
+            // Converts IANA or Windows time zone ID to platform-compatible ID
+            timeZone = TZConvert.GetTimeZoneInfo(timeZoneId);
+        }
+        catch
+        {
+            // Default fallback
+            timeZone = TZConvert.GetTimeZoneInfo("Europe/Paris");
+        }
+
+        var result = new HistoryResult();
+
+        await Scan(db, timeZone, (value, category, localDate) =>
+        {
+            var date = localDate.Date;
+
+            // Ensure we have a dictionary for each day
+            var dateKey = date.ToString("yyyy-MM-dd");
+            AddToHistoryRecord(result.Dayly, dateKey, value, category);
+
+            // Handle week
+            var weekKey = $"{date.Year}-W{CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(date, CalendarWeekRule.FirstDay, DayOfWeek.Monday):D2}";
+            AddToHistoryRecord(result.Weekly, weekKey, value, category);
+            
+            // Handle month
+            var monthKey = $"{date.Year}-{date.Month:D2}";
+            AddToHistoryRecord(result.Monthly, monthKey, value, category);
+        });
+
+        return Ok(result);
     }
 
     private static List<string> GetRelevantBuckets(
@@ -159,10 +183,90 @@ public class InsightController : ControllerBase
             bucket[category] = value;
     }
 
+    private static void AddToHistoryRecord(
+        List<HistoryRecord> records,
+        string date,
+        decimal value,
+        string category)
+    {
+        if (records.Count == 0 || records.Last().Date != date)
+        {
+            records.Add(new HistoryRecord
+            {
+                Date = date,
+                Value = 0,
+                ByCategory = new Dictionary<string, decimal>()
+            });
+        }
+
+        var record = records.Last();
+        record.Value += value;
+
+        if (record.ByCategory.ContainsKey(category))
+            record.ByCategory[category] += value;
+        else
+            record.ByCategory[category] = value;
+    }
+
+    // Scans all transactions in the database, converting their UTC date to local time
+    // and applying the provided action to each transaction's value and category.
+    // This allows for processing transactions in a time zone-aware manner.
+    // The action receives the value, category name, and local date of the transaction.
+    private async Task Scan(LedgerDbContext db, TimeZoneInfo timeZone, Action<decimal, string, DateTime> action)
+    {
+        await foreach (var transaction in db.Transactions
+            .Include(t => t.Category)
+            .Include(t => t.TransactionDetails)
+            .ThenInclude(td => td.Category)
+            .OrderBy(t => t.Date)
+            .AsAsyncEnumerable())
+        {
+            var utcDate = transaction.Date;
+            if (utcDate == null) continue;
+
+            // Convert each UTC transaction time to local time
+            var localDate = TimeZoneInfo.ConvertTimeFromUtc(utcDate.Value, timeZone);
+
+            if (transaction.TransactionDetails != null && transaction.TransactionDetails.Any())
+            {
+                foreach (var detail in transaction.TransactionDetails)
+                {
+                    var value = detail.Value;
+                    var category = detail.Category?.Name ?? "Uncategorized";
+
+                    action(value, category, localDate);
+                }
+            }
+            else
+            {
+                var value = transaction.Value;
+                var category = transaction.Category?.Name ?? "Uncategorized";
+
+                action(value, category, localDate);
+            }
+        }
+
+    }
+
+
 }
 
 public class TotalByPeriodByCategoryResult
 {
     public Dictionary<string, Dictionary<string, decimal>> Expense { get; set; } = new();
     public Dictionary<string, Dictionary<string, decimal>> Income { get; set; } = new();
+}
+
+public class HistoryRecord
+{
+    public string Date { get; set; } = string.Empty;
+    public decimal Value { get; set; }
+    public Dictionary<string, decimal> ByCategory { get; set; } = new();
+}
+
+public class HistoryResult
+{
+    public List<HistoryRecord> Monthly { get; set; } = new();
+    public List<HistoryRecord> Weekly { get; set; } = new();
+    public List<HistoryRecord> Dayly { get; set; } = new();
 }
