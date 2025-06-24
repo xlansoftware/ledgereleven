@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.Twitter;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Security.Claims;
 
 namespace ledger11.auth.Extensions;
 
@@ -78,6 +79,33 @@ public static class AuthenticationExtensions
             logger?.LogInformation("Twitter authentication configured");
         }
 
+        // GitHub OAuth
+        var githubSettings = config.GetSection("Authentication:GitHub").Get<AuthProviderSettings>();
+        if (githubSettings?.Enable == true && ValidateSettings(githubSettings, "GitHub"))
+        {
+            builder.AddOAuth("GitHub", options =>
+            {
+                options.ClientId = githubSettings.ClientId;
+                options.ClientSecret = githubSettings.ClientSecret;
+
+                options.AuthorizationEndpoint = "https://github.com/login/oauth/authorize";
+                options.TokenEndpoint = "https://github.com/login/oauth/access_token";
+                options.UserInformationEndpoint = "https://api.github.com/user";
+
+                options.CallbackPath = new PathString("/signin-github");
+
+                options.Scope.Add("user:email"); // Request email scope
+
+                options.ClaimActions.MapJsonKey(ClaimTypes.NameIdentifier, "id");
+                options.ClaimActions.MapJsonKey(ClaimTypes.Name, "login");
+                options.ClaimActions.MapJsonKey(ClaimTypes.Email, "email");
+                options.ClaimActions.MapJsonKey("urn:github:name", "name");
+                options.ClaimActions.MapJsonKey("urn:github:avatar", "avatar_url");
+
+                options.SaveTokens = true;
+            });
+            logger?.LogInformation("GitHub authentication configured");
+        }
         return builder;
 
         bool ValidateSettings(AuthProviderSettings settings, string providerName)
