@@ -13,6 +13,7 @@ builder.AddAuthSupport();
 // Ability to send emails for email confirmation, password reset, etc.
 builder.AddEmailsSupport();
 
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
@@ -22,10 +23,7 @@ builder.Services.AddMemoryCache();
 
 var app = builder.Build();
 
-app.UseForwardedHeaders(new ForwardedHeadersOptions
-{
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-});
+app.UseDefaultForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

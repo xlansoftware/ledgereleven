@@ -36,6 +36,7 @@
     <ProjectReference Include="..\ledger11.service\ledger11.service.csproj" />
     <ProjectReference Include="..\ledger11.model\ledger11.model.csproj" />
     <ProjectReference Include="..\ledger11.data\ledger11.data.csproj" />
+    <ProjectReference Include="..\ledger11.lib\ledger11.lib.csproj" />
   </ItemGroup>
 
 </Project>

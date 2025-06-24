@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Threading.RateLimiting;
 using ledger11.auth.Data;
+using ledger11.auth.Extensions;
 using ledger11.auth.Models;
 using ledger11.auth.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -24,6 +25,17 @@ public static class Extensions
         var authority = configuration["Issuer"];
         var clientId = configuration["Client:ClientId"] ?? Guid.NewGuid().ToString();
 
+        // Create logger instance
+        using var loggerFactory = LoggerFactory.Create(loggingBuilder =>
+        {
+            loggingBuilder
+                .AddConsole()
+                .AddDebug()
+                .SetMinimumLevel(LogLevel.Information);
+        });
+
+        var logger = loggerFactory.CreateLogger("Authentication");
+
         services.AddAuthentication("Cookies")
             .AddCookie("Cookies")
             .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
@@ -40,7 +52,8 @@ public static class Extensions
                     ValidateIssuerSigningKey = true,
                     ValidateLifetime = true
                 };
-            });
+            })
+            .AddMultiProviderAuthentication(builder.Configuration, logger);
 
         services.Configure<AuthConfig>(builder.Configuration.GetSection("AuthConfig"));
         services.AddSingleton<ITokenService, TokenService>();

@@ -1,6 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 COPY ledger11.sln ./
+COPY ledger11.lib/ledger11.lib.csproj ledger11.lib/
 COPY ledger11.auth/ledger11.auth.csproj ledger11.auth/
 COPY ledger11.web/ledger11.web.csproj ledger11.web/
 COPY ledger11.service/ledger11.service.csproj ledger11.service/
