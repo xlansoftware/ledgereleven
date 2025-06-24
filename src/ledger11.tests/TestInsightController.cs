@@ -100,7 +100,7 @@ public class TestInsightController
         var Groceries = categories.FirstOrDefault(c => c.Name == "Groceries")!;
         var Education = categories.FirstOrDefault(c => c.Name == "Education")!;
 
-        var now = DateTime.UtcNow;
+        var now = new DateTime(2025, 6, 25);
         var today = now.Date;
         var startOfWeek = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
         var startOfMonth = new DateTime(today.Year, today.Month, 1);
@@ -110,28 +110,28 @@ public class TestInsightController
         var tx1 = new Transaction
         {
             Value = 50,
-            Date = now.AddDays(-1),
+            Date = now.AddDays(-1),     // 2025-06-24 Tuesday    2025-W26
             CategoryId = Groceries.Id,
             Notes = "Note abc",
         };
         var tx2 = new Transaction
         {
             Value = 150,
-            Date = now.AddDays(-5),
+            Date = now.AddDays(-5),     // 2025-06-20 Friday     2025-W25
             CategoryId = Education.Id,
             Notes = "Another note",
         };
         var tx3 = new Transaction
         {
             Value = 75,
-            Date = now,
+            Date = now,                 // 2025-06-25 Wednesday  2025-W26
             CategoryId = Groceries.Id,
             Notes = "note XYZ",
         };
         var tx4 = new Transaction
         {
             Value = 200,
-            Date = now.AddDays(-3),
+            Date = now.AddDays(-3),     // 2025-06-22 Saturday   2025-W25
             CategoryId = Education.Id,
             Notes = "Some other note",
         };
@@ -157,19 +157,20 @@ public class TestInsightController
             });
 
         // Assert weekly
+        var json = JsonSerializer.Serialize(response1.Weekly);
+        Console.WriteLine(json);
         Assert.Collection(response1.Weekly,
             item =>
             {
-                Assert.Equal(400.0m, item.Value);
-                Assert.Equal(2, item.ByCategory.Count);
+                Assert.Equal(350.0m, item.Value);
+                Assert.Single(item.ByCategory);
                 Assert.Equal(350.0m, item.ByCategory["Education"]);
-                Assert.Equal(50.0m, item.ByCategory["Groceries"]);
             },
             item =>
             {
-                Assert.Equal(75.0m, item.Value);
+                Assert.Equal(125.0m, item.Value);
                 Assert.Single(item.ByCategory);
-                Assert.Equal(75.0m, item.ByCategory["Groceries"]);
+                Assert.Equal(125.0m, item.ByCategory["Groceries"]);
             });
 
         // Assert dayly
