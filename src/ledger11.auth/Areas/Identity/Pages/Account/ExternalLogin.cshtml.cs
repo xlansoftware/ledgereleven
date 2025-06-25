@@ -125,6 +125,36 @@ namespace ledger11.auth.Areas.Identity.Pages.Account
             }
             else
             {
+                var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+                var username = info.Principal.FindFirstValue(ClaimTypes.Name) ?? info.ProviderKey;
+
+                if (!string.IsNullOrEmpty(email))
+                {
+                    // Create a new user if the user does not have an account.
+                    var user = new ApplicationUser
+                    {
+                        UserName = email ?? username,
+                        Email = email,
+                        // we trust the external provider to confirm the email
+                        EmailConfirmed = true
+                    };
+
+                    var createResult = await _userManager.CreateAsync(user);
+                    if (createResult.Succeeded)
+                    {
+                        await _userManager.AddLoginAsync(user, info);
+                        await _signInManager.SignInAsync(user, isPersistent: false);
+                        return LocalRedirect(returnUrl);
+                    }
+
+                    // Handle errors
+                    foreach (var error in createResult.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                    return RedirectToPage("./Login");
+                }
+
                 // If the user does not have an account, then ask the user to create an account.
                 ReturnUrl = returnUrl;
                 ProviderDisplayName = info.ProviderDisplayName;
@@ -136,6 +166,7 @@ namespace ledger11.auth.Areas.Identity.Pages.Account
                     };
                 }
                 return Page();
+
             }
         }
 

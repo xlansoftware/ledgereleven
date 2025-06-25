@@ -163,12 +163,37 @@ public static class AuthenticationExtensions
 
                         var response = await context.Backchannel.SendAsync(
                             request, HttpCompletionOption.ResponseHeadersRead, context.HttpContext.RequestAborted);
-
                         response.EnsureSuccessStatusCode();
 
-                        var json = await response.Content.ReadAsStringAsync();
-                        using var user = JsonDocument.Parse(json);
+                        using var user = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
                         context.RunClaimActions(user.RootElement);
+
+                        // Additional request to /user/emails
+                        var emailRequest = new HttpRequestMessage(HttpMethod.Get, "https://api.github.com/user/emails");
+                        emailRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
+                        emailRequest.Headers.UserAgent.ParseAdd("LedgerEleven");
+
+                        var emailResponse = await context.Backchannel.SendAsync(
+                            emailRequest, HttpCompletionOption.ResponseHeadersRead, context.HttpContext.RequestAborted);
+                        emailResponse.EnsureSuccessStatusCode();
+
+                        var emailsText = await emailResponse.Content.ReadAsStringAsync();
+                        // Console.WriteLine("GitHub /user/emails JSON:\n" + emailsText);
+                        using var emails = JsonDocument.Parse(emailsText);
+
+                        // Get the primary verified email
+                        var email = emails.RootElement
+                            .EnumerateArray()
+                            .FirstOrDefault(e =>
+                                e.GetProperty("primary").GetBoolean() &&
+                                e.GetProperty("verified").GetBoolean())
+                            .GetProperty("email")
+                            .GetString();
+
+                        if (!string.IsNullOrEmpty(email))
+                        {
+                            context.Identity!.AddClaim(new Claim(ClaimTypes.Email, email));
+                        }
                     },
                     OnRemoteFailure = context =>
                     {
