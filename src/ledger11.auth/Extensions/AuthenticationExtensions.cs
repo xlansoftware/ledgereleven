@@ -70,6 +70,21 @@ public static class AuthenticationExtensions
                 options.ClientId = microsoftSettings.ClientId;
                 options.ClientSecret = microsoftSettings.ClientSecret;
                 options.SignInScheme = IdentityConstants.ExternalScheme;
+
+                // Uncomment the following lines if you want to debug the claims during ticket creation
+
+                // options.Events.OnCreatingTicket = context =>
+                // {
+                //     var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
+                //         .CreateLogger("ledger11.MicrosoftAuth");
+
+                //     foreach (var claim in context.Identity!.Claims)
+                //     {
+                //         logger.LogInformation("Claim: {Type} = {Value}", claim.Type, claim.Value);
+                //     }
+
+                //     return Task.CompletedTask;
+                // };
             });
             logger?.LogInformation("Microsoft authentication configured");
         }
