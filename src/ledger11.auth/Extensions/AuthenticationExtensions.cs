@@ -110,53 +110,16 @@ public static class AuthenticationExtensions
 
                 options.SaveTokens = true;
 
-                // Debug the OAuth flow
                 options.Events = new OAuthEvents
                 {
-                    // OnCreatingTicket = async context =>
-                    // {
-                    //     // Log everything coming back from GitHub
-                    //     var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
-                    //     request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
-                    //     request.Headers.UserAgent.ParseAdd("YourAppName");
-
-                    //     var response = await context.Backchannel.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, context.HttpContext.RequestAborted);
-                    //     response.EnsureSuccessStatusCode();
-
-                    //     var json = await response.Content.ReadAsStringAsync();
-                    //     Console.WriteLine("GitHub user info: " + json);
-
-                    //     using var user = JsonDocument.Parse(json);
-                    //     context.RunClaimActions(user.RootElement);
-                    // },
-                    // OnCreatingTicket = async context =>
-                    // {
-                    //     var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
-                    //     request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
-                    //     request.Headers.UserAgent.ParseAdd("LedgerElevenApp"); // GitHub requires User-Agent
-
-                    //     var response = await context.Backchannel.SendAsync(
-                    //         request,
-                    //         HttpCompletionOption.ResponseHeadersRead,
-                    //         context.HttpContext.RequestAborted);
-
-                    //     response.EnsureSuccessStatusCode();
-
-                    //     var json = await response.Content.ReadAsStringAsync();
-                    //     Console.WriteLine("GitHub /user JSON:\n" + json);
-
-                    //     using var user = JsonDocument.Parse(json);
-                    //     context.RunClaimActions(user.RootElement);
-
-                    //     Console.WriteLine("====== Claims from GitHub ======");
-                    //     foreach (var claim in context.Identity!.Claims)
-                    //     {
-                    //         Console.WriteLine($"Claim: {claim.Type} = {claim.Value}");
-                    //     }
-                    //     Console.WriteLine("================================");
-                    // },
                     OnCreatingTicket = async context =>
                     {
+                        var logger = context.HttpContext.RequestServices
+                            .GetRequiredService<ILoggerFactory>()
+                            .CreateLogger("ledger11.OAuth.GitHub");
+
+                        logger.LogInformation("Fetching GitHub user profile...");
+
                         var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
                         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
                         request.Headers.UserAgent.ParseAdd("LedgerEleven");
@@ -168,7 +131,8 @@ public static class AuthenticationExtensions
                         using var user = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
                         context.RunClaimActions(user.RootElement);
 
-                        // Additional request to /user/emails
+                        logger.LogInformation("GitHub user profile loaded. Now requesting email...");
+
                         var emailRequest = new HttpRequestMessage(HttpMethod.Get, "https://api.github.com/user/emails");
                         emailRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
                         emailRequest.Headers.UserAgent.ParseAdd("LedgerEleven");
@@ -178,10 +142,10 @@ public static class AuthenticationExtensions
                         emailResponse.EnsureSuccessStatusCode();
 
                         var emailsText = await emailResponse.Content.ReadAsStringAsync();
-                        // Console.WriteLine("GitHub /user/emails JSON:\n" + emailsText);
+                        logger.LogDebug("GitHub email JSON: {EmailJson}", emailsText);
+
                         using var emails = JsonDocument.Parse(emailsText);
 
-                        // Get the primary verified email
                         var email = emails.RootElement
                             .EnumerateArray()
                             .FirstOrDefault(e =>
@@ -193,11 +157,20 @@ public static class AuthenticationExtensions
                         if (!string.IsNullOrEmpty(email))
                         {
                             context.Identity!.AddClaim(new Claim(ClaimTypes.Email, email));
+                            logger.LogInformation("Primary verified email added to claims");
+                        }
+                        else
+                        {
+                            logger.LogWarning("No primary verified email found in GitHub response.");
                         }
                     },
+
                     OnRemoteFailure = context =>
                     {
-                        Console.WriteLine("OAuth failure: " + context.Failure?.Message);
+                        var logger = context.HttpContext.RequestServices
+                            .GetRequiredService<ILoggerFactory>()
+                            .CreateLogger("ledger11.OAuth.GitHub");
+                        logger.LogError("GitHub OAuth failure: {Message}", context.Failure?.Message);
                         return Task.CompletedTask;
                     }
                 };
