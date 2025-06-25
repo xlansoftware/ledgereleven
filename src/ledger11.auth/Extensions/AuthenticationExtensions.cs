@@ -43,6 +43,7 @@ public static class AuthenticationExtensions
             {
                 options.ClientId = googleSettings.ClientId;
                 options.ClientSecret = googleSettings.ClientSecret;
+                options.SignInScheme = IdentityConstants.ExternalScheme;
             });
             logger?.LogInformation("Google authentication configured");
         }
@@ -55,6 +56,7 @@ public static class AuthenticationExtensions
             {
                 options.ClientId = fbSettings.ClientId;
                 options.ClientSecret = fbSettings.ClientSecret;
+                options.SignInScheme = IdentityConstants.ExternalScheme;
             });
             logger?.LogInformation("Facebook authentication configured");
         }
@@ -67,6 +69,7 @@ public static class AuthenticationExtensions
             {
                 options.ClientId = microsoftSettings.ClientId;
                 options.ClientSecret = microsoftSettings.ClientSecret;
+                options.SignInScheme = IdentityConstants.ExternalScheme;
             });
             logger?.LogInformation("Microsoft authentication configured");
         }
@@ -80,6 +83,7 @@ public static class AuthenticationExtensions
                 options.ConsumerKey = twitterSettings.ConsumerAPIKey;
                 options.ConsumerSecret = twitterSettings.ConsumerSecret;
                 options.RetrieveUserDetails = twitterSettings.RetrieveUserDetails;
+                options.SignInScheme = IdentityConstants.ExternalScheme;
             });
             logger?.LogInformation("Twitter authentication configured");
         }
