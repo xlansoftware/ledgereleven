@@ -4,6 +4,7 @@ using ledger11.auth.Data;
 using ledger11.auth.Extensions;
 using ledger11.auth.Models;
 using ledger11.auth.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -36,8 +37,21 @@ public static class Extensions
 
         var logger = loggerFactory.CreateLogger("Authentication");
 
-        services.AddAuthentication("Cookies")
-            .AddCookie("Cookies")
+        services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = "Cookies";
+                options.DefaultSignInScheme = "Cookies"; // Critical for external logins
+            })
+            .AddCookie("Cookies", options =>
+                {
+                    options.Cookie.SameSite = SameSiteMode.None;
+                    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                    options.ExpireTimeSpan = TimeSpan.FromDays(14);
+
+                    // Required for external providers
+                    // options.Cookie.Name = "LedgerEleven.Auth";
+                    options.SlidingExpiration = true;
+                })
             .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
             {
                 options.RequireHttpsMetadata = !env.IsDevelopment();

@@ -7,6 +7,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.OAuth;
+using System.Net.Http.Headers;
+using System.Text.Json;
+using Microsoft.AspNetCore.Identity;
 
 namespace ledger11.auth.Extensions;
 
@@ -88,6 +92,8 @@ public static class AuthenticationExtensions
                 options.ClientId = githubSettings.ClientId;
                 options.ClientSecret = githubSettings.ClientSecret;
 
+                options.SignInScheme = IdentityConstants.ExternalScheme;
+
                 options.AuthorizationEndpoint = "https://github.com/login/oauth/authorize";
                 options.TokenEndpoint = "https://github.com/login/oauth/access_token";
                 options.UserInformationEndpoint = "https://api.github.com/user";
@@ -103,6 +109,73 @@ public static class AuthenticationExtensions
                 options.ClaimActions.MapJsonKey("urn:github:avatar", "avatar_url");
 
                 options.SaveTokens = true;
+
+                // Debug the OAuth flow
+                options.Events = new OAuthEvents
+                {
+                    // OnCreatingTicket = async context =>
+                    // {
+                    //     // Log everything coming back from GitHub
+                    //     var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
+                    //     request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
+                    //     request.Headers.UserAgent.ParseAdd("YourAppName");
+
+                    //     var response = await context.Backchannel.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, context.HttpContext.RequestAborted);
+                    //     response.EnsureSuccessStatusCode();
+
+                    //     var json = await response.Content.ReadAsStringAsync();
+                    //     Console.WriteLine("GitHub user info: " + json);
+
+                    //     using var user = JsonDocument.Parse(json);
+                    //     context.RunClaimActions(user.RootElement);
+                    // },
+                    // OnCreatingTicket = async context =>
+                    // {
+                    //     var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
+                    //     request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
+                    //     request.Headers.UserAgent.ParseAdd("LedgerElevenApp"); // GitHub requires User-Agent
+
+                    //     var response = await context.Backchannel.SendAsync(
+                    //         request,
+                    //         HttpCompletionOption.ResponseHeadersRead,
+                    //         context.HttpContext.RequestAborted);
+
+                    //     response.EnsureSuccessStatusCode();
+
+                    //     var json = await response.Content.ReadAsStringAsync();
+                    //     Console.WriteLine("GitHub /user JSON:\n" + json);
+
+                    //     using var user = JsonDocument.Parse(json);
+                    //     context.RunClaimActions(user.RootElement);
+
+                    //     Console.WriteLine("====== Claims from GitHub ======");
+                    //     foreach (var claim in context.Identity!.Claims)
+                    //     {
+                    //         Console.WriteLine($"Claim: {claim.Type} = {claim.Value}");
+                    //     }
+                    //     Console.WriteLine("================================");
+                    // },
+                    OnCreatingTicket = async context =>
+                    {
+                        var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
+                        request.Headers.UserAgent.ParseAdd("LedgerEleven");
+
+                        var response = await context.Backchannel.SendAsync(
+                            request, HttpCompletionOption.ResponseHeadersRead, context.HttpContext.RequestAborted);
+
+                        response.EnsureSuccessStatusCode();
+
+                        var json = await response.Content.ReadAsStringAsync();
+                        using var user = JsonDocument.Parse(json);
+                        context.RunClaimActions(user.RootElement);
+                    },
+                    OnRemoteFailure = context =>
+                    {
+                        Console.WriteLine("OAuth failure: " + context.Failure?.Message);
+                        return Task.CompletedTask;
+                    }
+                };
             });
             logger?.LogInformation("GitHub authentication configured");
         }
