@@ -1,6 +1,6 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
-    var baseUrl = Configuration["AuthConfig__ClientUrl"]?.TrimEnd('/');
+    var baseUrl = Configuration["AuthConfig:ClientUrl"]?.TrimEnd('/');
     var clientUrl = $"{baseUrl}/app";
     
     if (string.IsNullOrEmpty(baseUrl))

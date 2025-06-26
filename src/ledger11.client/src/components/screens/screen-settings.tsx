@@ -62,6 +62,10 @@ export default function Settings() {
     window.location.href = "/home/signoutall";
   };
 
+  const handleManageAccount = () => {
+    window.location.href = "/home/manageaccount";
+  };
+
   const handleBackupCsv = () => {
     downloadUrl("/api/backup/export?format=csv");
     toast("Your data has been exported to a CSV file.");
@@ -225,6 +229,7 @@ export default function Settings() {
           <CardContent></CardContent>
           <CardFooter>
             <Button onClick={handleLogout}>Log out</Button>
+            <Button onClick={handleManageAccount}>Manage</Button>
           </CardFooter>
         </Card>
 
