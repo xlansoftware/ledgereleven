@@ -229,7 +229,7 @@ export default function Settings() {
           <CardContent></CardContent>
           <CardFooter>
             <Button onClick={handleLogout}>Log out</Button>
-            <Button onClick={handleManageAccount}>Manage</Button>
+            <Button className="ml-5" onClick={handleManageAccount}>Manage</Button>
           </CardFooter>
         </Card>
 
