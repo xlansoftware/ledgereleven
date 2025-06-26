@@ -129,13 +129,31 @@ public class AuthSessionController : Controller
     private bool IsValidRedirectUri(string redirectUri)
     {
         if (!Uri.TryCreate(redirectUri, UriKind.Absolute, out var uri))
+        {
+            _logger.LogWarning("Invalid redirect URI: {Uri}. Should be absolute URL", redirectUri);
             return false;
+        }
 
         if (!_env.IsDevelopment() && !uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning("Redirect URI {Uri} is not HTTPS. Only secure URIs are allowed in production.", redirectUri);
             return false;
+        }
 
-        return uri.AbsoluteUri.StartsWith(_config.ClientUrl, StringComparison.OrdinalIgnoreCase) &&
-               _config.RedirectUris.Contains(uri.AbsolutePath, StringComparer.OrdinalIgnoreCase);
+        if (!uri.AbsoluteUri.StartsWith(_config.ClientUrl, StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning("Redirect URI {Uri} does not match the configured client URL: {ClientUrl}", redirectUri, _config.ClientUrl);
+            return false;
+        }
+
+        if (!_config.RedirectUris.Contains(uri.AbsolutePath, StringComparer.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning("Redirect URI {Uri} is not in the allowed list: {AllowedUris}", redirectUri, string.Join(", ", _config.RedirectUris));
+            return false;
+        }
+
+        _logger.LogDebug("Redirect URI {Uri} is valid", redirectUri);
+        return true;
     }
 
 #if DEBUG
