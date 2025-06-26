@@ -16,7 +16,7 @@ const HistoryScreen = lazy(() => import("@/components/screens/screen-history"));
 const ScreenInsights = lazy(
   () => import("@/components/screens/screen-insights")
 );
-const Settings = lazy(() => import("@/components/screens/settings"));
+const Settings = lazy(() => import("@/components/screens/screen-settings"));
 const CategoriesScreen = lazy(
   () => import("@/components/screens/screen-categories")
 );

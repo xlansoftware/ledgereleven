@@ -13,13 +13,17 @@ namespace ledger11.web.Controllers;
 public class HomeController : Controller
 {
     private readonly IHostEnvironment _hostEnvironment;
-
+    private readonly IConfiguration _configuration;
     private readonly ILogger<HomeController> _logger;
 
-    public HomeController(ILogger<HomeController> logger, IHostEnvironment hostEnvironment)
+    public HomeController(
+        ILogger<HomeController> logger,
+        IHostEnvironment hostEnvironment,
+        IConfiguration configuration)
     {
         _logger = logger;
         _hostEnvironment = hostEnvironment;
+        _configuration = configuration;
     }
 
     public IActionResult Index()
@@ -121,6 +125,12 @@ public class HomeController : Controller
                 RedirectUri = Url.Action("Index", "Home")
             },
             "oidc");
+    }
+
+    public IActionResult ManageAccount()
+    {
+        var authServer = _configuration["Authentication:oidc:Authority"]?.TrimEnd('/');
+        return new RedirectResult($"{authServer}/Identity/Account/Manage");
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
