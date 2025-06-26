@@ -1,12 +1,19 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
+    var baseUrl = Configuration["AuthConfig__ClientUrl"]?.TrimEnd('/');
+    var clientUrl = $"{baseUrl}/app";
+    
+    if (string.IsNullOrEmpty(baseUrl))
+    {
+        clientUrl = "https://ledgereleven.com/app";
+    }
 }
 
 <div class="text-center">
     @if (User.Identity != null && User.Identity.IsAuthenticated)
     {
         <h1>Welcome, @User.Identity.Name!</h1>
-        <a href="https://ledgereleven.com/app" class="w-20 mt-5 btn btn-lg btn-primary">Open the Ledger</a>
+        <a href="@clientUrl" class="w-20 mt-5 btn btn-lg btn-primary">Open the Ledger</a>
     }
     else
     {
