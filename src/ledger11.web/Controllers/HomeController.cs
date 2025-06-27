@@ -12,15 +12,18 @@ namespace ledger11.web.Controllers;
 
 public class HomeController : Controller
 {
+    private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IHostEnvironment _hostEnvironment;
     private readonly IConfiguration _configuration;
     private readonly ILogger<HomeController> _logger;
 
     public HomeController(
+        SignInManager<ApplicationUser> signInManager,
         ILogger<HomeController> logger,
         IHostEnvironment hostEnvironment,
         IConfiguration configuration)
     {
+        _signInManager = signInManager;
         _logger = logger;
         _hostEnvironment = hostEnvironment;
         _configuration = configuration;
@@ -92,45 +95,30 @@ public class HomeController : Controller
         return View();
     }
 
-    public async Task<IActionResult> SignIn(
-        [FromServices] IAuthenticationSchemeProvider schemeProvider,
-        [FromQuery] string? returnUrl)
+    public async Task<IActionResult> SignOutAll(string? returnUrl = null)
     {
-        var schemes = await schemeProvider.GetAllSchemesAsync();
-        var oidc = schemes.FirstOrDefault(s => s.Name == "oidc");
-
-        var redirectUrl = Url.IsLocalUrl(returnUrl)
-            ? returnUrl
-            : Url.Action("Index", "Start") ?? "/start";
-
-        if (oidc != null)
+        await _signInManager.SignOutAsync();
+        _logger.LogInformation("User logged out.");
+        if (returnUrl != null)
         {
-            return Challenge(new AuthenticationProperties
-            {
-                RedirectUri = redirectUrl
-            }, oidc.Name);
+            return LocalRedirect(returnUrl);
         }
-
-        return LocalRedirect(redirectUrl);
+        else
+        {
+            return LocalRedirect("/");
+        }
     }
 
-    public async Task<IActionResult> SignOutAll()
-    {
-        await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-
-        return SignOut(
-            new AuthenticationProperties
-            {
-                RedirectUri = Url.Action("Index", "Home")
-            },
-            "oidc");
-    }
 
     public IActionResult ManageAccount()
     {
-        var authServer = _configuration["Authentication:oidc:Authority"]?.TrimEnd('/');
-        return new RedirectResult($"{authServer}/Identity/Account/Manage");
+        if (_configuration["Authentication:oidc:Enable"] == "true")
+        {
+            var authServer = _configuration["Authentication:oidc:Authority"]?.TrimEnd('/');
+            return new RedirectResult($"{authServer}/Identity/Account/Manage");
+        }
+
+        return Redirect("~/Identity/Account/Manage");
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

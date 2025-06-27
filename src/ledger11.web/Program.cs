@@ -19,11 +19,6 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // DotNetEnv.Env.Load();
-
-        // builder.Configuration
-        //     .AddEnvironmentVariables();
-
         builder.Services.Configure<AppConfig>(builder.Configuration.GetSection("AppConfig"));
 
         builder.Services.AddFeatureManagement();
@@ -37,18 +32,22 @@ public class Program
         });
 
         builder.Services
-            .AddIdentity<ApplicationUser, IdentityRole<Guid>>()
+            .AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
+            {
+                options.SignIn.RequireConfirmedEmail = true;
+            })
             .AddEntityFrameworkStores<AppDbContext>()
-            .AddDefaultTokenProviders();
+            .AddDefaultTokenProviders()
+            .AddDefaultUI();
 
         builder.Services.Configure<SecurityStampValidatorOptions>(options =>
         {
             options.ValidationInterval = TimeSpan.Zero; // Always validate
         });
 
-        builder.AddAuthentication();
+        builder.AddEmailsSupport();
 
-        // Business logic
+        // Ledger Logic
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
         builder.Services.AddScoped<IUserSpaceService, UserSpaceService>();

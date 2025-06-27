@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ledger11.auth", "ledger11.a
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ledger11.lib", "ledger11.lib\ledger11.lib.csproj", "{CD237AE2-27FC-4F07-8178-85818C337061}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ledger11.service.SmtpEmailSenderService", "ledger11.service.SmtpEmailSenderService\ledger11.service.SmtpEmailSenderService.csproj", "{05AA18A7-5CC5-4F47-8687-F72475E35880}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -125,6 +127,18 @@ Global
 		{CD237AE2-27FC-4F07-8178-85818C337061}.Release|x64.Build.0 = Release|Any CPU
 		{CD237AE2-27FC-4F07-8178-85818C337061}.Release|x86.ActiveCfg = Release|Any CPU
 		{CD237AE2-27FC-4F07-8178-85818C337061}.Release|x86.Build.0 = Release|Any CPU
+		{05AA18A7-5CC5-4F47-8687-F72475E35880}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05AA18A7-5CC5-4F47-8687-F72475E35880}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05AA18A7-5CC5-4F47-8687-F72475E35880}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{05AA18A7-5CC5-4F47-8687-F72475E35880}.Debug|x64.Build.0 = Debug|Any CPU
+		{05AA18A7-5CC5-4F47-8687-F72475E35880}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{05AA18A7-5CC5-4F47-8687-F72475E35880}.Debug|x86.Build.0 = Debug|Any CPU
+		{05AA18A7-5CC5-4F47-8687-F72475E35880}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05AA18A7-5CC5-4F47-8687-F72475E35880}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05AA18A7-5CC5-4F47-8687-F72475E35880}.Release|x64.ActiveCfg = Release|Any CPU
+		{05AA18A7-5CC5-4F47-8687-F72475E35880}.Release|x64.Build.0 = Release|Any CPU
+		{05AA18A7-5CC5-4F47-8687-F72475E35880}.Release|x86.ActiveCfg = Release|Any CPU
+		{05AA18A7-5CC5-4F47-8687-F72475E35880}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
