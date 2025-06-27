@@ -11,8 +11,7 @@ using Microsoft.AspNetCore.Authentication.OAuth;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
-
-namespace ledger11.auth.Extensions;
+using Microsoft.AspNetCore.Http;
 
 public class AuthProviderSettings
 {

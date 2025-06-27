@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using System.Threading.RateLimiting;
 using ledger11.auth.Data;
-using ledger11.auth.Extensions;
 using ledger11.auth.Models;
 using ledger11.auth.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;

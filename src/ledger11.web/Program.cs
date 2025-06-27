@@ -40,6 +40,20 @@ public class Program
             .AddDefaultTokenProviders()
             .AddDefaultUI();
 
+        // Create logger instance
+        using var loggerFactory = LoggerFactory.Create(loggingBuilder =>
+        {
+            loggingBuilder
+                .AddConsole()
+                .AddDebug()
+                .SetMinimumLevel(LogLevel.Information);
+        });
+
+        var logger = loggerFactory.CreateLogger("Authentication");
+
+        builder.Services.AddAuthentication()
+            .AddMultiProviderAuthentication(builder.Configuration, logger);
+
         builder.Services.Configure<SecurityStampValidatorOptions>(options =>
         {
             options.ValidationInterval = TimeSpan.Zero; // Always validate
