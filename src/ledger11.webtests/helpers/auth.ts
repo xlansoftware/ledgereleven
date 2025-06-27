@@ -1,5 +1,13 @@
 import { Page, expect } from '@playwright/test'
-import { APP_URL, AUTH_URL } from './tools'
+import { APP_URL } from './tools'
+
+export async function logout(page: Page) {
+    await page.goto(`${APP_URL}Identity/Account/Logout`);
+    await expect(page).toHaveURL(`${APP_URL}Identity/Account/Logout`);  
+
+    // Click Logout link
+    await page.getByRole('button', { name: /Click here to Logout/i }).click()
+}
 
 export async function login(page: Page, email: string, password: string) {
     // Go to home page
@@ -7,10 +15,6 @@ export async function login(page: Page, email: string, password: string) {
 
     // Click Login link
     await page.getByRole('link', { name: /Start managing your expenses/i }).click()
-
-    // Wait for redirect to login page
-    // console.log(page.url());
-    await expect(page.url().startsWith(AUTH_URL)).toBe(true);
 
     // Fill email and password
     await page.getByRole('textbox', { name: /email/i }).fill(email)

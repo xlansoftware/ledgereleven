@@ -1,7 +1,7 @@
 # Build the Docker image
 docker build -t ledger11-web -f ./Dockerfile.ledger-eleven-app ../../src
-docker build -t ledger11-authserver -f ./Dockerfile.ledger-eleven-auth-server ../../src
 
+# Build with version arguments
 docker build \
   --build-arg VERSION=1.2.3 \
   --build-arg COMMIT_HASH=$(git rev-parse --short HEAD) \

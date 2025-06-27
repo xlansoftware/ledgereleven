@@ -2,6 +2,7 @@ namespace ledger11.service.Models;
 
 public class SmtpConfig
 {
+    public bool Enable { get; set; } = false;
     public string Host { get; set; } = string.Empty;
     public int Port { get; set; } = 587;
     public bool EnableSsl { get; set; } = true;

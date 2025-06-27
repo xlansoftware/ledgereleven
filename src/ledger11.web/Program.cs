@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.HttpOverrides;
+using ledger11.service.Models;
 
 namespace ledger11.web;
 
@@ -34,7 +35,8 @@ public class Program
         builder.Services
             .AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
             {
-                options.SignIn.RequireConfirmedEmail = true;
+                var smtpConfig = builder.Configuration.GetSection("Smtp").Get<SmtpConfig>();
+                options.SignIn.RequireConfirmedEmail = smtpConfig?.Enable ?? false;
             })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders()
