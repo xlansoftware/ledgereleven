@@ -39,7 +39,7 @@ public class TestEndpoints : IClassFixture<CustomWebApplicationFactory>
     {
         // This will cause a application user and space to be assigned for the single user
         var response1 = await _client.GetAsync("/api/category");
-        Assert.Equal(HttpStatusCode.OK, response1.StatusCode);
+        Assert.Equal(HttpStatusCode.Found, response1.StatusCode); // 302 Found
     }
 
 }

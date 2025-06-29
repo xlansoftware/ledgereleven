@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.HttpOverrides;
+using ledger11.service.Models;
 
 namespace ledger11.web;
 
@@ -18,11 +19,6 @@ public class Program
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-
-        // DotNetEnv.Env.Load();
-
-        // builder.Configuration
-        //     .AddEnvironmentVariables();
 
         builder.Services.Configure<AppConfig>(builder.Configuration.GetSection("AppConfig"));
 
@@ -37,18 +33,37 @@ public class Program
         });
 
         builder.Services
-            .AddIdentity<ApplicationUser, IdentityRole<Guid>>()
+            .AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
+            {
+                var smtpConfig = builder.Configuration.GetSection("Smtp").Get<SmtpConfig>();
+                options.SignIn.RequireConfirmedEmail = smtpConfig?.Enable ?? false;
+            })
             .AddEntityFrameworkStores<AppDbContext>()
-            .AddDefaultTokenProviders();
+            .AddDefaultTokenProviders()
+            .AddDefaultUI();
+
+        // Create logger instance
+        using var loggerFactory = LoggerFactory.Create(loggingBuilder =>
+        {
+            loggingBuilder
+                .AddConsole()
+                .AddDebug()
+                .SetMinimumLevel(LogLevel.Information);
+        });
+
+        var logger = loggerFactory.CreateLogger("Authentication");
+
+        builder.Services.AddAuthentication()
+            .AddMultiProviderAuthentication(builder.Configuration, logger);
 
         builder.Services.Configure<SecurityStampValidatorOptions>(options =>
         {
             options.ValidationInterval = TimeSpan.Zero; // Always validate
         });
 
-        builder.AddAuthentication();
+        builder.AddEmailsSupport();
 
-        // Business logic
+        // Ledger Logic
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
         builder.Services.AddScoped<IUserSpaceService, UserSpaceService>();

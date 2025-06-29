@@ -20,9 +20,9 @@ ARG COMMIT_HASH
 WORKDIR /src
 COPY ledger11.sln ./
 COPY ledger11.lib/ledger11.lib.csproj ledger11.lib/
-COPY ledger11.auth/ledger11.auth.csproj ledger11.auth/
 COPY ledger11.web/ledger11.web.csproj ledger11.web/
 COPY ledger11.service/ledger11.service.csproj ledger11.service/
+COPY ledger11.service.SmtpEmailSenderService/ledger11.service.SmtpEmailSenderService.csproj ledger11.service.SmtpEmailSenderService/
 COPY ledger11.model/ledger11.model.csproj ledger11.model/
 COPY ledger11.data/ledger11.data.csproj ledger11.data/
 COPY ledger11.tests/ledger11.tests.csproj ledger11.tests/

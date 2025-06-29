@@ -24,7 +24,6 @@ wait_for_url() {
 }
 
 wait_for_url "$APP_URL" "APP_URL"
-wait_for_url "$AUTH_URL" "AUTH_URL"
 
-echo "Both services are up!"
+echo "Services are up!"
 exec "$@"

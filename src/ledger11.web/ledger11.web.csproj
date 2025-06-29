@@ -1,9 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>4a8cf652-3c6b-4b0d-9992-8c29342a7ad6</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -37,6 +38,7 @@
     <ProjectReference Include="..\ledger11.model\ledger11.model.csproj" />
     <ProjectReference Include="..\ledger11.data\ledger11.data.csproj" />
     <ProjectReference Include="..\ledger11.lib\ledger11.lib.csproj" />
+    <ProjectReference Include="..\ledger11.service.SmtpEmailSenderService\ledger11.service.SmtpEmailSenderService.csproj" />
   </ItemGroup>
 
 </Project>
