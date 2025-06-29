@@ -116,6 +116,11 @@ namespace ledger11.web.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
+#if DEBUG
+                    // During development, the frontend and backend are running on different ports
+                    // This is because the backend is proxied through the frontend
+                    if (returnUrl == "http://localhost:5173") return Redirect(returnUrl);
+#endif
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)

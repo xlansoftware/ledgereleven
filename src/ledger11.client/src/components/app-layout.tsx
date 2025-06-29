@@ -24,6 +24,8 @@ const EditWidgetScreen = lazy(
   () => import("@/components/screens/screen-edit-widget")
 );
 
+const ScreenLogin = lazy(() => import("@/components/screens/screen-login"));
+
 export default function AppLayout() {
   const location = useLocation();
   const [currentPath, setCurrentPath] = useState(location.pathname);
@@ -46,6 +48,7 @@ export default function AppLayout() {
   return (
     <div className="flex flex-col bg-background h-full">
       {currentPath === "/login" ||
+      currentPath === "/start" ||
       currentPath === "/identity/account/Login" ? null : (
         <Header currentPath={currentPath} />
       )}
@@ -67,6 +70,7 @@ export default function AppLayout() {
             <Route path="/categories" element={<CategoriesScreen />} />
             <Route path="/spaces" element={<SpacesScreen />} />
             <Route path="/edit-widget" element={<EditWidgetScreen />} />
+            <Route path="/start" element={<ScreenLogin />} />
           </Routes>
         </Suspense>
         <Toaster
