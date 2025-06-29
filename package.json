@@ -2,10 +2,10 @@
   "name": "@xlansoftware/ledgereleven",
   "scripts": {
     "start:client": "cd src/ledger11.client && npm run dev",
-    "start:server": "dotnet run --project ./src/ledger11.web/ledger11.web.csproj",
-    "test:server": "dotnet test ./src/ledger11.sln",
-    "dev": "concurrently \"npm run start:client\" \"npm run start:server\"",
-    "test": "npm run test:server"
+    "start:backend": "dotnet run --project ./src/ledger11.web/ledger11.web.csproj",
+    "test:backend": "dotnet test ./src/ledger11.sln",
+    "dev": "concurrently \"npm run start:client\" \"npm run start:backend\"",
+    "test": "npm run test:backend"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

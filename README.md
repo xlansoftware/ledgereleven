@@ -36,31 +36,20 @@ dotnet test
 ### Run the backend tests in a container
 
 ```bash
-cd .devops/test/backend
+cd ./.devops/test/backend
 docker-compose run --build --rm app-test
 ```
 
 ### Run the frontend tests in a container
 
 ```bash
-# generate self-sign certificates
-cd .devops/test/web/certs
-./generate-test-certificates.sh
-cd ..
-# start the tests
+cd ./.devops/test/web
 docker-compose run --build --rm test
 ```
 
 ### Run the frontend tests locally:
 
-By default, the backend (```ledger11.web``` project) is configured to use "single-user mode". Uncomment the "Authentication" config in the ```application.json``` file to enable the OpenID connect authentication.
-
-```bash
-# start the auth server
-cd ./src/ledger11.auth
-dotnet run
-```
-Leave it running and open another terminal window for the backend:
+Start the backend:
 ```bash
 # start the backend
 cd ./src/ledger11.web
@@ -77,14 +66,6 @@ npx playwright test
 
 ```bash
 npm run dev
-```
-
-## leger11.auth
-
-```bash
-dotnet user-secrets init
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "your-connection-string"
-dotnet user-secrets set "Smtp:Password" "your-dev-password"
 ```
 
 ## Work with SQLite in a container
