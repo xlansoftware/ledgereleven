@@ -8,6 +8,7 @@ rootCommand.AddCreateUserComand();
 rootCommand.AddGenerateComand();
 rootCommand.AddInfoComand();
 rootCommand.AddTestUpgradeComand();
+rootCommand.AddSyncUsersCommand();
 
 var result = await rootCommand.InvokeAsync(args);
 return Tools.ExitCode != 0 ? Tools.ExitCode : result;
