@@ -1,3 +1,15 @@
+# Ledger Eleven Web Tests
+
+This project contains the end-to-end tests for the Ledger Eleven application, written using Playwright.
+
+## Key Features
+
+* **Playwright**: A framework for web testing and automation.
+* **End-to-End Testing**: Simulates real user scenarios to test the application's functionality from start to finish.
+* **Cross-Browser Testing**: Configured to run tests on Chromium, with the option to add Firefox and WebKit.
+
+---
+
 ```
 npx playwright test
 ```

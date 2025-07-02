@@ -1,3 +1,20 @@
+# Ledger Eleven Client
+
+This project is the React frontend for the Ledger Eleven application. It is built with Vite, TypeScript, and Tailwind CSS.
+
+## Key Features
+
+* **React**: A JavaScript library for building user interfaces.
+* **Vite**: A fast build tool for modern web projects.
+* **TypeScript**: A typed superset of JavaScript that compiles to plain JavaScript.
+* **Tailwind CSS**: A utility-first CSS framework for rapidly building custom designs.
+* **React Router**: For declarative routing in the application.
+* **Zustand**: A small, fast, and scalable state-management solution.
+* **Recharts**: A composable charting library built on React components.
+* **Tesseract.js**: A JavaScript library that gets words in almost any language out of images.
+
+---
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
