@@ -14,8 +14,8 @@ const HistoryComponent = lazy(
   () => import("@/components/insight/HistoryComponent")
 );
 
-const PerMonthComponent = lazy(
-  () => import("@/components/insight/PerMonthComponent")
+const PerPeriodComponent = lazy(
+  () => import("@/components/insight/PerPeriodComponent")
 );
 
 export default function Insights() {
@@ -40,7 +40,7 @@ export default function Insights() {
       <Suspense>
         {tab === "history" && <HistoryComponent />}
         {tab === "total" && <TotalByPeriodByCategoryComponent />}
-        {tab === "per-month" && <PerMonthComponent />}
+        {tab === "per-month" && <PerPeriodComponent period="month" />}
       </Suspense>
     </>
   );

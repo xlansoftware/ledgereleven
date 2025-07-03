@@ -248,8 +248,8 @@ public class InsightController : ControllerBase
 
     }
 
-    [HttpGet("per-month")]
-    public async Task<IActionResult> GetPerMonthDataAsync(string timeZoneId = "Europe/Paris")
+    [HttpGet("per-period/{period}")]
+    public async Task<IActionResult> GetPerPeriodDataAsync(string period, string timeZoneId = "Europe/Paris")
     {
         using var db = await _currentLedger.GetLedgerDbContextAsync();
 
@@ -263,18 +263,18 @@ public class InsightController : ControllerBase
             timeZone = TZConvert.GetTimeZoneInfo("Europe/Paris");
         }
 
-        var monthlyData = new Dictionary<string, PerMonthData>();
+        var monthlyData = new Dictionary<string, PerPeriodData>();
 
         await Scan(db, timeZone, (value, category, localDate) =>
         {
-            var monthKey = localDate.ToString("MMMM yyyy");
+            var periodKey = GetPeriodKey(localDate, period);
 
-            if (!monthlyData.ContainsKey(monthKey))
+            if (!monthlyData.ContainsKey(periodKey))
             {
-                monthlyData[monthKey] = new PerMonthData { Title = monthKey };
+                monthlyData[periodKey] = new PerPeriodData { Title = periodKey };
             }
 
-            var data = monthlyData[monthKey];
+            var data = monthlyData[periodKey];
             var dictionary = IsExpense(value) ? data.Expense : data.Income;
 
             if (dictionary.ContainsKey(category))
@@ -287,7 +287,18 @@ public class InsightController : ControllerBase
             }
         });
 
-        return Ok(monthlyData.Values.OrderByDescending(m => DateTime.Parse(m.Title)));
+        return Ok(monthlyData.Values.OrderByDescending(m => m.Title));
+    }
+
+    private string GetPeriodKey(DateTime date, string period)
+    {
+        return period switch
+        {
+            "day" => date.ToString("yyyy-MM-dd"),
+            "week" => $"{date.Year}-W{CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(date, CalendarWeekRule.FirstDay, DayOfWeek.Monday):D2}",
+            "month" => date.ToString("MMMM yyyy"),
+            _ => date.ToString("yyyy-MM-dd"),
+        };
     }
 
 
@@ -313,7 +324,7 @@ public class HistoryResult
     public List<HistoryRecord> Dayly { get; set; } = new();
 }
 
-public class PerMonthData
+public class PerPeriodData
 {
     public string Title { get; set; } = string.Empty;
     public Dictionary<string, decimal> Expense { get; set; } = new();
