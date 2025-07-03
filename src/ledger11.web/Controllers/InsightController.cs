@@ -248,6 +248,48 @@ public class InsightController : ControllerBase
 
     }
 
+    [HttpGet("per-month")]
+    public async Task<IActionResult> GetPerMonthDataAsync(string timeZoneId = "Europe/Paris")
+    {
+        using var db = await _currentLedger.GetLedgerDbContextAsync();
+
+        TimeZoneInfo timeZone;
+        try
+        {
+            timeZone = TZConvert.GetTimeZoneInfo(timeZoneId);
+        }
+        catch
+        {
+            timeZone = TZConvert.GetTimeZoneInfo("Europe/Paris");
+        }
+
+        var monthlyData = new Dictionary<string, PerMonthData>();
+
+        await Scan(db, timeZone, (value, category, localDate) =>
+        {
+            var monthKey = localDate.ToString("MMMM yyyy");
+
+            if (!monthlyData.ContainsKey(monthKey))
+            {
+                monthlyData[monthKey] = new PerMonthData { Title = monthKey };
+            }
+
+            var data = monthlyData[monthKey];
+            var dictionary = IsExpense(value) ? data.Expense : data.Income;
+
+            if (dictionary.ContainsKey(category))
+            {
+                dictionary[category] += Math.Abs(value);
+            }
+            else
+            {
+                dictionary[category] = Math.Abs(value);
+            }
+        });
+
+        return Ok(monthlyData.Values.OrderByDescending(m => DateTime.Parse(m.Title)));
+    }
+
 
 }
 
@@ -269,4 +311,11 @@ public class HistoryResult
     public List<HistoryRecord> Monthly { get; set; } = new();
     public List<HistoryRecord> Weekly { get; set; } = new();
     public List<HistoryRecord> Dayly { get; set; } = new();
+}
+
+public class PerMonthData
+{
+    public string Title { get; set; } = string.Empty;
+    public Dictionary<string, decimal> Expense { get; set; } = new();
+    public Dictionary<string, decimal> Income { get; set; } = new();
 }
