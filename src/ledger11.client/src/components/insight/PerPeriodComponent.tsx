@@ -79,7 +79,7 @@ export default function PerPeriodComponent({ period }: { period: 'day' | 'week' 
       ))}
       {hasMore && (
         <div className="flex justify-center">
-            <Button onClick={handleLoadMore} disabled={loading}>
+            <Button onClick={handleLoadMore} disabled={loading} variant={"secondary"}>
                 {loading ? 'Loading...' : 'Load more...'}
             </Button>
         </div>
