@@ -249,7 +249,7 @@ public class InsightController : ControllerBase
     }
 
     [HttpGet("per-period/{period}")]
-    public async Task<IActionResult> GetPerPeriodDataAsync(string period, string timeZoneId = "Europe/Paris")
+    public async Task<IActionResult> GetPerPeriodDataAsync(string period, [FromQuery] int start = 0, [FromQuery] int count = 5, string timeZoneId = "Europe/Paris")
     {
         using var db = await _currentLedger.GetLedgerDbContextAsync();
 
@@ -287,7 +287,7 @@ public class InsightController : ControllerBase
             }
         });
 
-        return Ok(monthlyData.Values.OrderByDescending(m => m.Title));
+        return Ok(monthlyData.Values.OrderByDescending(m => m.Title).Skip(start).Take(count));
     }
 
     private string GetPeriodKey(DateTime date, string period)
