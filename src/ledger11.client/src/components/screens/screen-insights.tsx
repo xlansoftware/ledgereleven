@@ -4,7 +4,13 @@
 
 import { lazy, Suspense, useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3Icon, CalendarIcon, ChartPieIcon } from "lucide-react";
+import {
+  BarChart3Icon,
+  CalendarIcon,
+  ChartPieIcon,
+  CalendarDays,
+  CalendarRange,
+} from "lucide-react";
 
 const TotalByPeriodByCategoryComponent = lazy(
   () => import("@/components/insight/TotalByPeriodByCategoryComponent")
@@ -34,6 +40,12 @@ export default function Insights() {
             <TabsTrigger value="per-month" className="m-4">
               <CalendarIcon className="w-6 h-6" />
             </TabsTrigger>
+            <TabsTrigger value="per-week" className="m-4">
+              <CalendarDays className="w-6 h-6" />
+            </TabsTrigger>
+            <TabsTrigger value="per-day" className="m-4">
+              <CalendarRange className="w-6 h-6" />
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -41,6 +53,8 @@ export default function Insights() {
         {tab === "history" && <HistoryComponent />}
         {tab === "total" && <TotalByPeriodByCategoryComponent />}
         {tab === "per-month" && <PerPeriodComponent period="month" />}
+        {tab === "per-week" && <PerPeriodComponent period="week" />}
+        {tab === "per-day" && <PerPeriodComponent period="day" />}
       </Suspense>
     </>
   );
