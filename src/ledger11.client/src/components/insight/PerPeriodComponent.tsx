@@ -28,7 +28,7 @@ export default function PerPeriodComponent({ period }: { period: 'day' | 'week' 
   const fetchData = useCallback(async (fetchStart: number) => {
     setLoading(true);
     try {
-      const response = await fetchWithAuth(`api/insight/per-period/${period}?start=${fetchStart}&count=${BATCH_SIZE}`);
+      const response = await fetchWithAuth(`/api/insight/per-period/${period}?start=${fetchStart}&count=${BATCH_SIZE}`);
       if (response.ok) {
         const newData = await response.json();
         if (fetchStart === 0) {
