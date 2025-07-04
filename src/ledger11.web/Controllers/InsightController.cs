@@ -248,6 +248,59 @@ public class InsightController : ControllerBase
 
     }
 
+    [HttpGet("per-period/{period}")]
+    public async Task<IActionResult> GetPerPeriodDataAsync(string period, [FromQuery] int start = 0, [FromQuery] int count = 5, string timeZoneId = "Europe/Paris")
+    {
+        using var db = await _currentLedger.GetLedgerDbContextAsync();
+
+        TimeZoneInfo timeZone;
+        try
+        {
+            timeZone = TZConvert.GetTimeZoneInfo(timeZoneId);
+        }
+        catch
+        {
+            timeZone = TZConvert.GetTimeZoneInfo("Europe/Paris");
+        }
+
+        var monthlyData = new Dictionary<string, PerPeriodData>();
+
+        await Scan(db, timeZone, (value, category, localDate) =>
+        {
+            var periodKey = GetPeriodKey(localDate, period);
+
+            if (!monthlyData.ContainsKey(periodKey))
+            {
+                monthlyData[periodKey] = new PerPeriodData { Title = periodKey };
+            }
+
+            var data = monthlyData[periodKey];
+            var dictionary = IsExpense(value) ? data.Expense : data.Income;
+
+            if (dictionary.ContainsKey(category))
+            {
+                dictionary[category] += Math.Abs(value);
+            }
+            else
+            {
+                dictionary[category] = Math.Abs(value);
+            }
+        });
+
+        return Ok(monthlyData.Values.OrderByDescending(m => m.Title).Skip(start).Take(count));
+    }
+
+    private string GetPeriodKey(DateTime date, string period)
+    {
+        return period switch
+        {
+            "day" => date.ToString("yyyy-MM-dd"),
+            "week" => $"{date.Year}-W{CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(date, CalendarWeekRule.FirstDay, DayOfWeek.Monday):D2}",
+            "month" => date.ToString("MMMM yyyy"),
+            _ => date.ToString("yyyy-MM-dd"),
+        };
+    }
+
 
 }
 
@@ -269,4 +322,11 @@ public class HistoryResult
     public List<HistoryRecord> Monthly { get; set; } = new();
     public List<HistoryRecord> Weekly { get; set; } = new();
     public List<HistoryRecord> Dayly { get; set; } = new();
+}
+
+public class PerPeriodData
+{
+    public string Title { get; set; } = string.Empty;
+    public Dictionary<string, decimal> Expense { get; set; } = new();
+    public Dictionary<string, decimal> Income { get; set; } = new();
 }

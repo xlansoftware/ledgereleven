@@ -104,7 +104,7 @@ export const InsightComponent: React.FC<InsightComponentProps> = ({
         y={(viewBox.cy || 0) + 36}
         className="fill-muted-foreground"
       >
-        {charTitle[title]}
+        {charTitle[title] ?? title}
       </tspan>
     </text>
   );
@@ -128,7 +128,7 @@ export const InsightComponent: React.FC<InsightComponentProps> = ({
         y={(viewBox.cy || 0) + 24}
         className="fill-muted-foreground"
       >
-        {charTitle[title]}
+        {charTitle[title] ?? title}
       </tspan>
     </text>
   );
