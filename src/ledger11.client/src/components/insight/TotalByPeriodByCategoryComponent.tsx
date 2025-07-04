@@ -13,7 +13,13 @@ interface TotalByPeriodByCategory {
   expense: Record<string, Record<string, number>>;
 }
 
-export default function TotalByPeriodByCategoryComponent() {
+interface TotalByPeriodByCategoryComponentProps {
+  setTab: (tab: string) => void;
+}
+
+export default function TotalByPeriodByCategoryComponent(
+  props: TotalByPeriodByCategoryComponentProps
+) {
   const { categories, loadCategories } = useCategoryStore();
   const colors = categories.reduce((acc, category) => {
     acc[category.name] = category;
@@ -63,22 +69,52 @@ export default function TotalByPeriodByCategoryComponent() {
           No expenses.
         </div>
       )}
-      {Object.entries(expense || {}).map(
-        ([key, value]) =>
-          value && (
-            <div key={key} className="mb-4">
-              <InsightComponent data={value} altData={income?.[key]} title={key} categories={colors}>
-                {/* {income && income[key] && (
-                  <IncomeComponent
-                    data={income[key]}
-                    title={key}
-                    categories={colors}
-                  />
-                )} */}
-              </InsightComponent>
-            </div>
-          )
-      )}
+      {Object.entries(expense || {}).map(([key, value]) => {
+        const hasData = value && Object.keys(value).length > 0;
+        if (!hasData) {
+          return null;
+        }
+        return (
+          <div
+            key={key}
+            className="mb-4 flex flex-col content-center items-center"
+          >
+            <InsightComponent
+              data={value}
+              altData={income?.[key]}
+              title={key}
+              categories={colors}
+            />
+            {key === "today" && (
+              <a
+                href="#"
+                onClick={() => props.setTab("per-day")}
+                className="text-xs text-blue-500 m-4"
+              >
+                view per day ...
+              </a>
+            )}
+            {key === "thisWeek" && (
+              <a
+                href="#"
+                onClick={() => props.setTab("per-week")}
+                className="text-xs text-blue-500 m-4"
+              >
+                view per week ...
+              </a>
+            )}
+            {key === "thisMonth" && (
+              <a
+                href="#"
+                onClick={() => props.setTab("per-month")}
+                className="text-xs text-blue-500 m-4"
+              >
+                view per month ...
+              </a>
+            )}
+          </div>
+        );
+      })}
       {data === null && (
         <div className="flex items-center justify-center pt-16">
           <DonutSkeleton size={220} thickness={32} />
@@ -87,4 +123,3 @@ export default function TotalByPeriodByCategoryComponent() {
     </div>
   );
 }
-

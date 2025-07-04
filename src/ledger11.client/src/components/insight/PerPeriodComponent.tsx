@@ -13,7 +13,11 @@ type PerPeriodData = {
 
 const BATCH_SIZE = 5;
 
-export default function PerPeriodComponent({ period }: { period: 'day' | 'week' | 'month' }) {
+export default function PerPeriodComponent({
+  period,
+}: {
+  period: "day" | "week" | "month";
+}) {
   const { categories, loadCategories } = useCategoryStore();
   const [data, setData] = useState<PerPeriodData[]>([]);
   const [start, setStart] = useState(0);
@@ -25,26 +29,31 @@ export default function PerPeriodComponent({ period }: { period: 'day' | 'week' 
     return acc;
   }, {} as Record<string, Category>);
 
-  const fetchData = useCallback(async (fetchStart: number) => {
-    setLoading(true);
-    try {
-      const response = await fetchWithAuth(`/api/insight/per-period/${period}?start=${fetchStart}&count=${BATCH_SIZE}`);
-      if (response.ok) {
-        const newData = await response.json();
-        if (fetchStart === 0) {
-          setData(newData);
-        } else {
-          setData(prevData => [...prevData, ...newData]);
+  const fetchData = useCallback(
+    async (fetchStart: number) => {
+      setLoading(true);
+      try {
+        const response = await fetchWithAuth(
+          `/api/insight/per-period/${period}?start=${fetchStart}&count=${BATCH_SIZE}`
+        );
+        if (response.ok) {
+          const newData = await response.json();
+          if (fetchStart === 0) {
+            setData(newData);
+          } else {
+            setData((prevData) => [...prevData, ...newData]);
+          }
+          setStart(fetchStart + BATCH_SIZE);
+          if (newData.length < BATCH_SIZE) {
+            setHasMore(false);
+          }
         }
-        setStart(fetchStart + BATCH_SIZE);
-        if (newData.length < BATCH_SIZE) {
-          setHasMore(false);
-        }
+      } finally {
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
-    }
-  }, [period]);
+    },
+    [period]
+  );
 
   useEffect(() => {
     loadCategories();
@@ -62,7 +71,9 @@ export default function PerPeriodComponent({ period }: { period: 'day' | 'week' 
   };
 
   if (loading && data.length === 0) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center pt-16">Loading...</div>
+    );
   }
 
   return (
@@ -79,9 +90,13 @@ export default function PerPeriodComponent({ period }: { period: 'day' | 'week' 
       ))}
       {hasMore && (
         <div className="flex justify-center">
-            <Button onClick={handleLoadMore} disabled={loading} variant={"secondary"}>
-                {loading ? 'Loading...' : 'Load more...'}
-            </Button>
+          <Button
+            onClick={handleLoadMore}
+            disabled={loading}
+            variant={"secondary"}
+          >
+            {loading ? "Loading..." : "Load more..."}
+          </Button>
         </div>
       )}
     </div>

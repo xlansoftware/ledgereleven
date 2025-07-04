@@ -143,7 +143,7 @@ export const InsightComponent: React.FC<InsightComponentProps> = ({
   };
 
   return (
-    <div>
+    <div className="w-full">
       {chartData.length === 0 ? (
         <p className="text-muted-foreground text-center">&nbsp;</p>
       ) : (
