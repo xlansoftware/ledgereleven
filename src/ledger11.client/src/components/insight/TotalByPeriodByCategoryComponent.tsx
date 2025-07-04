@@ -70,7 +70,7 @@ export default function TotalByPeriodByCategoryComponent(
         </div>
       )}
       {Object.entries(expense || {}).map(([key, value]) => (
-        <div key={key} className="mb-4">
+        <div key={key} className="mb-4 flex flex-col content-center items-center">
           {value && (
             <InsightComponent
               data={value}
@@ -83,27 +83,27 @@ export default function TotalByPeriodByCategoryComponent(
             <a
               href="#"
               onClick={() => props.setTab("per-day")}
-              className="text-xs text-blue-500"
+              className="text-xs text-blue-500 m-4"
             >
-              view more days
+              view per day ...
             </a>
           )}
           {key === "thisWeek" && (
             <a
               href="#"
               onClick={() => props.setTab("per-week")}
-              className="text-xs text-blue-500"
+              className="text-xs text-blue-500 m-4"
             >
-              view more weeks
+              view per week ...
             </a>
           )}
           {key === "thisMonth" && (
             <a
               href="#"
               onClick={() => props.setTab("per-month")}
-              className="text-xs text-blue-500"
+              className="text-xs text-blue-500 m-4"
             >
-              view more months
+              view per month ...
             </a>
           )}
         </div>
