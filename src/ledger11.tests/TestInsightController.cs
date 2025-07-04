@@ -30,13 +30,11 @@ public class TestInsightController
         var Groceries = categories.FirstOrDefault(c => c.Name == "Groceries")!;
         var Education = categories.FirstOrDefault(c => c.Name == "Education")!;
 
-        var now = DateTime.UtcNow;
+        // Use DateTime.Now to avoid time-dependent test failures.
+        var now = DateTime.Now;
         var today = now.Date;
-        var startOfWeek = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
-        var startOfMonth = new DateTime(today.Year, today.Month, 1);
-        var startOfYear = new DateTime(today.Year, 1, 1);
 
-        // Act 1: Create test data
+        // Act 1: Create test data on today and yesterday to make test more robust
         var tx1 = new Transaction
         {
             Value = 50,
@@ -47,7 +45,7 @@ public class TestInsightController
         var tx2 = new Transaction
         {
             Value = 150,
-            Date = now.AddDays(-5),
+            Date = now.AddDays(-1),
             CategoryId = Education.Id,
             Notes = "Another note",
         };
@@ -61,7 +59,7 @@ public class TestInsightController
         var tx4 = new Transaction
         {
             Value = 200,
-            Date = now.AddDays(-3),
+            Date = now,
             CategoryId = Education.Id,
             Notes = "Some other note",
         };
@@ -73,14 +71,26 @@ public class TestInsightController
         await transactionController.Create(tx4);
 
         // Act 2: Apply filters one by one and assert results
-
-        // Filter by Note (case-insensitive)
         var result1 = await insightController.TotalByPeriodByCategory();
         var response1 = Assert.IsType<TotalByPeriodByCategoryResult>(Assert.IsType<OkObjectResult>(result1).Value);
+        
         Assert.Equal(75, response1.Expense["today"]["Groceries"]);
+        Assert.Equal(200, response1.Expense["today"]["Education"]);
         Assert.Equal(50, response1.Expense["yesterday"]["Groceries"]);
-        Assert.Equal(125, response1.Expense["thisMonth"]["Groceries"]);
-        Assert.Equal(350, response1.Expense["thisMonth"]["Education"]);
+        Assert.Equal(150, response1.Expense["yesterday"]["Education"]);
+
+        // Handle month boundaries for "thisMonth" assertions
+        var expectedGroceriesMonth = 75m;
+        var expectedEducationMonth = 200m;
+
+        if (today.Day > 1)
+        {
+            expectedGroceriesMonth += 50m;
+            expectedEducationMonth += 150m;
+        }
+        
+        Assert.Equal(expectedGroceriesMonth, response1.Expense["thisMonth"]["Groceries"]);
+        Assert.Equal(expectedEducationMonth, response1.Expense["thisMonth"]["Education"]);
     }
 
     [Fact]
@@ -100,40 +110,36 @@ public class TestInsightController
         var Groceries = categories.FirstOrDefault(c => c.Name == "Groceries")!;
         var Education = categories.FirstOrDefault(c => c.Name == "Education")!;
 
-        var now = new DateTime(2025, 6, 25);
-        var today = now.Date;
-        var startOfWeek = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
-        var startOfMonth = new DateTime(today.Year, today.Month, 1);
-        var startOfYear = new DateTime(today.Year, 1, 1);
+        var now = DateTime.Now;
 
         // Act 1: Create test data
         var tx1 = new Transaction
         {
-            Value = 50,
-            Date = now.AddDays(-1),     // 2025-06-24 Tuesday    2025-W26
-            CategoryId = Groceries.Id,
-            Notes = "Note abc",
-        };
-        var tx2 = new Transaction
-        {
-            Value = 150,
-            Date = now.AddDays(-5),     // 2025-06-20 Friday     2025-W25
-            CategoryId = Education.Id,
-            Notes = "Another note",
-        };
-        var tx3 = new Transaction
-        {
             Value = 75,
-            Date = now,                 // 2025-06-25 Wednesday  2025-W26
+            Date = now,
             CategoryId = Groceries.Id,
             Notes = "note XYZ",
         };
-        var tx4 = new Transaction
+        var tx2 = new Transaction
         {
             Value = 200,
-            Date = now.AddDays(-3),     // 2025-06-22 Saturday   2025-W25
+            Date = now,
             CategoryId = Education.Id,
             Notes = "Some other note",
+        };
+        var tx3 = new Transaction
+        {
+            Value = 50,
+            Date = now.AddDays(-1),
+            CategoryId = Groceries.Id,
+            Notes = "Note abc",
+        };
+        var tx4 = new Transaction
+        {
+            Value = 150,
+            Date = now.AddDays(-1),
+            CategoryId = Education.Id,
+            Notes = "Another note",
         };
 
         // Create all test transactions
@@ -146,59 +152,87 @@ public class TestInsightController
         var result1 = await insightController.History();
         var response1 = Assert.IsType<HistoryResult>(Assert.IsType<OkObjectResult>(result1).Value);
 
-        // Assert monthly
-        Assert.Collection(response1.Monthly,
-            item =>
-            {
-                Assert.Equal(475.0m, item.Value);
-                Assert.Equal(2, item.ByCategory.Count);
-                Assert.Equal(350.0m, item.ByCategory["Education"]);
-                Assert.Equal(125.0m, item.ByCategory["Groceries"]);
-            });
-
-        // Assert weekly
-        var json = JsonSerializer.Serialize(response1.Weekly);
-        Console.WriteLine(json);
-        Assert.Collection(response1.Weekly,
-            item =>
-            {
-                Assert.Equal(350.0m, item.Value);
-                Assert.Single(item.ByCategory);
-                Assert.Equal(350.0m, item.ByCategory["Education"]);
-            },
-            item =>
-            {
-                Assert.Equal(125.0m, item.Value);
-                Assert.Single(item.ByCategory);
-                Assert.Equal(125.0m, item.ByCategory["Groceries"]);
-            });
-
         // Assert dayly
         Assert.Collection(response1.Dayly,
             item =>
             {
-                Assert.Equal(150.0m, item.Value);
-                Assert.Single(item.ByCategory);
-                Assert.Equal(150.0m, item.ByCategory["Education"]);
-            },
-            item =>
-            {
                 Assert.Equal(200.0m, item.Value);
-                Assert.Single(item.ByCategory);
-                Assert.Equal(200.0m, item.ByCategory["Education"]);
-            },
-            item =>
-            {
-                Assert.Equal(50.0m, item.Value);
-                Assert.Single(item.ByCategory);
+                Assert.Equal(2, item.ByCategory.Count);
+                Assert.Equal(150.0m, item.ByCategory["Education"]);
                 Assert.Equal(50.0m, item.ByCategory["Groceries"]);
             },
             item =>
             {
-                Assert.Equal(75.0m, item.Value);
-                Assert.Single(item.ByCategory);
+                Assert.Equal(275.0m, item.Value);
+                Assert.Equal(2, item.ByCategory.Count);
+                Assert.Equal(200.0m, item.ByCategory["Education"]);
                 Assert.Equal(75.0m, item.ByCategory["Groceries"]);
             });
+
+        // Assert weekly
+        var today = now.Date;
+        var isMonday = today.DayOfWeek == DayOfWeek.Monday;
+        if (isMonday)
+        {
+            Assert.Collection(response1.Weekly,
+                item =>
+                {
+                    Assert.Equal(200.0m, item.Value);
+                    Assert.Equal(2, item.ByCategory.Count);
+                    Assert.Equal(150.0m, item.ByCategory["Education"]);
+                    Assert.Equal(50.0m, item.ByCategory["Groceries"]);
+                },
+                item =>
+                {
+                    Assert.Equal(275.0m, item.Value);
+                    Assert.Equal(2, item.ByCategory.Count);
+                    Assert.Equal(200.0m, item.ByCategory["Education"]);
+                    Assert.Equal(75.0m, item.ByCategory["Groceries"]);
+                });
+        }
+        else
+        {
+            Assert.Collection(response1.Weekly,
+                item =>
+                {
+                    Assert.Equal(475.0m, item.Value);
+                    Assert.Equal(2, item.ByCategory.Count);
+                    Assert.Equal(350.0m, item.ByCategory["Education"]);
+                    Assert.Equal(125.0m, item.ByCategory["Groceries"]);
+                });
+        }
+
+        // Assert monthly
+        var isFirstDayOfMonth = today.Day == 1;
+        if (isFirstDayOfMonth)
+        {
+            Assert.Collection(response1.Monthly,
+                item =>
+                {
+                    Assert.Equal(200.0m, item.Value);
+                    Assert.Equal(2, item.ByCategory.Count);
+                    Assert.Equal(150.0m, item.ByCategory["Education"]);
+                    Assert.Equal(50.0m, item.ByCategory["Groceries"]);
+                },
+                item =>
+                {
+                    Assert.Equal(275.0m, item.Value);
+                    Assert.Equal(2, item.ByCategory.Count);
+                    Assert.Equal(200.0m, item.ByCategory["Education"]);
+                    Assert.Equal(75.0m, item.ByCategory["Groceries"]);
+                });
+        }
+        else
+        {
+            Assert.Collection(response1.Monthly,
+                item =>
+                {
+                    Assert.Equal(475.0m, item.Value);
+                    Assert.Equal(2, item.ByCategory.Count);
+                    Assert.Equal(350.0m, item.ByCategory["Education"]);
+                    Assert.Equal(125.0m, item.ByCategory["Groceries"]);
+                });
+        }
     }
 
 }
