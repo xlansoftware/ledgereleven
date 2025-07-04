@@ -17,3 +17,6 @@ git tag test-v1.0.0
 git push origin test-v1.0.0
 
 git tag -a v1.0.0 -m "First stable release"
+
+# Run the container interactively
+docker exec -it -u vscode xenodochial_villani bash
