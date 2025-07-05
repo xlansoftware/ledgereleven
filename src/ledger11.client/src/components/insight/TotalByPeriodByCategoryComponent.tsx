@@ -4,6 +4,7 @@ import { InsightComponent } from "../widgets/InsightComponent";
 import { useCategoryStore } from "@/lib/store-category";
 import { Category } from "@/lib/types";
 import DonutSkeleton from "../DonutSkeleton";
+import ViewMoreLink from "./ViewMoreLink";
 // import { Button } from "../ui/button";
 // import { PlusCircleIcon } from "lucide-react";
 // import { IncomeComponent } from "../widgets/IncomeComponent";
@@ -86,31 +87,19 @@ export default function TotalByPeriodByCategoryComponent(
               categories={colors}
             />
             {key === "today" && (
-              <a
-                href="#"
-                onClick={() => props.setTab("per-day")}
-                className="text-xs text-blue-500 m-4"
-              >
+              <ViewMoreLink onClick={() => props.setTab("per-day")}>
                 view per day ...
-              </a>
+              </ViewMoreLink>
             )}
             {key === "thisWeek" && (
-              <a
-                href="#"
-                onClick={() => props.setTab("per-week")}
-                className="text-xs text-blue-500 m-4"
-              >
+              <ViewMoreLink onClick={() => props.setTab("per-week")}>
                 view per week ...
-              </a>
+              </ViewMoreLink>
             )}
             {key === "thisMonth" && (
-              <a
-                href="#"
-                onClick={() => props.setTab("per-month")}
-                className="text-xs text-blue-500 m-4"
-              >
+              <ViewMoreLink onClick={() => props.setTab("per-month")}>
                 view per month ...
-              </a>
+              </ViewMoreLink>
             )}
           </div>
         );
