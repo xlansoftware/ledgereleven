@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { useSuccessOverlay } from "@/components/success";
 
-const audio = new Audio("/sounds/success.mp3")
+const audio = new Audio("/sounds/success.mp3");
 
 export default function AddScreen() {
   const { addTransaction } = useTransactionStore();
@@ -58,7 +58,7 @@ export default function AddScreen() {
       setValue("");
       setNotes("");
 
-      audio.play().catch(e => console.warn("Playback blocked:", e));
+      audio.play().catch((e) => console.warn("Playback blocked:", e));
 
       await showSuccess({ playSound: false });
     } catch (error) {
@@ -73,30 +73,37 @@ export default function AddScreen() {
     <div className="flex flex-col gap-4 h-full justify-between">
       <form
         onSubmit={handleAdd}
-        className="flex flex-col items-center gap-2 px-4 pt-1"
+        className="flex flex-col items-center gap-4 p-[2px] pt-4 w-full max-w-md mx-auto"
       >
-        <div className="flex flex-row gap-2 items-center w-full">
+        {/* Amount Input and Add Button */}
+        <div className="flex w-full gap-3 items-center">
           <Input
             ref={refInput}
             autoFocus
-            className="text-xl p-6"
-            type="number"
-            // inputMode="decimal"
-            // pattern="[0-9]*"
+            type="text"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             placeholder="0.00"
+            className="h-14 text-3xl font-semibold py-4 px-4 rounded-m border border-input shadow-sm focus-visible:ring-2 focus-visible:ring-primary transition-all w-full"
           />
-          <Button type="submit">Add</Button>
+          <Button
+            type="submit"
+            className="h-14 px-6 text-lg font-medium rounded-m"
+          >
+            Add
+          </Button>
         </div>
+
+        {/* Notes Input */}
         <Input
-          className="text-xl p-4"
           type="text"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Notes ..."
+          className="text-base py-3 px-4 rounded-m border border-input shadow-sm focus-visible:ring-2 focus-visible:ring-primary transition-all w-full"
         />
       </form>
+
       <ScrollArea className="flex-grow overflow-y-auto">
         <CategoryPicker
           categories={categories}
