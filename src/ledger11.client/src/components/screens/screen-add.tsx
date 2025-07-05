@@ -84,7 +84,7 @@ export default function AddScreen() {
             value={value}
             onChange={(e) => setValue(e.target.value)}
             placeholder="0.00"
-            className="h-14 text-3xl font-semibold py-4 px-4 rounded-m border border-input shadow-sm focus-visible:ring-2 focus-visible:ring-primary transition-all w-full"
+            className="h-14 text-3xl font-semibold py-4 px-4 rounded-m border border-input shadow-sm focus-visible:ring-2 focus-visible:ring-primary transition-all w-full md:text-3xl lg:text-3xl"
           />
           <Button
             type="submit"
