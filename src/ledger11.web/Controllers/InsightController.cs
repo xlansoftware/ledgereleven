@@ -263,18 +263,18 @@ public class InsightController : ControllerBase
             timeZone = TZConvert.GetTimeZoneInfo("Europe/Paris");
         }
 
-        var monthlyData = new Dictionary<string, PerPeriodData>();
+        var periodData = new Dictionary<string, PerPeriodData>();
 
         await Scan(db, timeZone, (value, category, localDate) =>
         {
             var periodKey = GetPeriodKey(localDate, period);
 
-            if (!monthlyData.ContainsKey(periodKey))
+            if (!periodData.ContainsKey(periodKey))
             {
-                monthlyData[periodKey] = new PerPeriodData { Title = periodKey };
+                periodData[periodKey] = new PerPeriodData { Title = periodKey };
             }
 
-            var data = monthlyData[periodKey];
+            var data = periodData[periodKey];
             var dictionary = IsExpense(value) ? data.Expense : data.Income;
 
             if (dictionary.ContainsKey(category))
@@ -287,7 +287,7 @@ public class InsightController : ControllerBase
             }
         });
 
-        return Ok(monthlyData.Values.OrderByDescending(m => m.Title).Skip(start).Take(count));
+        return Ok(periodData.Values.Skip(start).Take(count));
     }
 
     private string GetPeriodKey(DateTime date, string period)
