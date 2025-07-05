@@ -287,7 +287,7 @@ public class InsightController : ControllerBase
             }
         });
 
-        return Ok(periodData.Values.Skip(start).Take(count));
+        return Ok(periodData.Values.Reverse().Skip(start).Take(count));
     }
 
     private string GetPeriodKey(DateTime date, string period)
