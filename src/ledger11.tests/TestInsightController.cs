@@ -235,4 +235,99 @@ public class TestInsightController
         }
     }
 
+    [Fact]
+    public async Task Test_GetPerPeriodDataAsync()
+    {
+        // Arrange
+        using var serviceProvider = await TestExtesions.MockLedgerServiceProviderAsync("xuser1");
+
+        var categoriesController = ActivatorUtilities.CreateInstance<CategoryController>(serviceProvider);
+        var transactionController = ActivatorUtilities.CreateInstance<TransactionController>(serviceProvider);
+        var insightController = ActivatorUtilities.CreateInstance<InsightController>(serviceProvider);
+
+        // Get available categories
+        var allCategoriesResult = await categoriesController.GetAll();
+        var categories = Assert.IsType<List<Category>>(Assert.IsType<OkObjectResult>(allCategoriesResult).Value);
+
+        var Groceries = categories.FirstOrDefault(c => c.Name == "Groceries")!;
+        var Education = categories.FirstOrDefault(c => c.Name == "Education")!;
+
+        var today = new DateTime(2024, 1, 15);
+
+        // Act 1: Create test data
+        await transactionController.Create(new Transaction { Value = 10, Date = today, CategoryId = Groceries.Id });
+        await transactionController.Create(new Transaction { Value = -70, Date = today, CategoryId = Groceries.Id }); // Income
+        await transactionController.Create(new Transaction { Value = 20, Date = today.AddDays(-1), CategoryId = Education.Id }); // 2024-01-14
+        await transactionController.Create(new Transaction { Value = 30, Date = today.AddDays(-7), CategoryId = Groceries.Id }); // 2024-01-08
+        await transactionController.Create(new Transaction { Value = 40, Date = today.AddDays(-14), CategoryId = Education.Id }); // 2024-01-01
+        await transactionController.Create(new Transaction { Value = 50, Date = new DateTime(2023, 12, 31), CategoryId = Groceries.Id });
+        await transactionController.Create(new Transaction { Value = 60, Date = new DateTime(2023, 12, 25), CategoryId = Education.Id });
+        
+
+        // Act 2: Test daily period
+        var dailyResult = await insightController.GetPerPeriodDataAsync("day", timeZoneId: "UTC");
+        var dailyData = Assert.IsType<OkObjectResult>(dailyResult).Value as IEnumerable<PerPeriodData>;
+        Assert.NotNull(dailyData);
+        var dailyList = dailyData.ToList();
+
+        // the default retun page size is 5
+        Assert.Equal(5, dailyList.Count);
+        Assert.Equal("2024-01-15", dailyList[0].Title);
+        Assert.Equal(10, dailyList[0].Expense["Groceries"]);
+        Assert.Equal(70, dailyList[0].Income["Groceries"]);
+        Assert.Equal("2024-01-14", dailyList[1].Title);
+        Assert.Equal(20, dailyList[1].Expense["Education"]);
+        Assert.Equal("2024-01-08", dailyList[2].Title);
+        Assert.Equal(30, dailyList[2].Expense["Groceries"]);
+        Assert.Equal("2024-01-01", dailyList[3].Title);
+        Assert.Equal(40, dailyList[3].Expense["Education"]);
+        Assert.Equal("2023-12-31", dailyList[4].Title);
+        Assert.Equal(50, dailyList[4].Expense["Groceries"]);
+        // Assert.Equal("2023-12-25", dailyList[5].Title);
+        // Assert.Equal(60, dailyList[5].Expense["Education"]);
+
+        // Act 3: Test weekly period
+        var weeklyResult = await insightController.GetPerPeriodDataAsync("week", timeZoneId: "UTC");
+        var weeklyData = Assert.IsType<OkObjectResult>(weeklyResult).Value as IEnumerable<PerPeriodData>;
+        Assert.NotNull(weeklyData);
+        var weeklyList = weeklyData.ToList();
+
+        Assert.Equal(4, weeklyList.Count);
+        Assert.Equal("2024-W03", weeklyList[0].Title);
+        Assert.Equal(10, weeklyList[0].Expense["Groceries"]);
+        Assert.Equal(70, weeklyList[0].Income["Groceries"]);
+        Assert.Equal("2024-W02", weeklyList[1].Title);
+        Assert.Equal(30, weeklyList[1].Expense["Groceries"]);
+        Assert.Equal(20, weeklyList[1].Expense["Education"]);
+        Assert.Equal("2024-W01", weeklyList[2].Title);
+        Assert.Equal(40, weeklyList[2].Expense["Education"]);
+        Assert.Equal("2023-W53", weeklyList[3].Title);
+        Assert.Equal(50, weeklyList[3].Expense["Groceries"]);
+        Assert.Equal(60, weeklyList[3].Expense["Education"]);
+
+        // Act 4: Test monthly period
+        var monthlyResult = await insightController.GetPerPeriodDataAsync("month", timeZoneId: "UTC");
+        var monthlyData = Assert.IsType<OkObjectResult>(monthlyResult).Value as IEnumerable<PerPeriodData>;
+        Assert.NotNull(monthlyData);
+        var monthlyList = monthlyData.ToList();
+        
+        Assert.Equal(2, monthlyList.Count);
+        Assert.Equal("January 2024", monthlyList[0].Title);
+        Assert.Equal(40, monthlyList[0].Expense["Groceries"]);
+        Assert.Equal(60, monthlyList[0].Expense["Education"]);
+        Assert.Equal(70, monthlyList[0].Income["Groceries"]);
+        Assert.Equal("December 2023", monthlyList[1].Title);
+        Assert.Equal(50, monthlyList[1].Expense["Groceries"]);
+        Assert.Equal(60, monthlyList[1].Expense["Education"]);
+
+        // Test pagination
+        var dailyPagedResult = await insightController.GetPerPeriodDataAsync("day", start: 2, count: 2, timeZoneId: "UTC");
+        var dailyPagedData = Assert.IsType<OkObjectResult>(dailyPagedResult).Value as IEnumerable<PerPeriodData>;
+        Assert.NotNull(dailyPagedData);
+        var dailyPagedList = dailyPagedData.ToList();
+
+        Assert.Equal(2, dailyPagedList.Count);
+        Assert.Equal("2024-01-08", dailyPagedList[0].Title);
+        Assert.Equal("2024-01-01", dailyPagedList[1].Title);
+    }
 }
