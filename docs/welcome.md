@@ -4,11 +4,14 @@ LedgerEleven is a personal finance application designed to be both a simple expe
 
 ## Project Goals
 
-*   **A Useful App**: Beyond being a learning tool, LedgerEleven is a genuinely useful, simple expense tracker. It aims to do one thing and do it well.
-*   **Learning Resource**: Provide a clear and well-documented codebase that can be used to learn about modern web development practices.
-*   **Best Practices**: Demonstrate best practices for building a web application, including testing, security, and deployment.
-*   **Extensibility**: The project is designed to be extensible, allowing developers to add new features and functionality.
-*   **A Playground for Contributions**: No aspect of the project—whether it's tests, features, design, or code quality—is considered complete. This is by design. It provides a playground for developers to practice creating pull requests and contributing to an open-source project. We encourage you to create a pull request to improve any part of it!
+*   **A Useful App**: LedgerEleven is a genuinely useful, simple expense tracker. It aims to do one thing and do it well.
+*   **Pragmatic Approach**: This project follows a "get the job done first, improve later" philosophy. The code does not pretend to be clean, well-documented, or to follow all best practices. This is intentional and leaves a lot of room for improvement.
+*   **An Opportunity to Contribute**: The pragmatic approach means there are many opportunities to improve the project. You can help by:
+    *   Extending the test coverage.
+    *   Improving performance.
+    *   Enhancing general code readability.
+    *   Improve the user experience and visuals.
+*   **A Playground for Contributions**: No aspect of the project—whether it's tests, features, design, or code quality is considered complete. This is by design. It provides a playground for developers to practice creating pull requests and contributing to an open-source project. We encourage you to create a pull request to improve any part of it!
 
 ## Documentation
 
