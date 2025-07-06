@@ -55,10 +55,10 @@ Therefore, the recommended configuration is to have the Nginx reverse proxy serv
 
 ```mermaid
 graph TD
-    A[Internet] --> B{Cloudflare Tunnel<br><span style='font-size: smaller; font-style: italic;'>Handles HTTPS, DDoS Protection</span>};
-    B --> C{Nginx Reverse Proxy<br><span style='font-size: smaller; font-style: italic;'>Listens on HTTP</span>};
-    C -- "/api/*" --> D[LedgerEleven App<br><span style='font-size: smaller; font-style: italic;'>Exposed on HTTP</span>];
-    C -- "/*" --> E[Static Files<br><span style='font-size: smaller; font-style: italic;'>(wwwroot/app)</span>];
+    A[Internet] --> B{Cloudflare Tunnel<br>Handles HTTPS, DDoS Protection};
+    B --> C{Nginx Reverse Proxy<br>Listens on HTTP};
+    C -- "/api/*" --> D[LedgerEleven App<br>Exposed on HTTP];
+    C -- "/*" --> E[Static Files<br>(wwwroot/app)];
     subgraph "Your Server / Docker"
     C
     D
