@@ -54,16 +54,17 @@ Therefore, the recommended configuration is to have the Nginx reverse proxy serv
 ### Production Architecture Diagram
 
 ```mermaid
-graph TD
-    A[Internet] --> B{Cloudflare Tunnel<br>Handles HTTPS, DDoS Protection};
-    B --> C{Nginx Reverse Proxy<br>Listens on HTTP};
-    C -- "/api/*" --> D[LedgerEleven App<br>Exposed on HTTP];
-    C -- "/*" --> E[Static Files<br>(wwwroot/app)];
-    subgraph "Your Server / Docker"
-    C
-    D
-    E
-    end
+flowchart LR
+    Internet["Internet"] -- Internet --> CF["Cloudflare tunnel
+    handles HTTPS"]
+    CF --> NGINX["Nginx
+    reverse proxy"]
+    NGINX -- /app → static wwwroot/app --> APP["App
+    (http://*:8080)"]
+    NGINX -- /metrics → challenge --> APP
+    NGINX -- /* → API --> APP
+
+    Internet@{ shape: anchor}
 ```
 
 In this diagram:
