@@ -53,15 +53,20 @@ Therefore, the recommended configuration is to have the Nginx reverse proxy serv
 
 ### Production Architecture Diagram
 
+```mermaid
+graph TD
+    A[Internet] --> B{Cloudflare Tunnel<br><span style='font-size: smaller; font-style: italic;'>Handles HTTPS, DDoS Protection</span>};
+    B --> C{Nginx Reverse Proxy<br><span style='font-size: smaller; font-style: italic;'>Listens on HTTP</span>};
+    C -- "/api/*" --> D[LedgerEleven App<br><span style='font-size: smaller; font-style: italic;'>Exposed on HTTP</span>];
+    C -- "/*" --> E[Static Files<br><span style='font-size: smaller; font-style: italic;'>(wwwroot/app)</span>];
+    subgraph "Your Server / Docker"
+    C
+    D
+    E
+    end
 ```
-+----------+      +-------------------+      +-------------------------+      +------------------------+
-|          |      |                   |      |                         |      |                        |
-| Internet |----->| Cloudflare Tunnel |----->|  Nginx Reverse Proxy    |----->|   LedgerEleven App     |
-|          |      |                   |      |                         |      | (Backend API)          |
-+----------+      +-------------------+      |                         |      |                        |
-                                             |                         |      +------------------------+
-                                             |                         |
-                                             |  - Serves static files  |-----> (wwwroot/app)
-                                             |  - Forwards API reqs    |
-                                             +-------------------------+
-```
+
+In this diagram:
+- **Cloudflare Tunnel**: Exposes your service to the internet, handling HTTPS termination and providing protection against attacks.
+- **Nginx Reverse Proxy**: Listens for plain HTTP traffic from the tunnel. It serves static files (the React app) directly and forwards all API requests (under `/api/`) to the LedgerEleven application container. It can also be configured to add extra security, like authentication challenges for specific endpoints (e.g., `/metrics`).
+- **LedgerEleven App**: The backend application, which only needs to be exposed on HTTP within the Docker network.
