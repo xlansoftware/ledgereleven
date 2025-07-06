@@ -1,64 +1,30 @@
 # Hosting Locally
 
-This document describes how to host the LedgerEleven application locally using the provided Docker Compose setup.
+This document describes how to host the LedgerEleven application locally, from a simple proof of concept to a more production-ready setup.
 
-## Prerequisites
+## Building the Application
 
-*   [Docker](https.docs.docker.com/get-docker/)
-*   [Docker Compose](https://docs.docker.com/compose/install/)
+The `.devops/build` directory contains the core components for building the application into a container image.
 
-## Staging Environment
+*   **`Dockerfile.ledger-eleven-app`**: This Dockerfile compiles the .NET backend and the React frontend, packaging them into a single, self-contained image.
+*   **`docker-compose.yaml`**: This file provides a basic example of how to configure and run the application image in a simple development environment, exposing the necessary ports for local access.
 
-The `.devops/stage` directory contains a `docker-compose.yaml` file that is configured to run the application in a staging environment.
+## Staging and Proof of Concept
 
-### Configuration
+To host the application for anything more than a quick local test, you will typically need a public domain name and a TLS certificate to enable secure HTTPS access.
 
-Before you can run the application, you need to create a `.env` file in the `.devops/stage` directory. You can use the provided `.env.template` as a starting point:
+One straightforward way to achieve this is by using a [Cloudflare Tunnel](https://www.cloudflare.com/products/tunnel/). A Cloudflare Tunnel creates a secure, outbound-only connection from your local server to the Cloudflare network. This allows you to expose your local application to the internet through a public hostname without opening any ports on your firewall.
 
-```bash
-cp .devops/stage/.env.template .devops/stage/.env
-```
+The `.devops/stage` directory includes an example `docker-compose.yaml` that demonstrates this setup. It uses the same `Dockerfile.ledger-eleven-app` from the `build` directory to build the application and then starts it behind a Cloudflare Tunnel service. You will need to provide your own tunnel token in the configuration.
 
-Next, you need to fill in the values for the following environment variables in the `.env` file:
+## Production-Ready Environment
 
-*   `APP_TUNNEL_TOKEN`
-*   `AI_API_KEY`
+For a more robust, production-ready environment, we recommend adding a reverse proxy, such as Nginx, as an additional layer between the Cloudflare Tunnel and the application.
 
-### Cloudflare Tunnel
+In this setup:
+1.  **Cloudflare Tunnel** acts as the first line of defense, protecting your network from DDoS attacks and other malicious traffic.
+2.  **Nginx Reverse Proxy** receives the traffic from the tunnel and intelligently routes it to the appropriate service.
 
-The application uses a [Cloudflare Tunnel](https://www.cloudflare.com/products/tunnel/) to expose the locally running application to the internet. This is one convenient way to obtain an HTTPS certificate for your local development environment. While not the only method, it's fast and easy, though it does require you to own a domain. This setup is particularly useful for testing webhooks or sharing the application with others.
+A key benefit of this approach is optimizing how the application's static files are served. The React client application is compiled and placed into the `wwwroot/app` folder within the `ledger11.web` project. While the .NET web server is perfectly capable of serving these files, a reverse proxy like Nginx is far more efficient at handling requests for static content.
 
-To get a Cloudflare Tunnel token, you will need to:
-
-1.  Sign up for a Cloudflare account.
-2.  Follow the instructions to [create a tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/tunnel-guide/).
-
-### AI API Key
-
-The application uses an AI API to provide AI-powered features. While the examples often refer to OpenAI, the application is designed to work with any AI provider that is compatible with the OpenAI API. You can provide the URL and API key for any such provider.
-
-To get an OpenAI API key (as an example):
-
-1.  Sign up for an OpenAI account.
-2.  Navigate to the [API keys](https://platform.openai.com/account/api-keys) section of your account to create a new secret key.
-
-Alternatively, you can use a local Large Language Model (LLM) for development and testing. Tools like [LM Studio](https://lmstudio.ai/) allow you to run various LLMs (e.g., Llama models) directly on your machine, providing an OpenAI-compatible API endpoint. This can be a great option for privacy and cost-effectiveness during development.
-
-To learn more about running local LLMs:
-
-*   [LM Studio](https://lmstudio.ai/)
-*   [Ollama](https://ollama.com/) (another popular tool for running local LLMs)
-
-## Running the Application
-
-Once you have configured the `.env` file, you can run the application using the following command from the `.devops/stage` directory:
-
-```bash
-docker-compose up -d
-```
-
-This will start the application in the background. You can view the logs using the following command:
-
-```bash
-docker-compose logs -f
-```
+Therefore, the recommended configuration is to have the Nginx reverse proxy serve the static React app directly from the filesystem, while forwarding all API requests (e.g., to `/api/...`) to the backend .NET application. This separation of concerns improves performance and scalability.
