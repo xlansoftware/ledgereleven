@@ -67,6 +67,13 @@ If you prefer to work directly on Windows, we recommend using WSL.
     nvm use 22
     ```
 
+### Windows
+
+If you are not using WSL, you can follow these steps:
+
+1.  Install the [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0).
+2.  Install [Node.js 22](https://nodejs.org/en/download/current/).
+
 ### macOS
 
 1.  Install the [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0).
