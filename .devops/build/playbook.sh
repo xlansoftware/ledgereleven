@@ -1,3 +1,6 @@
+# The file contains example commands useful for
+# working with image, etc
+
 # Build the Docker image
 docker build -t ledger11-web -f ./Dockerfile.ledger-eleven-app ../../src
 
@@ -16,7 +19,8 @@ docker run --rm debug-context
 git tag test-v1.0.0
 git push origin test-v1.0.0
 
+# Create a new tag with a message
 git tag -a v1.0.0 -m "First stable release"
 
 # Run the container interactively
-docker exec -it -u vscode xenodochial_villani bash
+docker exec -it -u vscode container_name bash
