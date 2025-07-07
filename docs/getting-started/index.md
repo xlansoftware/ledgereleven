@@ -132,3 +132,15 @@ Developing the app requires two steps:
     ```
 
 Open a browser and navigate to ```http://localhost:5173```. When you first open the app, you will be prompted to register a new user. During development, email verification is disabled, so you can use any email address.
+
+Alternatively, you can use the ```lefger11.cli``` cli tool to create a demo user and seed it with random data:
+
+```bash
+cd src/ledger11.cli
+
+# Create demo user
+dotnet run create-user --data ../ledger11.web --email demo@example.com --password Super-Secret-42
+
+# Generate sample data
+dotnet run generate-data --data ../ledger11.web --email demo@example.com
+```
