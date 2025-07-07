@@ -95,61 +95,82 @@ public static class Tools
     }
 
     /// <summary>
-    /// Get or discover the data path.
+    /// Determines the absolute path to the data directory.
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="path">A path to the data folder or the application root, in which case, the path is read from the configuration.</param>
-    /// <returns>The actual folder where the database files reside</returns>
-    /// <exception cref="Exception"></exception>
+    /// <param name="logger">Optional logger for diagnostic messages.</param>
+    /// <param name="path">
+    /// An optional path that can be either:
+    /// 1. The direct path to the data folder.
+    /// 2. The path to the application's root folder (containing appsettings.json).
+    /// If not provided, the method will try to locate the application root automatically.
+    /// </param>
+    /// <returns>The absolute path to the data directory.</returns>
+    /// <exception cref="Exception">
+    /// Thrown if the data path cannot be determined, for example, if appsettings.json is not found
+    /// or if it's missing the required 'AppConfig:DataPath' setting.
+    /// </exception>
     public static string DataPath(ILogger? logger, string path)
     {
-        logger?.LogTrace($"--data = {path}");
-        logger?.LogTrace($"AppContext.BaseDirectory = {AppContext.BaseDirectory}");
-        logger?.LogTrace($"Environment.CurrentDirectory = {Environment.CurrentDirectory}");
+        logger?.LogTrace($"--data parameter = {path}");
 
-        if (string.IsNullOrWhiteSpace(path))
+        string appRootPath = path;
+
+        // 1. Determine the application root path if not explicitly provided.
+        if (string.IsNullOrWhiteSpace(appRootPath))
         {
+            logger?.LogTrace("Data path not provided. Attempting to discover appsettings.json...");
+            logger?.LogTrace($"Searching in: {AppContext.BaseDirectory}");
+            logger?.LogTrace($"Searching in: {Environment.CurrentDirectory}");
+
             if (File.Exists(Path.Combine(AppContext.BaseDirectory, "appsettings.json")))
             {
-                path = AppContext.BaseDirectory;
+                appRootPath = AppContext.BaseDirectory;
             }
             else if (File.Exists(Path.Combine(Environment.CurrentDirectory, "appsettings.json")))
             {
-                path = Environment.CurrentDirectory;
+                appRootPath = Environment.CurrentDirectory;
             }
             else
             {
-                throw new Exception("The default location has no appsettings.json. Use --data option to proveide path to the db files or appsettings.json file.");
+                throw new Exception("Could not find appsettings.json in default locations. Please use the --data option to specify the path to the data folder or the application root.");
+            }
+            logger?.LogTrace($"Found application root at: {appRootPath}");
+        }
+
+        // 2. Convert to an absolute path to handle relative inputs.
+        var absolutePath = Path.GetFullPath(appRootPath, Environment.CurrentDirectory);
+        logger?.LogTrace($"Resolved path to: {absolutePath}");
+
+        var configFile = Path.Combine(absolutePath, "appsettings.json");
+
+        // 3. Check if the path is the application root (contains appsettings.json).
+        if (File.Exists(configFile))
+        {
+            logger?.LogTrace($"Found configuration file: {configFile}");
+
+            var config = new ConfigurationBuilder()
+                .SetBasePath(absolutePath)
+                .AddJsonFile("appsettings.json", optional: false)
+                .Build();
+
+            var dataPathFromConfig = config["AppConfig:DataPath"];
+
+            if (string.IsNullOrWhiteSpace(dataPathFromConfig))
+            {
+                throw new Exception($"The configuration file at '{configFile}' is missing the required 'AppConfig:DataPath' setting.");
             }
 
-            logger?.LogTrace($"Using data path {path} ...");
+            // The path from config can be relative to the app root. Resolve it.
+            var finalPath = Path.GetFullPath(dataPathFromConfig, absolutePath);
+            logger?.LogTrace($"Data path from config: '{dataPathFromConfig}', resolved to: '{finalPath}'");
+            return finalPath;
         }
-
-        // convert to absolute path
-        path = Path.GetFullPath(path, Environment.CurrentDirectory);
-
-        var configFile = Path.Combine(path, "appsettings.json");
-
-        if (!File.Exists(configFile))
+        else
         {
-            // This is not an app root folder so it should be the data path itself.
-            return path;
+            // 4. If no appsettings.json, assume the provided path is the data directory itself.
+            logger?.LogTrace($"No appsettings.json found at '{absolutePath}'. Assuming it is the data directory.");
+            return absolutePath;
         }
-
-        logger?.LogTrace($"Found appsettings.json at {configFile} ...");
-
-        var config = new ConfigurationBuilder()
-            .SetBasePath(path)
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
-            .Build();
-
-        var result = config["AppConfig:DataPath"];
-        if (result == null)
-        {
-            throw new Exception($"Path {path} has appsettings.json, but it has no setting for AppConfig:DataPath...");
-        }
-
-        return Path.GetFullPath(result, path);
     }
 
     public static ILogger CreateConsoleLogger(LogLevel level, string name)
