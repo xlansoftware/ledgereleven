@@ -1,87 +1,47 @@
 # Ledger Eleven
 
-Personal expense tracker
+LedgerEleven is a simple, mobile-first personal expense tracker designed for quick and easy entry on the go. It helps you visualize spending trends, import/export data for analysis, and leverages AI for a smarter experience.
 
-# How to build
+## Live Application
 
-## Prerequisites
+The application is publicly available at: **[https://ledgereleven.com/](https://ledgereleven.com/)**
 
-```bash
-nvm install --lts
-nvm use --lts
-npm i
-cd ./src/ledger11.client
-npm i --legacy-peer-deps
-cd ./src/ledger11.playwright
-npm i --legacy-peer-deps
-```
+## Running the Application
+
+### In a Container (Recommended)
+
+To build and run the application in a Docker container, execute the following command:
 
 ```bash
-dotnet tool install --global dotnet-ef
+cd ./.devops/build
+docker-compose up --build
 ```
 
-## Run the tests
+The application will be available at `http://localhost:8080`.
 
-```bash
-npm run test
-```
+### Locally
 
-### Run the backend tests locally
+To run the application locally, you need to start both the backend and frontend services.
 
-```bash
-cd src
-dotnet test
-```
+1.  **Start the backend:**
+    ```bash
+    cd ./src/ledger11.web
+    dotnet run
+    ```
 
-### Run the backend tests in a container
+2.  **Start the frontend (in a new terminal):**
+    ```bash
+    cd ./src/ledger11.client
+    npm run dev
+    ```
 
-```bash
-cd ./.devops/test/backend
-docker-compose run --build --rm app-test
-```
+The application will be available at `http://localhost:5173`.
 
-### Run the frontend tests in a container
+## Documentation
 
-```bash
-cd ./.devops/test/web
-docker-compose run --build --rm test
-```
+For more detailed instructions, troubleshooting, and a full list of useful commands, please refer to the following documents:
 
-### Run the frontend tests locally:
+*   **[Getting Started](./docs/getting-started/index.md)**: Detailed setup and development instructions.
+*   **[Playbook](./PLAYBOOK.md)**: A collection of useful commands for development and testing.
 
-Start the backend:
-```bash
-# start the backend
-cd ./src/ledger11.web
-dotnet run
-```
-Leave it running and open another terminal for the playwright tests
-```bash
-# start the playwright tests
-cd ./src/ledger11.webtests
-npx playwright test
-```
 
-## Start
-
-```bash
-npm run dev
-```
-
-## Work with SQLite in a container
-
-```bash
-sudo apt update
-sudo apt install sqlite3
-
-sqlite3
-.open <db file name>
-.tabes
-```
-
-## Convert wav to mp3
-
-```bash
-sudo apt install ffmpeg
-ffmpeg -i input.wav output.mp3
-```

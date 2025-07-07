@@ -12,19 +12,34 @@ Entity Framework Core migrations are used to manage the database schema. When yo
 
 ### Creating a Migration
 
-To create a new migration, run the following command from the `src/ledger11.data` directory:
-
+To create migrations, you first need to install the .NET EF Core command-line tool:
 ```bash
-dotnet ef migrations add <MigrationName>
+dotnet tool install --global dotnet-ef
 ```
+
+The `ledger11.data` project contains the application's `DbContext`s. There are two:
+1.  `LedgerDbContext`: For core application data like ledgers and transactions.
+2.  `AppDbContext`: For ASP.NET Identity data, such as users and roles.
+
+To create a new migration, run the corresponding command from the repository root. Replace `InitialCreate` with a descriptive name for your migration (e.g., `AddPurchaseDate`).
+
+- **For `LedgerDbContext`:**
+  ```bash
+  dotnet ef migrations add NameOfTheChange --project src/ledger11.data --context LedgerDbContext --output-dir Migrations/Ledger
+  ```
+
+- **For `AppDbContext`:**
+  ```bash
+  dotnet ef migrations add NameOfTheChange --project src/ledger11.data --context AppDbContext --output-dir Migrations/App
+  ```
 
 ### Applying a Migration
 
-To apply a migration to the database, run the following command from the `src/ledger11.web` directory:
+Migrations are applied automatically when the application starts up.
 
-```bash
-dotnet ef database update
-```
+Because of this automatic execution, it is critical that every migration is accompanied by a migration test in the `ledger11.tests` project. These tests validate the schema changes by running against a sample database file that represents the state *before* the migration.
+
+For complex data transformations that go beyond simple schema changes, you can implement custom logic in the `ledger11.cli` project.
 
 ## SQLite vs. PostgreSQL
 
@@ -37,6 +52,12 @@ However, because the application uses Entity Framework Core, switching to a more
 If you want to inspect the SQLite database directly, you can use the `sqlite3` command-line tool.
 
 1.  Install `sqlite3`.
+
+    ```bash
+    sudo apt update
+    sudo apt install sqlite3
+    ```
+
 2.  Open the database file:
 
     ```bash

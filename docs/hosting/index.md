@@ -28,6 +28,7 @@ The `.devops/stage` directory includes an example `docker-compose.yaml` that dem
 
 To run the staging environment:
 
+1.  You will need a configured Cloudflare Tunnel.
 1.  Navigate to the `.devops/stage` directory.
 2.  Create a `.env` file from the template:
     ```bash
@@ -39,9 +40,9 @@ To run the staging environment:
     docker-compose up -d
     ```
 
-## Production-Ready Environment
+## Reverse Proxy
 
-For a more robust, production-ready environment, we recommend adding a reverse proxy, such as Nginx, as an additional layer between the Cloudflare Tunnel and the application.
+For a more robust environment, we recommend adding a reverse proxy, such as Nginx, as an additional layer between the Cloudflare Tunnel and the application.
 
 In this setup:
 1.  **Cloudflare Tunnel** acts as the first line of defense, protecting your network from DDoS attacks and other malicious traffic.
@@ -51,7 +52,7 @@ A key benefit of this approach is optimizing how the application's static files 
 
 Therefore, the recommended configuration is to have the Nginx reverse proxy serve the static React app directly from the filesystem, while forwarding all API requests (e.g., to `/api/...`) to the backend .NET application. This separation of concerns improves performance and scalability.
 
-### Production Architecture Diagram
+### Architecture Diagram
 
 ```mermaid
 flowchart LR
@@ -59,15 +60,16 @@ flowchart LR
     handles HTTPS"]
     CF --> NGINX["Nginx
     reverse proxy"]
-    NGINX -- /app → static wwwroot/app --> APP["App
-    (http://*:8080)"]
+    NGINX -- /app --> FILES["Files mount
+    static wwwroot/app"]
     NGINX -- /metrics → challenge --> APP
-    NGINX -- /* → API --> APP
+    NGINX -- /* → API --> APP["App
+    (http://*:8080)"]
 
     Internet@{ shape: anchor}
 ```
 
 In this diagram:
 - **Cloudflare Tunnel**: Exposes your service to the internet, handling HTTPS termination and providing protection against attacks.
-- **Nginx Reverse Proxy**: Listens for plain HTTP traffic from the tunnel. It serves static files (the React app) directly and forwards all API requests (under `/api/`) to the LedgerEleven application container. It can also be configured to add extra security, like authentication challenges for specific endpoints (e.g., `/metrics`).
+- **Nginx Reverse Proxy**: Listens for plain HTTP traffic from the tunnel. It serves static files (the React app) directly and forwards all API requests (under `/`) to the LedgerEleven application container. It can also be configured to add extra security, like authentication challenges for specific endpoints (e.g., `/metrics`).
 - **LedgerEleven App**: The backend application, which only needs to be exposed on HTTP within the Docker network.
