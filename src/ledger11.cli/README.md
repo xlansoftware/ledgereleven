@@ -13,3 +13,8 @@ This project provides a command-line interface (CLI) for interacting with the Le
 ```bash
 dotnet run create-user --data ../ledger11.web --email demo@example.com --password Super-Secret-42
 ```
+### Seed the test user with data
+
+```bash
+dotnet run generate-data --data ../ledger11.web --email demo@example.com
+```
