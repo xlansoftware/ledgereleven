@@ -4,9 +4,15 @@
 
 LedgerEleven is a simple, mobile-first personal expense tracker designed for quick and easy entry on the go. It helps you visualize spending trends, import/export data for analysis, and leverages AI for a smarter experience.
 
-## Live Application
+## Key Features
 
-### Screenshots
+*   **Mobile-First Design:** Optimized for a seamless experience on your smartphone.
+*   **AI-Powered Insights:** Get a smarter understanding of your spending habits.
+*   **Data Portability:** Easily import and export your data.
+*   **Self-Hostable:** Run it on your own infrastructure using Docker.
+*   **Secure:** Your data is your own.
+
+## Screenshots
 
 <table>
   <tr>
@@ -16,15 +22,25 @@ LedgerEleven is a simple, mobile-first personal expense tracker designed for qui
   </tr>
 </table>
 
+## Live Application
+
 The application is publicly available at: **[https://ledgereleven.com/](https://ledgereleven.com/)**
 
-## Getting Started
+## Technology Stack
+
+*   **Backend:** C#, .NET 9, ASP.NET Core
+*   **Frontend:** React, TypeScript, Vite
+*   **Database:** SQLite
+*   **Testing:** Playwright for end-to-end tests, xUnit for unit tests
+*   **Containerization:** Docker
+
+## Development
+
+To get a local copy up and running, follow these simple steps.
 
 ### Running the Application Locally
 
 (_Requires: .NET 9.0 SDK and node.js installed._)
-
-To run the application locally, you need to start both the backend and frontend services.
 
 1.  **Start the backend:**
     ```bash
@@ -40,11 +56,9 @@ To run the application locally, you need to start both the backend and frontend 
 
 The application will be available at `http://localhost:5173`.
 
-### In a Container
+### Running in a Container
 
 (_Requires: Docker or Docker for Desktop installed._)
-
-To build and run the application in a Docker container, execute the following command:
 
 ```bash
 cd ./.devops/build
@@ -53,9 +67,9 @@ docker-compose up --build
 
 The application will be available at `http://localhost:8080`.
 
-## Run the Tests
+### Running Tests
 
-### Locally
+#### Locally
 
 **Backend Tests:**
 ```bash
@@ -65,13 +79,13 @@ dotnet test
 
 **Frontend Tests:**
 
-First, start the backend (see "Running the Application" section). Then, in a new terminal:
+First, start the backend. Then, in a new terminal:
 ```bash
 cd ./src/ledger11.webtests
 npx playwright test
 ```
 
-### In a Container
+#### In a Container
 
 **Backend Tests:**
 ```bash
@@ -91,5 +105,11 @@ For more detailed instructions, troubleshooting, and a full list of useful comma
 
 *   **[Getting Started](./docs/getting-started/index.md)**: Detailed setup and development instructions.
 *   **[About](./docs/welcome.md)**: More about the app, architecture, technology and design choices.
+
+## Contributing
+
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+Please read our [**Contributing Guide**](./CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
 
 
