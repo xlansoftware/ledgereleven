@@ -68,7 +68,10 @@ public static class UserCommands
         {
             await Tools.Catch(async () =>
             {
-                var host = Tools.CreateHost(logLevel, data);
+                var consoleLogger = Tools.CreateConsoleLogger(logLevel, "InfoCommand");
+                var dataPath = Tools.DataPath(consoleLogger, data);
+
+                var host = Tools.CreateHost(logLevel, dataPath);
                 using var scope = host.Services.CreateScope();
                 var services = scope.ServiceProvider;
 

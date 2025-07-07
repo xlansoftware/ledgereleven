@@ -118,6 +118,9 @@ public static class Tools
             logger?.LogTrace($"Using data path {path} ...");
         }
 
+        // convert to absolute path
+        path = Path.GetFullPath(path, Environment.CurrentDirectory);
+
         var configFile = Path.Combine(path, "appsettings.json");
 
         if (!File.Exists(configFile))
