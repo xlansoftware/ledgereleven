@@ -1,14 +1,26 @@
 # Ledger Eleven
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
 LedgerEleven is a simple, mobile-first personal expense tracker designed for quick and easy entry on the go. It helps you visualize spending trends, import/export data for analysis, and leverages AI for a smarter experience.
 
 ## Live Application
 
+### Screenshots
+
+<table>
+  <tr>
+    <td><img src="./assets/images/screenshot-add.png" alt="Add Transaction" width="250"/></td>
+    <td><img src="./assets/images/screenshot-hostory.png" alt="Transaction History" width="250"/></td>
+    <td><img src="./assets/images/screenshot-insights.png" alt="Spending Insights" width="250"/></td>
+  </tr>
+</table>
+
 The application is publicly available at: **[https://ledgereleven.com/](https://ledgereleven.com/)**
 
-## Running the Application
+## Getting Started
 
-### Locally
+### Running the Application Locally
 
 (_Requires: .NET 9.0 SDK and node.js installed._)
 
