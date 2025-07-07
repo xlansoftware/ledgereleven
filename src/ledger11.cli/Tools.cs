@@ -94,6 +94,13 @@ public static class Tools
 
     }
 
+    /// <summary>
+    /// Get or discover the data path.
+    /// </summary>
+    /// <param name="logger"></param>
+    /// <param name="path">A path to the data folder or the application root, in which case, the path is read from the configuration.</param>
+    /// <returns>The actual folder where the database files reside</returns>
+    /// <exception cref="Exception"></exception>
     public static string DataPath(ILogger? logger, string path)
     {
         logger?.LogTrace($"--data = {path}");
@@ -125,6 +132,7 @@ public static class Tools
 
         if (!File.Exists(configFile))
         {
+            // This is not an app root folder so it should be the data path itself.
             return path;
         }
 
