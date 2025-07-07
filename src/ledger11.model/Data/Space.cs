@@ -2,6 +2,9 @@ using System.Text.Json.Serialization;
 
 namespace ledger11.model.Data;
 
+// A "space" is a collection of transactions.
+// Also referred to as a "ledger" or "book".
+// Each space is stored in a separate database.
 public class Space
 {
     public Guid Id { get; set; } = Guid.NewGuid(); // Primary Key
