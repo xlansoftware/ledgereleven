@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useExchangeRate } from "@/hooks/useExchangeRate";
 
 interface ExchangeRateDialogProps {
   isOpen: boolean;
@@ -31,29 +32,36 @@ export function ExchangeRateDialog({
   onCancel,
   ...props
 }: ExchangeRateDialogProps) {
-  const [value, setValue] = useState<number>(props.value ?? 42);
+  const [value, setValue] = useState<number>(props.value || 0);
   const [exchangeRate, setExchangeRate] = useState<number>(1.0);
   const [result, setResult] = useState<number>(0.0);
   const exchangeRateRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    setValue(props.value ?? 42);
-    setExchangeRate(1.0);
-  }, [props.value, props.currency]);
+  const rate = useExchangeRate(
+    props.currency || "USD",
+    props.ledgerCurrency || "USD"
+  );
 
-  // useEffect(() => {
-  //   if (isOpen && exchangeRateRef.current) {
-  //     exchangeRateRef.current.select();
-  //   }
-  // }, [isOpen]);
+  useEffect(() => {
+    setValue(props.value || 0);
+    setExchangeRate(rate || 1.0);
+    setResult((props.value || 0) * (rate || 1.0));
+  }, [props.value, props.currency, rate]);
 
   if (!isOpen) return null;
 
   return (
-    <Drawer direction="top"  open={isOpen} onOpenChange={(open) => !open && onCancel()}>
+    <Drawer
+      direction="top"
+      open={isOpen}
+      onOpenChange={(open) => !open && onCancel()}
+    >
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>Exchange Rate for {props.currency} to {props.ledgerCurrency || "USD"}</DrawerTitle>
+          <DrawerTitle>
+            Exchange Rate for {props.currency} to{" "}
+            {props.ledgerCurrency || "USD"}
+          </DrawerTitle>
         </DrawerHeader>
 
         <div className="grid gap-4 px-4 pb-4">
@@ -92,7 +100,9 @@ export function ExchangeRateDialog({
           </div>
 
           <div>
-            <Label htmlFor="result">Result ({props.ledgerCurrency || "USD"})</Label>
+            <Label htmlFor="result">
+              Result ({props.ledgerCurrency || "USD"})
+            </Label>
             <Input
               id="result"
               type="number"
