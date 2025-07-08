@@ -26,6 +26,10 @@ interface ExchangeRateDialogProps {
   currency?: string;
 }
 
+// In-memory store for remembering user-entered exchange rates per currency pair.
+// Note: We could use localStorage or IndexedDB if persistence across reloads is needed.
+const exchangeRateCache = new Map<string, number>();
+
 export function ExchangeRateDialog({
   isOpen,
   onConfirm,
@@ -37,16 +41,22 @@ export function ExchangeRateDialog({
   const [result, setResult] = useState<number>(0.0);
   const exchangeRateRef = useRef<HTMLInputElement | null>(null);
 
-  const rate = useExchangeRate(
-    props.currency || "USD",
-    props.ledgerCurrency || "USD"
-  );
+  const fromCurrency = props.currency || "USD";
+  const toCurrency = props.ledgerCurrency || "USD";
+  const cacheKey = `${fromCurrency}_${toCurrency}`;
+
+  const fetchedRate = useExchangeRate(fromCurrency, toCurrency);
 
   useEffect(() => {
     setValue(props.value || 0);
-    setExchangeRate(rate || 1.0);
-    setResult((props.value || 0) * (rate || 1.0));
-  }, [props.value, props.currency, rate]);
+
+    // Use cached user-entered rate if available, otherwise use fetched API rate
+    const cachedRate = exchangeRateCache.get(cacheKey);
+    const initialRate = cachedRate ?? fetchedRate ?? 1.0;
+
+    setExchangeRate(initialRate);
+    setResult((props.value || 0) * initialRate);
+  }, [props.value, fromCurrency, toCurrency, fetchedRate]);
 
   if (!isOpen) return null;
 
@@ -90,11 +100,13 @@ export function ExchangeRateDialog({
               step={0.01}
               className="text-xl"
               value={exchangeRate || ""}
-              // onFocus={(e) => e.target.select()}
               onChange={(e) => {
                 const rate = parseFloat(e.target.value) || 0;
                 setExchangeRate(rate);
                 setResult(parseFloat((value * rate).toFixed(2)));
+
+                // Store user-entered rate in cache
+                exchangeRateCache.set(cacheKey, rate);
               }}
             />
           </div>
@@ -112,7 +124,13 @@ export function ExchangeRateDialog({
               onChange={(e) => {
                 const res = parseFloat(e.target.value) || 0;
                 setResult(res);
-                setExchangeRate(parseFloat((res / value).toFixed(4)));
+
+                const rate =
+                  value !== 0 ? parseFloat((res / value).toFixed(4)) : 0;
+                setExchangeRate(rate);
+
+                // Update cache with recalculated rate
+                exchangeRateCache.set(cacheKey, rate);
               }}
             />
           </div>
