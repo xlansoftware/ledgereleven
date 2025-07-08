@@ -51,7 +51,7 @@ public class SpaceController : ControllerBase
             {
                 try
                 {
-                    var ledgerContext = await _currentLedgerService.GetLedgerDbContextAsync(space.Id, false);
+                    var ledgerContext = await _userSpace.GetLedgerDbContextAsync(space.Id, false);
                     var result = await ledgerContext.Transactions
                         .GroupBy(t => 1)
                         .Select(g => new
@@ -98,7 +98,7 @@ public class SpaceController : ControllerBase
             {
                 try
                 {
-                    var ledgerContext = await _currentLedgerService.GetLedgerDbContextAsync(dto.Current.Id, false);
+                    var ledgerContext = await _userSpace.GetLedgerDbContextAsync(dto.Current.Id, false);
                     dto.Current.CountTransactions = await ledgerContext.Transactions.CountAsync();
                 }
                 catch
@@ -129,7 +129,7 @@ public class SpaceController : ControllerBase
         {
             // copy the categories form the current space to the new space
             var currentLedger = await _currentLedgerService.GetLedgerDbContextAsync();
-            var newLedger = await _currentLedgerService.GetLedgerDbContextAsync(result.Id, true);
+            var newLedger = await _userSpace.GetLedgerDbContextAsync(result.Id, true);
             _logger.LogInformation("Copying categories from current ledger to new ledger {NewLedgerId}", result.Id);
             await CopyCategoriesAsync(currentLedger, newLedger);
         }

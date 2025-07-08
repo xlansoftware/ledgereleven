@@ -14,7 +14,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ledger11.tests;
 
-public class TestApiSpace
+public class TestSpaceController
 {
     [Fact]
     public async Task Test_Create_Space()
@@ -22,7 +22,7 @@ public class TestApiSpace
         // Arrange
         using var serviceProvider = await TestExtesions.MockLedgerServiceProviderAsync("xuser1");
 
-        var controller = ActivatorUtilities.CreateInstance<ApiSpaceController>(serviceProvider);
+        var controller = ActivatorUtilities.CreateInstance<SpaceController>(serviceProvider);
 
         // Act
         var response = await controller.Create(new Space
@@ -45,7 +45,7 @@ public class TestApiSpace
     {
         // Arrange
         using var serviceProvider = await TestExtesions.MockLedgerServiceProviderAsync("xuser1");
-        var controller = ActivatorUtilities.CreateInstance<ApiSpaceController>(serviceProvider);
+        var controller = ActivatorUtilities.CreateInstance<SpaceController>(serviceProvider);
 
         // Act
         var result = await controller.List();
@@ -62,7 +62,7 @@ public class TestApiSpace
     {
         // Arrange
         using var serviceProvider = await TestExtesions.MockLedgerServiceProviderAsync("xuser1");
-        var controller = ActivatorUtilities.CreateInstance<ApiSpaceController>(serviceProvider);
+        var controller = ActivatorUtilities.CreateInstance<SpaceController>(serviceProvider);
 
         var createResult = await controller.Create(new Space
         {
@@ -106,7 +106,7 @@ public class TestApiSpace
     {
         // Arrange
         using var serviceProvider = await TestExtesions.MockLedgerServiceProviderAsync("xuser1");
-        var controller = ActivatorUtilities.CreateInstance<ApiSpaceController>(serviceProvider);
+        var controller = ActivatorUtilities.CreateInstance<SpaceController>(serviceProvider);
 
         var createResult = await controller.Create(new Space
         {
@@ -139,7 +139,7 @@ public class TestApiSpace
     {
         // Arrange
         using var serviceProvider = await TestExtesions.MockLedgerServiceProviderAsync("xuser1");
-        var controller = ActivatorUtilities.CreateInstance<ApiSpaceController>(serviceProvider);
+        var controller = ActivatorUtilities.CreateInstance<SpaceController>(serviceProvider);
 
         var createResult = await controller.Create(new Space
         {
@@ -188,7 +188,7 @@ public class TestApiSpace
             Console.WriteLine($"User: {user.UserName} ({user.Id})");
         }
 
-        var controller = ActivatorUtilities.CreateInstance<ApiSpaceController>(serviceProvider);
+        var controller = ActivatorUtilities.CreateInstance<SpaceController>(serviceProvider);
 
         // Get the id of the current space
         var list = await controller.List();

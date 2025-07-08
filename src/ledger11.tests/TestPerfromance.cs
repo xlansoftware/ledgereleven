@@ -75,7 +75,7 @@ public class TestPerformance
         var initialCategory = categories[0];
 
         var transactionsController = ActivatorUtilities.CreateInstance<TransactionController>(serviceProvider);
-        var spaceController = ActivatorUtilities.CreateInstance<ApiSpaceController>(serviceProvider);
+        var spaceController = ActivatorUtilities.CreateInstance<SpaceController>(serviceProvider);
 
         const int transactionCount = 1000;
         var stopwatch = Stopwatch.StartNew();
