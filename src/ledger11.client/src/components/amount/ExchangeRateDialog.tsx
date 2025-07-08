@@ -31,13 +31,11 @@ export function ExchangeRateDialog({
   ...props
 }: ExchangeRateDialogProps) {
   const [value, setValue] = useState<number>(props.value ?? 42);
-  const [currency, setCurrency] = useState<string>(props.currency ?? "");
   const [exchangeRate, setExchangeRate] = useState<number>(1.0);
   const [result, setResult] = useState<number>(0.0);
 
   useEffect(() => {
     setValue(props.value ?? 42);
-    setCurrency(props.currency ?? "");
     setExchangeRate(1.0);
   }, [props.value, props.currency]);
 
@@ -104,7 +102,7 @@ export function ExchangeRateDialog({
               onConfirm({
                 value,
                 exchangeRate,
-                currency,
+                currency: props.currency || "USD",
               })
             }
           >

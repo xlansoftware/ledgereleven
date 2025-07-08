@@ -31,6 +31,7 @@ export default function AddScreen() {
 
   const handleAdd = async (transaction: Partial<Transaction>) => {
     try {
+      // console.log("Adding transaction:", transaction);
       // disable controls
       await addTransaction({
         ...transaction,

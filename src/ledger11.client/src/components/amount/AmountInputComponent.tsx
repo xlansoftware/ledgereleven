@@ -4,6 +4,7 @@ import { Button } from "../ui/button";
 import { Transaction } from "@/lib/types";
 import { ExchangeRateDialog } from "./ExchangeRateDialog";
 import { parseMoneyInput } from "@/lib/parseMoneyInput";
+import { useSpaceStore } from "@/lib/store-space";
 
 interface AmountInputComponentProps {
   onConfirm: (transaction: Partial<Transaction>) => void;
@@ -18,6 +19,8 @@ interface ExchangeRateDialogProps {
 
 export function AmountInputComponent({ onConfirm }: AmountInputComponentProps) {
   const refInput = useRef<HTMLInputElement>(null);
+
+  const { current } = useSpaceStore();
 
   const [value, setValue] = useState("");
   const [exchangeRateDialogProps, setExchangeRateDialogProps] =
@@ -35,13 +38,17 @@ export function AmountInputComponent({ onConfirm }: AmountInputComponentProps) {
     if (!amount) return;
 
     if (amount?.currency) {
+      if (amount.currency === (current?.currency || "USD")) {
+        onConfirm({ value: amount.value });
+        setValue("");
+        return;
+      }
       // allow the user to provide exchange rate
-      debugger;
       setExchangeRateDialogProps({
         isOpen: true,
-        ledgerCurrency: "EUR",
+        ledgerCurrency: current?.currency,
         value: amount.value,
-        currency: amount.currency
+        currency: amount.currency,
       });
       // the call the onConfirm callback will be handled by the dialog
       return;
@@ -66,8 +73,12 @@ export function AmountInputComponent({ onConfirm }: AmountInputComponentProps) {
         Add
       </Button>
       <ExchangeRateDialog
-        onConfirm={() => {
-          onConfirm({ value: parseFloat(value) });
+        onConfirm={(result) => {
+          onConfirm({
+            value: result.value,
+            currency: result.currency,
+            exchangeRate: result.exchangeRate,
+          });
           setExchangeRateDialogProps({ isOpen: false });
           setValue("");
         }}

@@ -13,20 +13,59 @@ interface TransactionRowProps {
   expanded?: boolean;
 }
 
-function convertValue(value: number, exchangeRate?: number, currency?: string) {
+function convertValue(
+  value: number,
+  exchangeRate?: number,
+  _currency?: string
+) {
   const convertedValue = value * (exchangeRate ?? 1.0);
-  return formatCurrency(convertedValue, 2) + (currency ? ` (${currency})` : "");
+  return formatCurrency(convertedValue, 2);
 }
 
 function transactionValue(transaction: Transaction) {
-  return convertValue(transaction.value || 0, transaction.exchangeRate, transaction.currency);
+  return convertValue(
+    transaction.value || 0,
+    transaction.exchangeRate,
+    transaction.currency
+  );
 }
 
 function detailValue(detail: TransactionDetails, transaction: Transaction) {
   if (!detail.value) return "N/A";
   const totalValue = detail.value * (detail.quantity || 1);
-  return convertValue(totalValue || 0, transaction.exchangeRate, transaction.currency);
+  return convertValue(
+    totalValue || 0,
+    transaction.exchangeRate,
+    transaction.currency
+  );
 }
+
+function explainValue(value: number, exchangeRate?: number, currency?: string) {
+  if (!currency) return null;
+  if (!exchangeRate) return null;
+  return `${formatCurrency(value, 2)} x ${exchangeRate ?? 1.0} ${currency}`;
+}
+
+function explainTransactionValue(transaction: Transaction) {
+  return explainValue(
+    transaction.value || 0,
+    transaction.exchangeRate,
+    transaction.currency
+  );
+}
+
+// function explainDetailValue(
+//   detail: TransactionDetails,
+//   transaction: Transaction
+// ) {
+//   if (!detail.value) return "N/A";
+//   const totalValue = detail.value * (detail.quantity || 1);
+//   return explainValue(
+//     totalValue || 0,
+//     transaction.exchangeRate,
+//     transaction.currency
+//   );
+// }
 
 export default function TransactionRow({
   transaction,
@@ -101,14 +140,19 @@ export default function TransactionRow({
               </div>
             </div>
 
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <div className="text-right">
-                <div className="font-bold">
-                  {transactionValue(transaction)}
+            <div className="flex flex-col flex-shrink-0 items-end">
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="text-right">
+                  <div className="font-bold">
+                    {transactionValue(transaction)}
+                  </div>
                 </div>
-              </div>
 
-              <TransactionRowMenu transaction={transaction} />
+                <TransactionRowMenu transaction={transaction} />
+              </div>
+              <div className="pr-2 text-sm text-muted-foreground">
+                {explainTransactionValue(transaction)}
+              </div>
             </div>
           </div>
         </div>
