@@ -36,17 +36,17 @@ export default function AddScreen() {
         ...transaction,
         categoryId: selectedCategory?.id,
         notes,
-        currency: "EUR",
-        exchangeRate: 1.1,
-        transactionDetails: [{
-          value: 10,
-          description: "bread",
-          quantity: 1,
-        }, {
-          value: 20,
-          description: "beer",
-          quantity: 3,
-        }],
+        // currency: "EUR",
+        // exchangeRate: 1.1,
+        // transactionDetails: [{
+        //   value: 10,
+        //   description: "bread",
+        //   quantity: 1,
+        // }, {
+        //   value: 20,
+        //   description: "beer",
+        //   quantity: 3,
+        // }],
       });
       // reset controls
       setNotes("");

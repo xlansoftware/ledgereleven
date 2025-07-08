@@ -1,30 +1,54 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Transaction } from "@/lib/types";
-import { useAmountInput } from "./useAmountInput";
-import { ConfirmDialog } from "./ConfirmDialog";
+import { ExchangeRateDialog } from "./ExchangeRateDialog";
+import { parseMoneyInput } from "@/lib/parseMoneyInput";
 
 interface AmountInputComponentProps {
   onConfirm: (transaction: Partial<Transaction>) => void;
 }
 
+interface ExchangeRateDialogProps {
+  isOpen: boolean;
+  ledgerCurrency?: string;
+  value?: number;
+  currency?: string;
+}
+
 export function AmountInputComponent({ onConfirm }: AmountInputComponentProps) {
   const refInput = useRef<HTMLInputElement>(null);
-  const {
-    value,
-    handleInputChange,
-    evaluateExpression,
-    isConfirmDialogOpen,
-    confirm,
-    setConfirmDialogOpen,
-  } = useAmountInput({ onConfirm });
+
+  const [value, setValue] = useState("");
+  const [exchangeRateDialogProps, setExchangeRateDialogProps] =
+    useState<ExchangeRateDialogProps>({ isOpen: false });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setValue(e.target.value);
+  };
 
   const handleAdd = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!value) return;
 
-    confirm(value);
+    const amount = parseMoneyInput(value);
+    if (!amount) return;
+
+    if (amount?.currency) {
+      // allow the user to provide exchange rate
+      debugger;
+      setExchangeRateDialogProps({
+        isOpen: true,
+        ledgerCurrency: "EUR",
+        value: amount.value,
+        currency: amount.currency
+      });
+      // the call the onConfirm callback will be handled by the dialog
+      return;
+    }
+
+    onConfirm({ value: amount.value });
+    setValue("");
   };
 
   return (
@@ -35,22 +59,22 @@ export function AmountInputComponent({ onConfirm }: AmountInputComponentProps) {
         type="text"
         value={value}
         onChange={handleInputChange}
-        onBlur={evaluateExpression}
         placeholder="0.00"
         className="h-14 text-3xl font-semibold py-4 px-4 rounded-m border border-input shadow-sm focus-visible:ring-2 focus-visible:ring-primary transition-all w-full md:text-3xl lg:text-3xl"
       />
       <Button type="submit" className="h-14 px-6 text-lg font-medium rounded-m">
         Add
       </Button>
-      <ConfirmDialog
-        isOpen={isConfirmDialogOpen}
+      <ExchangeRateDialog
         onConfirm={() => {
           onConfirm({ value: parseFloat(value) });
-          setConfirmDialogOpen(false);
+          setExchangeRateDialogProps({ isOpen: false });
+          setValue("");
         }}
-        onCancel={() => setConfirmDialogOpen(false)}
-        title="Confirm Transaction"
+        onCancel={() => setExchangeRateDialogProps({ isOpen: false })}
+        title="Exchange Rate"
         description={`Are you sure you want to add a transaction for ${value}?`}
+        {...exchangeRateDialogProps}
       />
     </form>
   );
