@@ -39,6 +39,7 @@ public static class GenerateCommands
 
                 var logger = services.GetRequiredService<ILogger<Program>>();
 
+                await Tools.EnsureDatabaseMigratedAsync(services);
                 var dbContext = services.GetRequiredService<AppDbContext>();
                 var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
