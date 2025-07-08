@@ -142,4 +142,157 @@ public class TestFilterController
         var response9 = Assert.IsType<FilterController.FilterResponse>(Assert.IsType<OkObjectResult>(result9).Value);
         Assert.All(response9.Transactions, t => Assert.True(t.Date >= startOfYear));
     }
+
+
+    [Fact]
+    public async Task Test_Filter2()
+    {
+        // Arrange
+        using var serviceProvider = await TestExtesions.MockLedgerServiceProviderAsync("xuser1");
+
+        var categoriesController = ActivatorUtilities.CreateInstance<CategoryController>(serviceProvider);
+        var transactionController = ActivatorUtilities.CreateInstance<TransactionController>(serviceProvider);
+        var filterController = ActivatorUtilities.CreateInstance<FilterController>(serviceProvider);
+
+        // Get available categories
+        var allCategoriesResult = await categoriesController.GetAll();
+        var categories = Assert.IsType<List<Category>>(Assert.IsType<OkObjectResult>(allCategoriesResult).Value);
+
+        var cat1 = categories[0];
+        var cat2 = categories[1];
+
+        var now = DateTime.UtcNow;
+        var today = now.Date;
+        var startOfWeek = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
+        var startOfMonth = new DateTime(today.Year, today.Month, 1);
+        var startOfYear = new DateTime(today.Year, 1, 1);
+
+        // Act 1: Create test data
+        var tx1 = new Transaction
+        {
+            Value = 50,
+            Date = now.AddDays(-1),
+            CategoryId = cat1.Id,
+            Notes = "Note abc"
+        };
+        var tx2 = new Transaction
+        {
+            Value = 150,
+            Date = now.AddDays(-5),
+            CategoryId = cat2.Id,
+            Notes = "Another note"
+        };
+        var tx3 = new Transaction
+        {
+            Value = 75,
+            Date = now,
+            CategoryId = cat1.Id,
+            Notes = "note XYZ"
+        };
+        var tx4 = new Transaction
+        {
+            Value = 200,
+            Date = now.AddDays(-3),
+            CategoryId = cat2.Id,
+            Notes = "Some other note"
+        };
+
+        // Create test transactions with Currency and ExchangeRate
+        var tx5 = new Transaction
+        {
+            Value = 100,
+            Currency = "USD",
+            ExchangeRate = 0.9m,
+            Date = now.AddDays(-2),
+            CategoryId = cat1.Id,
+            Notes = "Foreign currency transaction 1"
+        };
+        var tx6 = new Transaction
+        {
+            Value = 300,
+            Currency = "EUR",
+            ExchangeRate = 1.1m,
+            Date = now.AddDays(-6),
+            CategoryId = cat2.Id,
+            Notes = "Foreign currency transaction 2"
+        };
+
+        // Create all test transactions
+        await transactionController.Create(tx1);
+        await transactionController.Create(tx2);
+        await transactionController.Create(tx3);
+        await transactionController.Create(tx4);
+        await transactionController.Create(tx5);
+        await transactionController.Create(tx6);
+
+        // Act 2: Apply filters one by one and assert results
+
+        // Filter by Note (case-insensitive)
+        var result1 = await filterController.Filter(new FilterController.FilterRequest
+        {
+            Note = "ABC"
+        }, 0, 10);
+        var response1 = Assert.IsType<FilterController.FilterResponse>(Assert.IsType<OkObjectResult>(result1).Value);
+        Assert.Single(response1.Transactions);
+        Assert.Contains("abc", response1.Transactions[0].Notes!, StringComparison.OrdinalIgnoreCase);
+
+        // Filter by StartDate and EndDate
+        var result2 = await filterController.Filter(new FilterController.FilterRequest
+        {
+            StartDate = now.AddDays(-4),
+            EndDate = now.AddDays(-2)
+        }, 0, 10);
+        var response2 = Assert.IsType<FilterController.FilterResponse>(Assert.IsType<OkObjectResult>(result2).Value);
+        Assert.Equal(2, response2.TotalCount); // tx4 and tx5
+        Assert.Contains(response2.Transactions, t => t.Notes == tx4.Notes);
+        Assert.Contains(response2.Transactions, t => t.Notes == tx5.Notes);
+
+        // Filter by MinValue and MaxValue
+        var result3 = await filterController.Filter(new FilterController.FilterRequest
+        {
+            MinValue = 70,
+            MaxValue = 160
+        }, 0, 10);
+        var response3 = Assert.IsType<FilterController.FilterResponse>(Assert.IsType<OkObjectResult>(result3).Value);
+        Assert.Equal(3, response3.TotalCount); // tx2, tx3, tx5
+
+        // Filter by Category
+        var result5 = await filterController.Filter(new FilterController.FilterRequest
+        {
+            Category = new[] { cat1.Id }
+        }, 0, 10);
+        var response5 = Assert.IsType<FilterController.FilterResponse>(Assert.IsType<OkObjectResult>(result5).Value);
+        Assert.Equal(3, response5.TotalCount); // tx1, tx3, tx5
+
+        // Period: today
+        var result6 = await filterController.Filter(new FilterController.FilterRequest
+        {
+            Period = "today"
+        }, 0, 10);
+        var response6 = Assert.IsType<FilterController.FilterResponse>(Assert.IsType<OkObjectResult>(result6).Value);
+        Assert.All(response6.Transactions, t => Assert.Equal(today, t.Date?.Date));
+
+        // Period: thismonth
+        var result8 = await filterController.Filter(new FilterController.FilterRequest
+        {
+            Period = "thismonth"
+        }, 0, 10);
+        var response8 = Assert.IsType<FilterController.FilterResponse>(Assert.IsType<OkObjectResult>(result8).Value);
+        Assert.All(response8.Transactions, t => Assert.True(t.Date >= startOfMonth));
+
+        // Period: thisyear
+        var result9 = await filterController.Filter(new FilterController.FilterRequest
+        {
+            Period = "thisyear"
+        }, 0, 10);
+        var response9 = Assert.IsType<FilterController.FilterResponse>(Assert.IsType<OkObjectResult>(result9).Value);
+        Assert.All(response9.Transactions, t => Assert.True(t.Date >= startOfYear));
+
+        // Assert currency-specific data exists
+        var allResult = await filterController.Filter(new FilterController.FilterRequest { }, 0, 20);
+        var allTransactions = Assert.IsType<FilterController.FilterResponse>(Assert.IsType<OkObjectResult>(allResult).Value);
+        Assert.Contains(allTransactions.Transactions, t => t.Currency == "USD" && t.ExchangeRate == 0.9m);
+        Assert.Contains(allTransactions.Transactions, t => t.Currency == "EUR" && t.ExchangeRate == 1.1m);
+    }
+
 }

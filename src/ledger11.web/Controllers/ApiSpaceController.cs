@@ -57,7 +57,7 @@ public class ApiSpaceController : ControllerBase
                         .Select(g => new
                         {
                             Count = g.Count(),
-                            Sum = g.Sum(t => t.Value)
+                            Sum = g.Sum(t => t.Value * (t.ExchangeRate ?? 1.0m))
                         })
                         .FirstOrDefaultAsync();
 

@@ -124,12 +124,12 @@ public class FilterController : ControllerBase
 
         if (filter.MinValue.HasValue)
         {
-            query = query.Where(t => t.Value >= filter.MinValue.Value);
+            query = query.Where(t => t.Value * (t.ExchangeRate ?? 1.0m) >= filter.MinValue.Value);
         }
 
         if (filter.MaxValue.HasValue)
         {
-            query = query.Where(t => t.Value <= filter.MaxValue.Value);
+            query = query.Where(t => t.Value * (t.ExchangeRate ?? 1.0m) <= filter.MaxValue.Value);
         }
 
         var totalCount = await query.CountAsync();

@@ -231,7 +231,7 @@ public class InsightController : ControllerBase
             {
                 foreach (var detail in transaction.TransactionDetails)
                 {
-                    var value = detail.Value;
+                    var value = detail.Value * (transaction.ExchangeRate ?? 1.0m);
                     var category = detail.Category?.Name ?? "Uncategorized";
 
                     action(value, category, localDate);
@@ -239,7 +239,7 @@ public class InsightController : ControllerBase
             }
             else
             {
-                var value = transaction.Value;
+                var value = transaction.ConvertedValue;
                 var category = transaction.Category?.Name ?? "Uncategorized";
 
                 action(value, category, localDate);
