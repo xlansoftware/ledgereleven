@@ -53,7 +53,7 @@ export function ExchangeRateDialog({
     <Drawer direction="top"  open={isOpen} onOpenChange={(open) => !open && onCancel()}>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>Exchange Rate for {props.ledgerCurrency || "USD"} to {props.currency}</DrawerTitle>
+          <DrawerTitle>Exchange Rate for {props.currency} to {props.ledgerCurrency || "USD"}</DrawerTitle>
         </DrawerHeader>
 
         <div className="grid gap-4 px-4 pb-4">
@@ -79,7 +79,7 @@ export function ExchangeRateDialog({
               ref={exchangeRateRef}
               id="exchange-rate"
               type="number"
-              step="0.0001"
+              step={0.01}
               className="text-xl"
               value={exchangeRate || ""}
               // onFocus={(e) => e.target.select()}
@@ -92,13 +92,13 @@ export function ExchangeRateDialog({
           </div>
 
           <div>
-            <Label htmlFor="result">Result ({props.ledgerCurrency})</Label>
+            <Label htmlFor="result">Result ({props.ledgerCurrency || "USD"})</Label>
             <Input
               id="result"
               type="number"
-              step="0.0001"
+              step={0.01}
               className="text-xl"
-              value={result}
+              value={result || ""}
               onChange={(e) => {
                 const res = parseFloat(e.target.value) || 0;
                 setResult(res);
