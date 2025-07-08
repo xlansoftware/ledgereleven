@@ -45,7 +45,7 @@ export interface Space {
   id?: string;
   name?: string;
   tint?: string;
-  currency?: string; // default currnecy
+  currency?: string; // default currency
   createdAt?: Date;
   createdByUserId?: string;
 

@@ -31,6 +31,7 @@ export default function SpaceRow({ className, space, onClick }: SpaceRowProps) {
       >
         <span className="text-base flex items-center gap-2">
           <h1 className="text-xl">{space.name}</h1>
+          {space.currency && <span>({space.currency})</span>}
           {space.totalValue && (
             <Badge variant={"outline"}>
               Total: {formatCurrency(space.totalValue)}
