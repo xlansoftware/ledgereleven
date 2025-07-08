@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace ledger11.model.Data;
@@ -30,6 +31,13 @@ public class Transaction
     public decimal? ExchangeRate { get; set; }
 
     /// <summary>
+    /// Gets the value of the transaction converted to the ledger's reporting currency.
+    /// This is a computed, read-only property not stored in the database.
+    /// </summary>
+    [NotMapped]
+    public decimal ConvertedValue => Value * (ExchangeRate ?? 1.0m);
+
+    /// <summary>
     /// Gets or sets the date and time when the transaction occurred.
     /// </summary>
     public DateTime? Date { get; set; }
@@ -43,7 +51,7 @@ public class Transaction
     /// Gets or sets any additional notes or descriptions for the transaction.
     /// </summary>
     public string? Notes { get; set; }
-    
+
     /// <summary>
     /// Gets or sets the navigation property to the associated Category.
     /// This property is ignored during JSON serialization.
