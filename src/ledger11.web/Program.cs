@@ -102,6 +102,7 @@ public class Program
 
         // Add HttpClient service
         builder.Services.AddHttpClient();
+        builder.Services.AddMemoryCache();
 
         var app = builder.Build();
 
