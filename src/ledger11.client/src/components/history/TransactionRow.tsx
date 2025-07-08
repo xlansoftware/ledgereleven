@@ -1,4 +1,4 @@
-import { Transaction } from "@/lib/types";
+import { Transaction, TransactionDetails } from "@/lib/types";
 import { Card, CardContent } from "../ui/card";
 import { useState } from "react";
 import { count, formatCurrency, formatDate, invertColor } from "@/lib/utils";
@@ -11,6 +11,21 @@ import { getIcon } from "@/lib/getIcon";
 interface TransactionRowProps {
   transaction: Transaction;
   expanded?: boolean;
+}
+
+function convertValue(value: number, exchangeRate?: number, currency?: string) {
+  const convertedValue = value * (exchangeRate ?? 1.0);
+  return formatCurrency(convertedValue, 2) + (currency ? ` (${currency})` : "");
+}
+
+function transactionValue(transaction: Transaction) {
+  return convertValue(transaction.value || 0, transaction.exchangeRate, transaction.currency);
+}
+
+function detailValue(detail: TransactionDetails, transaction: Transaction) {
+  if (!detail.value) return "N/A";
+  const totalValue = detail.value * (detail.quantity || 1);
+  return convertValue(totalValue || 0, transaction.exchangeRate, transaction.currency);
 }
 
 export default function TransactionRow({
@@ -89,9 +104,7 @@ export default function TransactionRow({
             <div className="flex items-center gap-2 flex-shrink-0">
               <div className="text-right">
                 <div className="font-bold">
-                  {transaction.value
-                    ? formatCurrency(transaction.value)
-                    : "N/A"}
+                  {transactionValue(transaction)}
                 </div>
               </div>
 
@@ -119,11 +132,7 @@ export default function TransactionRow({
 
                   <div className="text-right">
                     <div className="font-bold">
-                      {detail.value
-                        ? formatCurrency(
-                            (detail.value || 0) * (detail.quantity || 1)
-                          )
-                        : "N/A"}
+                      {detailValue(detail, transaction)}
                     </div>
 
                     {detail.value && detail.quantity && (

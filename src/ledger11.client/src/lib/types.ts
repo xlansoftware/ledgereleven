@@ -9,6 +9,8 @@ export interface Category {
 export interface Transaction {
   id?: number;
   value?: number;
+  exchangeRate?: number;
+  currency?: string;
   notes?: string;
   date?: Date;
   categoryId?: number;
