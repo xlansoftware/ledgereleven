@@ -41,11 +41,11 @@ export function ExchangeRateDialog({
     setExchangeRate(1.0);
   }, [props.value, props.currency]);
 
-  useEffect(() => {
-    if (isOpen && exchangeRateRef.current) {
-      exchangeRateRef.current.select();
-    }
-  }, [isOpen]);
+  // useEffect(() => {
+  //   if (isOpen && exchangeRateRef.current) {
+  //     exchangeRateRef.current.select();
+  //   }
+  // }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -82,7 +82,7 @@ export function ExchangeRateDialog({
               step="0.0001"
               className="text-xl"
               value={exchangeRate || ""}
-              onFocus={(e) => e.target.select()}
+              // onFocus={(e) => e.target.select()}
               onChange={(e) => {
                 const rate = parseFloat(e.target.value) || 0;
                 setExchangeRate(rate);
