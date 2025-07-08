@@ -7,6 +7,39 @@ namespace ledger11.data;
 /// Represents the database context for a single "ledger" (also referred to as a "space" or "book").
 /// This context manages the transactions and related data specific to one ledger.
 /// Each ledger has its own dedicated database.
+/// <para>
+/// In the application, the terms <c>Space</c>, <c>Ledger</c>, and <c>Book</c> are sometimes used interchangeably,  
+/// but they have distinct meanings and roles:
+/// </para>
+/// <list type="bullet">
+///   <item>
+///     <term><c>Space</c></term>
+///     <description>
+///         A record in the <c>AppDbContext</c> that represents a user's financial workspace.  
+///         It holds metadata such as <c>Name</c>, <c>Currency</c>, and a unique <c>Id</c>, which is used to generate  
+///         and identify a separate database for the space.
+///     </description>
+///   </item>
+///   <item>
+///     <term><c>Ledger</c></term>
+///     <description>
+///         The actual database created for a given space. It contains all the transactional data,  
+///         including transactions, categories, and other financial structures.
+///     </description>
+///   </item>
+///   <item>
+///     <term><c>Book</c></term>
+///     <description>
+///         A user-facing metaphor for a ledger or space. Just like one can have multiple financial books  
+///         for different purposes, each book in the app is tied to a unique ledger database and represented  
+///         by a corresponding space in the <c>AppDbContext</c>.
+///     </description>
+///   </item>
+/// </list>
+///
+/// <para>
+/// Summary: <c>Book</c> (user concept) → <c>Space</c> (AppDbContext record) → <c>Ledger</c> (underlying database).
+/// </para>
 /// </summary>
 public class LedgerDbContext : DbContext
 {
