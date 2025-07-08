@@ -99,6 +99,8 @@ public class TransactionController : ControllerBase
 
         // Update scalar properties
         existingTransaction.Value = transaction.Value;
+        existingTransaction.ExchangeRate = transaction.ExchangeRate;
+        existingTransaction.Currency = transaction.Currency;
         existingTransaction.Date = transaction.Date;
         existingTransaction.Notes = transaction.Notes;
         existingTransaction.CategoryId = transaction.CategoryId;
