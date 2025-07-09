@@ -69,7 +69,7 @@ function explainTransactionValue(transaction: Transaction) {
 
 export default function TransactionRow({
   transaction,
-  expanded,
+  expanded
 }: TransactionRowProps) {
   const { categoryById } = useCategoryStore();
   const [expandedDetails, setExpandedDetails] = useState(expanded || false);
@@ -94,7 +94,10 @@ export default function TransactionRow({
   const title = transaction.notes || category || "No category";
   const Icon = getIcon(transactionCategory?.icon);
   return (
-    <Card className="overflow-hidden border-t border-b border-l-0 border-r-0 rounded-none">
+    <Card 
+      data-testid={`Item: ${title}, ${transactionValue(transaction)}`}
+      aria-label={`Item: ${title}, ${transactionValue(transaction)}`}
+      className="overflow-hidden border-t border-b border-l-0 border-r-0 rounded-none">
       <CardContent className="p-0">
         <div className="flex flex-row">
           <div

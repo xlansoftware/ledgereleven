@@ -61,6 +61,7 @@ export function AmountInputComponent({ onConfirm }: AmountInputComponentProps) {
   return (
     <form onSubmit={handleAdd} className="flex w-full gap-3 items-center">
       <Input
+        aria-label="Amount"
         ref={refInput}
         autoFocus
         type="text"

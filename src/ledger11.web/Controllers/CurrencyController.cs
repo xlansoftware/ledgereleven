@@ -46,6 +46,15 @@ public class CurrencyController : ControllerBase
         fromCurrency = fromCurrency.ToUpper();
         toCurrency = toCurrency.ToUpper();
 
+        if (fromCurrency == toCurrency)
+            return Ok(new
+            {
+                From = fromCurrency,
+                To = toCurrency,
+                Rate = 1.0m,
+                Source = "wtf"
+            });
+
         var cacheKey = $"exchangeRate_{fromCurrency}_{toCurrency}";
 
         // Try to get the rate from memory cache

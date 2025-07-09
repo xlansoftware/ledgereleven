@@ -4,7 +4,7 @@ import { APP_URL } from '../helpers/tools';
 import { login, logout } from '../helpers/auth';
 
 test('has title', async ({ page }) => {
-  // this test mostly makes sure that both of the sites are accessible...
+  // this test mostly makes sure that the site is accessible...
   await page.goto(APP_URL);
   await expect(page).toHaveTitle(/Ledger Eleven/);
 });
@@ -39,7 +39,7 @@ test('Register flow works correctly', async ({ page }) => {
     await page.getByRole('button', { name: /register/i }).click()
 
     // 9. Assert the page shows confirmation
-    console.log(`3: ${page.url()}`);
+    // console.log(`3: ${page.url()}`);
     await expect(page.url().startsWith(APP_URL)).toBe(true);
 
     // or start a on-bording process?

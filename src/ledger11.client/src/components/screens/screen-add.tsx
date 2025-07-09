@@ -74,6 +74,7 @@ export default function AddScreen() {
           type="text"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
+          aria-label="Notes"
           placeholder="Notes ..."
           className="text-base py-3 px-4 rounded-m border border-input shadow-sm focus-visible:ring-2 focus-visible:ring-primary transition-all w-full"
         />

@@ -36,6 +36,7 @@ export default function MobileNavigation({
     >
       <div className="grid grid-cols-5 h-full">
         <button
+          aria-label="Add Screen"
           onClick={() => navigate("/")}
           className={`flex flex-col items-center justify-center ${
             currentPath === "/" ? "text-primary" : "text-muted-foreground"
@@ -46,6 +47,7 @@ export default function MobileNavigation({
         </button>
 
         <button
+          aria-label="Scan Screen"
           onClick={() => navigate("/scan")}
           className={`flex flex-col items-center justify-center ${
             currentPath === "/scan" ? "text-primary" : "text-muted-foreground"
@@ -56,6 +58,7 @@ export default function MobileNavigation({
         </button>
 
         <button
+          aria-label="History Screen"
           onClick={() => navigate("/history")}
           className={`flex flex-col items-center justify-center ${
             currentPath === "/history"
@@ -68,6 +71,7 @@ export default function MobileNavigation({
         </button>
 
         <button
+          aria-label="Insights Screen"
           onClick={() => navigate("/insights")}
           className={`flex flex-col items-center justify-center ${
             currentPath === "/insights"
@@ -80,6 +84,7 @@ export default function MobileNavigation({
         </button>
 
         <button
+          aria-label="Settings Screen"
           onClick={() => navigate("/settings")}
           className={`flex flex-col items-center justify-center ${
             currentPath === "/settings"
