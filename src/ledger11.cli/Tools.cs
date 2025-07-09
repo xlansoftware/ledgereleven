@@ -53,6 +53,12 @@ public static class Tools
             })
             .Build();
 
+    public static async Task EnsureDatabaseMigratedAsync(IServiceProvider services)
+    {
+        var appContext = services.GetRequiredService<AppDbContext>();
+        await appContext.Database.MigrateAsync();
+    }
+
     public static async Task<Space> CreateSpaceAsync(this IServiceProvider services, ApplicationUser user, string name)
     {
         var _dbContext = services.GetRequiredService<AppDbContext>();

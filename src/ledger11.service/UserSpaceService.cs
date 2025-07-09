@@ -8,36 +8,107 @@ using Microsoft.Extensions.Logging;
 
 namespace ledger11.service;
 
+/// <summary>
+/// Defines the interface for managing user spaces (ledgers).
+/// </summary>
 public interface IUserSpaceService
 {
+    /// <summary>
+    /// Retrieves the current space for the authenticated user.
+    /// </summary>
+    /// <returns>The current Space object, or null if none is assigned.</returns>
     Task<Space?> GetUserSpaceAsync();
+
+    /// <summary>
+    /// Creates a new space for the authenticated user.
+    /// </summary>
+    /// <param name="space">The Space object containing details for the new space.</param>
+    /// <returns>The newly created Space object.</returns>
     Task<Space> CreateSpace(Space space);
+
+    /// <summary>
+    /// Updates an existing space with the provided fields.
+    /// </summary>
+    /// <param name="spaceId">The ID of the space to update.</param>
+    /// <param name="updatedFields">A dictionary of fields to update (e.g., "Name", "Tint", "Currency").</param>
+    /// <returns>The updated Space object.</returns>
     Task<Space> UpdateSpace(Guid spaceId, Dictionary<string, object> updatedFields);
 
+    /// <summary>
+    /// Sets the current active space for the authenticated user.
+    /// </summary>
+    /// <param name="id">The ID of the space to set as current.</param>
     Task SetCurrentSpaceAsync(Guid id);
+
+    /// <summary>
+    /// Deletes a space. Only the owner of the space can delete it.
+    /// </summary>
+    /// <param name="id">The ID of the space to delete.</param>
     Task DeleteSpaceAsync(Guid id);
+
+    /// <summary>
+    /// Retrieves a list of all spaces available to the authenticated user.
+    /// </summary>
+    /// <returns>A list of Space objects.</returns>
     Task<List<Space>> GetAvailableSpacesAsync();
+
+    /// <summary>
+    /// Shares a space with another user by their email address.
+    /// Only the owner of the space can share it.
+    /// </summary>
+    /// <param name="spaceId">The ID of the space to share.</param>
+    /// <param name="targetUserEmail">The email of the user to share the space with.</param>
     Task ShareSpaceWithAsync(Guid spaceId, string targetUserEmail);
+
+    /// <summary>
+    /// Gets a LedgerDbContext instance for a specific space, optionally initializing its database.
+    /// </summary>
+    /// <param name="spaceId">The ID of the space for which to get the context.</param>
+    /// <param name="initialize">If true, ensures the database for the space is migrated and seeded with default categories if empty.</param>
+    /// <returns>A LedgerDbContext instance configured for the specified space.</returns>
+    Task<LedgerDbContext> GetLedgerDbContextAsync(Guid spaceId, bool initialize);
 }
 
+/// <summary>
+/// Service for managing user-specific spaces (ledgers) and their associated data.
+/// Handles creation, retrieval, updating, deletion, and sharing of spaces.
+/// </summary>
 public class UserSpaceService : IUserSpaceService
 {
     private readonly ILogger<UserSpaceService> _logger;
     private readonly AppDbContext _dbContext;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ICurrentUserService _currentUserService;
+    private readonly AppConfig _appConfig;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UserSpaceService"/> class.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="dbContext">The application database context.</param>
+    /// <param name="currentUserService">The current user service.</param>
+    /// <param name="userManager">The user manager for handling application users.</param>
+    /// <param name="appConfig">The application configuration options.</param>
     public UserSpaceService(
         ILogger<UserSpaceService> logger,
         AppDbContext dbContext,
         ICurrentUserService currentUserService,
-        UserManager<ApplicationUser> userManager)
+        UserManager<ApplicationUser> userManager,
+        IOptions<AppConfig> appConfig)
     {
         _logger = logger;
         _dbContext = dbContext;
         _currentUserService = currentUserService;
         _userManager = userManager;
+        _appConfig = appConfig.Value;
     }
 
+    /// <summary>
+    /// Retrieves the current space for the authenticated user.
+    /// If no current space is set, it attempts to assign a default space.
+    /// </summary>
+    /// <returns>The current Space object, or null if no space can be assigned.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if no authenticated user is found.</exception>
     public async Task<Space?> GetUserSpaceAsync()
     {
         var user = await _currentUserService.GetCurrentUserAsync();
@@ -55,6 +126,12 @@ public class UserSpaceService : IUserSpaceService
         return existingSpace;
     }
 
+    /// <summary>
+    /// Assigns a default space to the user if no current space is set.
+    /// Prioritizes spaces created by the user, then shared spaces, and finally creates a new default space.
+    /// </summary>
+    /// <param name="user">The application user.</param>
+    /// <returns>The assigned or newly created Space object.</returns>
     private async Task<Space> AssingDefaultSpace(ApplicationUser user)
     {
         var userSpaces = await _dbContext.Spaces
@@ -96,6 +173,13 @@ public class UserSpaceService : IUserSpaceService
 
     }
 
+    /// <summary>
+    /// Creates a new space for the authenticated user and assigns them as the owner.
+    /// </summary>
+    /// <param name="space">The Space object containing details for the new space.</param>
+    /// <returns>The newly created Space object.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if no authenticated user is found.</exception>
+    /// <exception cref="Exception">Thrown if the user ID is empty.</exception>
     public async Task<Space> CreateSpace(Space space)
     {
         var user = await _currentUserService.GetCurrentUserAsync();
@@ -142,6 +226,13 @@ public class UserSpaceService : IUserSpaceService
         return newSpace;
     }
 
+    /// <summary>
+    /// Sets the current active space for the authenticated user.
+    /// The user must be a member of the specified space.
+    /// </summary>
+    /// <param name="spaceId">The ID of the space to set as current.</param>
+    /// <exception cref="InvalidOperationException">Thrown if no authenticated user is found.</exception>
+    /// <exception cref="UnauthorizedAccessException">Thrown if the user is not a member of the space.</exception>
     public async Task SetCurrentSpaceAsync(Guid spaceId)
     {
         var user = await _currentUserService.GetCurrentUserAsync();
@@ -158,6 +249,13 @@ public class UserSpaceService : IUserSpaceService
         await _dbContext.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// Deletes a space. Only the owner of the space can delete it.
+    /// If the deleted space is the user's current space, another available space is assigned as current.
+    /// </summary>
+    /// <param name="spaceId">The ID of the space to delete.</param>
+    /// <exception cref="InvalidOperationException">Thrown if no authenticated user is found.</exception>
+    /// <exception cref="UnauthorizedAccessException">Thrown if the user is not the owner of the space.</exception>
     public async Task DeleteSpaceAsync(Guid spaceId)
     {
         var user = await _currentUserService.GetCurrentUserAsync();
@@ -197,6 +295,11 @@ public class UserSpaceService : IUserSpaceService
         await _dbContext.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// Retrieves a list of all spaces that the authenticated user is a member of.
+    /// </summary>
+    /// <returns>A list of Space objects available to the user.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if no authenticated user is found.</exception>
     public async Task<List<Space>> GetAvailableSpacesAsync()
     {
         var user = await _currentUserService.GetCurrentUserAsync();
@@ -215,6 +318,16 @@ public class UserSpaceService : IUserSpaceService
         return spaces;
     }
 
+    /// <summary>
+    /// Updates an existing space with the provided fields.
+    /// Only the owner of the space can update it.
+    /// </summary>
+    /// <param name="spaceId">The ID of the space to update.</param>
+    /// <param name="updatedFields">A dictionary of fields to update (e.g., "Name", "Tint", "Currency").
+    /// Keys are case-insensitive.</param>
+    /// <returns>The updated Space object.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if no authenticated user is found.</exception>
+    /// <exception cref="UnauthorizedAccessException">Thrown if the user is not the owner of the space.</exception>
     public async Task<Space> UpdateSpace(Guid spaceId, Dictionary<string, object> updatedFields)
     {
         var user = await _currentUserService.GetCurrentUserAsync();
@@ -247,6 +360,15 @@ public class UserSpaceService : IUserSpaceService
         return membership.Space;
     }
 
+    /// <summary>
+    /// Shares a space with another user by their email address.
+    /// Only the owner of the space can share it.
+    /// The target user will be added as an Editor.
+    /// </summary>
+    /// <param name="spaceId">The ID of the space to share.</param>
+    /// <param name="targetUserEmail">The email of the user to share the space with.</param>
+    /// <exception cref="InvalidOperationException">Thrown if no authenticated user is found, or if the space or target user is not found.</exception>
+    /// <exception cref="UnauthorizedAccessException">Thrown if the current user is not the owner of the space.</exception>
     public async Task ShareSpaceWithAsync(Guid spaceId, string targetUserEmail)
     {
         var currentUser = await _currentUserService.GetCurrentUserAsync();
@@ -285,4 +407,107 @@ public class UserSpaceService : IUserSpaceService
             await _dbContext.SaveChangesAsync();
         }
     }
+
+    /// <summary>
+    /// Gets a LedgerDbContext instance for a specific space, optionally initializing its database.
+    /// The database path is determined by the AppConfig.DataPath and the space ID.
+    /// </summary>
+    /// <param name="spaceId">The ID of the space for which to get the context.</param>
+    /// <param name="initialize">If true, ensures the database for the space is migrated and seeded with default categories if empty.</param>
+    /// <returns>A LedgerDbContext instance configured for the specified space.</returns>
+    public async Task<LedgerDbContext> GetLedgerDbContextAsync(Guid spaceId, bool initialize)
+    {
+
+        var memory = string.Compare(_appConfig.DataPath, "memory", StringComparison.OrdinalIgnoreCase) == 0;
+        var dbPath = memory
+            ? ":memory:"
+            : Path.Combine(_appConfig.DataPath, $"space-{SanitizeFileName(spaceId.ToString())}.db");
+
+        _logger.LogTrace($"Creating LedgerDbContext: ${dbPath}");
+
+        var optionsBuilder = new DbContextOptionsBuilder<LedgerDbContext>()
+            .UseSqlite($"Data Source={dbPath};Pooling={_appConfig.Pooling}");
+
+        var options = optionsBuilder.Options;
+
+        var context = new LedgerDbContext(options);
+
+        if (memory)
+        {
+            // For in-memory SQLite, you MUST open the connection manually and keep it open
+            await context.Database.OpenConnectionAsync();
+        }
+
+        if (initialize)
+        {
+            await InitializeDbAsync(context);
+        }
+
+        return context;
+    }
+
+    /// <summary>
+    /// A static list of default categories to be used when initializing a new ledger database.
+    /// </summary>
+    private static List<Category> defaultCategories = [
+        new Category { Name = "Groceries", Color = "#fde68a", Icon = "shopping-cart" },
+        new Category { Name = "Entertainment", Color = "#bae6fd", Icon = "film" },
+        new Category { Name = "Education", Color = "#fef9c3", Icon = "book" },
+        new Category { Name = "Sport", Color = "#bae6fd", Icon = "dumbbell" },
+        new Category { Name = "Health / Medical", Color = "#fecaca", Icon = "heart" },
+        new Category { Name = "Personal Care", Color = "#ddd6fe", Icon = "smile" },
+        new Category { Name = "Transportation", Color = "#bbf7d0", Icon = "car" },
+        new Category { Name = "Dining Out", Color = "#fbcfe8", Icon = "utensils"},
+        new Category { Name = "Clothing", Color = "#e0f2fe", Icon = "shirt"},
+        new Category { Name = "Gifts", Color = "#d9f99d", Icon = "gift" },
+        new Category { Name = "Travel", Color = "#a7f3d0", Icon = "plane" },
+        new Category { Name = "Savings", Color = "#f0abfc", Icon = "piggy-bank" },
+        new Category { Name = "Utilities", Color = "#a5b4fc", Icon = "plug" },
+        new Category { Name = "Subscriptions", Color = "#fde2e4", Icon = "credit-card" },
+        new Category { Name = "Insurance", Color = "#fcd34d", Icon = "shield" },
+        new Category { Name = "Rent / Mortgage", Color = "#fca5a5", Icon = "home" },
+        new Category { Name = "Miscellaneous", Color = "#f5f5f4", Icon = "dots-horizontal" }
+    ];
+
+    /// <summary>
+    /// Initializes the LedgerDbContext by applying migrations and seeding default categories if the category table is empty.
+    /// </summary>
+    /// <param name="context">The LedgerDbContext instance to initialize.</param>
+    public static async Task InitializeDbAsync(LedgerDbContext context)
+    {
+        await context.Database.MigrateAsync();
+
+        // if Categoty is empty, add default categories
+        if (!await context.Categories.AnyAsync())
+        {
+            context.Categories.AddRange(
+                defaultCategories
+                    .Select((c, index) => new Category
+                    {
+                        Name = c.Name,
+                        Color = c.Color,
+                        Icon = c.Icon,
+                        DisplayOrder = index + 1,
+                    })
+            );
+            await context.SaveChangesAsync();
+        }
+
+    }
+
+    /// <summary>
+    /// Sanitizes a string to be used as a valid file name by replacing invalid characters with underscores.
+    /// </summary>
+    /// <param name="fileName">The original file name string.</param>
+    /// <returns>The sanitized file name string.</returns>
+    public static string SanitizeFileName(string fileName)
+    {
+        foreach (var c in Path.GetInvalidFileNameChars())
+        {
+            fileName = fileName.Replace(c, '_');
+        }
+        return fileName;
+    }
+
+
 }

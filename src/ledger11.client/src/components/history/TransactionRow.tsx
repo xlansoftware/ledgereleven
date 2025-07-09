@@ -1,4 +1,4 @@
-import { Transaction } from "@/lib/types";
+import { Transaction, TransactionDetails } from "@/lib/types";
 import { Card, CardContent } from "../ui/card";
 import { useState } from "react";
 import { count, formatCurrency, formatDate, invertColor } from "@/lib/utils";
@@ -13,9 +13,63 @@ interface TransactionRowProps {
   expanded?: boolean;
 }
 
+function convertValue(
+  value: number,
+  exchangeRate?: number,
+  _currency?: string
+) {
+  const convertedValue = value * (exchangeRate ?? 1.0);
+  return formatCurrency(convertedValue, 2);
+}
+
+function transactionValue(transaction: Transaction) {
+  return convertValue(
+    transaction.value || 0,
+    transaction.exchangeRate,
+    transaction.currency
+  );
+}
+
+function detailValue(detail: TransactionDetails, transaction: Transaction) {
+  if (!detail.value) return "N/A";
+  const totalValue = detail.value * (detail.quantity || 1);
+  return convertValue(
+    totalValue || 0,
+    transaction.exchangeRate,
+    transaction.currency
+  );
+}
+
+function explainValue(value: number, exchangeRate?: number, currency?: string) {
+  if (!currency) return null;
+  if (!exchangeRate) return null;
+  return `${formatCurrency(value, 2)} x ${exchangeRate ?? 1.0} ${currency}`;
+}
+
+function explainTransactionValue(transaction: Transaction) {
+  return explainValue(
+    transaction.value || 0,
+    transaction.exchangeRate,
+    transaction.currency
+  );
+}
+
+// function explainDetailValue(
+//   detail: TransactionDetails,
+//   transaction: Transaction
+// ) {
+//   if (!detail.value) return "N/A";
+//   const totalValue = detail.value * (detail.quantity || 1);
+//   return explainValue(
+//     totalValue || 0,
+//     transaction.exchangeRate,
+//     transaction.currency
+//   );
+// }
+
 export default function TransactionRow({
   transaction,
-  expanded,
+  expanded
 }: TransactionRowProps) {
   const { categoryById } = useCategoryStore();
   const [expandedDetails, setExpandedDetails] = useState(expanded || false);
@@ -40,7 +94,10 @@ export default function TransactionRow({
   const title = transaction.notes || category || "No category";
   const Icon = getIcon(transactionCategory?.icon);
   return (
-    <Card className="overflow-hidden border-t border-b border-l-0 border-r-0 rounded-none">
+    <Card 
+      data-testid={`Item: ${title}, ${transactionValue(transaction)}`}
+      aria-label={`Item: ${title}, ${transactionValue(transaction)}`}
+      className="overflow-hidden border-t border-b border-l-0 border-r-0 rounded-none">
       <CardContent className="p-0">
         <div className="flex flex-row">
           <div
@@ -86,16 +143,19 @@ export default function TransactionRow({
               </div>
             </div>
 
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <div className="text-right">
-                <div className="font-bold">
-                  {transaction.value
-                    ? formatCurrency(transaction.value)
-                    : "N/A"}
+            <div className="flex flex-col flex-shrink-0 items-end">
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="text-right">
+                  <div className="font-bold">
+                    {transactionValue(transaction)}
+                  </div>
                 </div>
-              </div>
 
-              <TransactionRowMenu transaction={transaction} />
+                <TransactionRowMenu transaction={transaction} />
+              </div>
+              <div className="pr-2 text-sm text-muted-foreground">
+                {explainTransactionValue(transaction)}
+              </div>
             </div>
           </div>
         </div>
@@ -119,11 +179,7 @@ export default function TransactionRow({
 
                   <div className="text-right">
                     <div className="font-bold">
-                      {detail.value
-                        ? formatCurrency(
-                            (detail.value || 0) * (detail.quantity || 1)
-                          )
-                        : "N/A"}
+                      {detailValue(detail, transaction)}
                     </div>
 
                     {detail.value && detail.quantity && (

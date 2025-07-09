@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.HttpOverrides;
 using ledger11.service.Models;
+using System.Text.Json.Serialization;
 
 namespace ledger11.web;
 
@@ -75,7 +76,11 @@ public class Program
         builder.AddOpenTelemetry();
 
         // Add services to the container.
-        builder.Services.AddControllersWithViews();
+        builder.Services.AddControllersWithViews()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+            });
 
         builder.Services.AddRazorPages();
 
@@ -97,6 +102,7 @@ public class Program
 
         // Add HttpClient service
         builder.Services.AddHttpClient();
+        builder.Services.AddMemoryCache();
 
         var app = builder.Build();
 

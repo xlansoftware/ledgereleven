@@ -11,118 +11,59 @@ using ledger11.model.Data;
 
 namespace ledger11.service;
 
+/// <summary>
+/// Defines the interface for retrieving the current user's ledger database context.
+/// This service acts as a convenient shortcut for common operations that only require the current ledger context.
+/// Instead of injecting `IUserSpaceService` and calling `GetUserSpaceAsync()` followed by `GetLedgerDbContextAsync(space.Id, true)`,
+/// this service directly provides the `LedgerDbContext` for the current user's space, streamlining access to ledger data.
+/// </summary>
 public interface ICurrentLedgerService
 {
+    /// <summary>
+    /// Asynchronously retrieves the LedgerDbContext for the currently active user space.
+    /// </summary>
+    /// <returns>A Task that represents the asynchronous operation. The Task result contains the LedgerDbContext instance.</returns>
     Task<LedgerDbContext> GetLedgerDbContextAsync();
-    Task<LedgerDbContext> GetLedgerDbContextAsync(Guid spaceId, bool initialize);
 }
 
+/// <summary>
+/// Provides services for accessing the LedgerDbContext associated with the current user's active space.
+/// </summary>
 public class CurrentLedgerService : ICurrentLedgerService
 {
-    private readonly AppConfig _appConfig;
     private readonly IUserSpaceService _userSpace;
     private readonly ILogger<CurrentLedgerService> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CurrentLedgerService"/> class.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="appConfig">The application configuration options.</param>
+    /// <param name="userSpace">The user space service.</param>
     public CurrentLedgerService(
         ILogger<CurrentLedgerService> logger,
         IOptions<AppConfig> appConfig,
         IUserSpaceService userSpace)
     {
         _logger = logger;
-        _appConfig = appConfig.Value;
         _userSpace = userSpace;
     }
 
+    /// <summary>
+    /// Asynchronously retrieves the LedgerDbContext for the currently active user space.
+    /// It relies on the `IUserSpaceService` to determine the current space and retrieve the appropriate database context.
+    /// </summary>
+    /// <returns>A Task that represents the asynchronous operation. The Task result contains the LedgerDbContext instance.</returns>
+    /// <exception cref="Exception">Thrown if the user has not selected a default space.</exception>
     public async Task<LedgerDbContext> GetLedgerDbContextAsync()
     {
         var space = await _userSpace.GetUserSpaceAsync();
         if (space == null)
             throw new Exception("User has not selected default space");
 
-        return await GetLedgerDbContextAsync(space.Id, true);
+        return await _userSpace.GetLedgerDbContextAsync(space.Id, true);
     }
 
-    public async Task<LedgerDbContext> GetLedgerDbContextAsync(Guid spaceId, bool initialize)
-    {
-
-        var memory = string.Compare(_appConfig.DataPath, "memory", StringComparison.OrdinalIgnoreCase) == 0;
-        var dbPath = memory
-            ? ":memory:"
-            : Path.Combine(_appConfig.DataPath, $"space-{SanitizeFileName(spaceId.ToString())}.db");
-
-        _logger.LogTrace($"Creating LedgerDbContext: ${dbPath}");
-
-        var optionsBuilder = new DbContextOptionsBuilder<LedgerDbContext>()
-            .UseSqlite($"Data Source={dbPath};Pooling={_appConfig.Pooling}");
-
-        var options = optionsBuilder.Options;
-
-        var context = new LedgerDbContext(options);
-
-        if (memory)
-        {
-            // For in-memory SQLite, you MUST open the connection manually and keep it open
-            await context.Database.OpenConnectionAsync();
-        }
-
-        if (initialize)
-        {
-            await InitializeDbAsync(context);
-        }
-
-        return context;
-    }
-
-    private static List<Category> defaultCategories = [
-        new Category { Name = "Groceries", Color = "#fde68a", Icon = "shopping-cart" },
-        new Category { Name = "Entertainment", Color = "#bae6fd", Icon = "film" },
-        new Category { Name = "Education", Color = "#fef9c3", Icon = "book" },
-        new Category { Name = "Sport", Color = "#bae6fd", Icon = "dumbbell" },
-        new Category { Name = "Health / Medical", Color = "#fecaca", Icon = "heart" },
-        new Category { Name = "Personal Care", Color = "#ddd6fe", Icon = "smile" },
-        new Category { Name = "Transportation", Color = "#bbf7d0", Icon = "car" },
-        new Category { Name = "Dining Out", Color = "#fbcfe8", Icon = "utensils"},
-        new Category { Name = "Clothing", Color = "#e0f2fe", Icon = "shirt"},
-        new Category { Name = "Gifts", Color = "#d9f99d", Icon = "gift" },
-        new Category { Name = "Travel", Color = "#a7f3d0", Icon = "plane" },
-        new Category { Name = "Savings", Color = "#f0abfc", Icon = "piggy-bank" },
-        new Category { Name = "Utilities", Color = "#a5b4fc", Icon = "plug" },
-        new Category { Name = "Subscriptions", Color = "#fde2e4", Icon = "credit-card" },
-        new Category { Name = "Insurance", Color = "#fcd34d", Icon = "shield" },
-        new Category { Name = "Rent / Mortgage", Color = "#fca5a5", Icon = "home" },
-        new Category { Name = "Miscellaneous", Color = "#f5f5f4", Icon = "dots-horizontal" }
-    ];
-
-    public static async Task InitializeDbAsync(LedgerDbContext context)
-    {
-        await context.Database.MigrateAsync();
-
-        // if Categoty is empty, add default categories
-        if (!await context.Categories.AnyAsync())
-        {
-            context.Categories.AddRange(
-                defaultCategories
-                    .Select((c, index) => new Category
-                    {
-                        Name = c.Name,
-                        Color = c.Color,
-                        Icon = c.Icon,
-                        DisplayOrder = index + 1,
-                    })
-            );
-            await context.SaveChangesAsync();
-        }
-
-    }
-
-    public static string SanitizeFileName(string fileName)
-    {
-        foreach (var c in Path.GetInvalidFileNameChars())
-        {
-            fileName = fileName.Replace(c, '_');
-        }
-        return fileName;
-    }
 
 
 }

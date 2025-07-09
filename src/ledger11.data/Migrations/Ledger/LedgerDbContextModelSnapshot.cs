@@ -38,7 +38,7 @@ namespace ledger11.data.Migrations.Ledger
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("ledger11.model.Data.Transaction", b =>
@@ -50,7 +50,13 @@ namespace ledger11.data.Migrations.Ledger
                     b.Property<int?>("CategoryId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Currency")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime?>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("ExchangeRate")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Notes")
@@ -68,7 +74,7 @@ namespace ledger11.data.Migrations.Ledger
 
                     b.HasIndex("Date");
 
-                    b.ToTable("Transactions", (string)null);
+                    b.ToTable("Transactions");
                 });
 
             modelBuilder.Entity("ledger11.model.Data.TransactionDetail", b =>
@@ -98,7 +104,7 @@ namespace ledger11.data.Migrations.Ledger
 
                     b.HasIndex("TransactionId");
 
-                    b.ToTable("TransactionDetail", (string)null);
+                    b.ToTable("TransactionDetail");
                 });
 
             modelBuilder.Entity("ledger11.model.Data.Widget", b =>
@@ -126,7 +132,7 @@ namespace ledger11.data.Migrations.Ledger
 
                     b.HasKey("Id");
 
-                    b.ToTable("Widgets", (string)null);
+                    b.ToTable("Widgets");
                 });
 
             modelBuilder.Entity("ledger11.model.Data.Transaction", b =>

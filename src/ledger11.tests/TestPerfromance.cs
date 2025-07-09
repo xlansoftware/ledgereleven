@@ -8,9 +8,10 @@ using ledger11.model.Api;
 
 namespace ledger11.tests;
 
+//TODO: Move the performance tests in a dedicated assembly ledger11.performance
 public class TestPerformance
 {
-    [Fact]
+    // [Fact]
     public async Task Test_Create1000Transactions()
     {
         // Arrange
@@ -60,7 +61,7 @@ public class TestPerformance
         Console.WriteLine($"Time taken to create {transactionCount} transactions: {stopwatch.Elapsed.TotalSeconds:F2} seconds");
     }
 
-    [Fact]
+    // [Fact]
     public async Task Test_SpaceList()
     {
         // Arrange
@@ -74,7 +75,7 @@ public class TestPerformance
         var initialCategory = categories[0];
 
         var transactionsController = ActivatorUtilities.CreateInstance<TransactionController>(serviceProvider);
-        var spaceController = ActivatorUtilities.CreateInstance<ApiSpaceController>(serviceProvider);
+        var spaceController = ActivatorUtilities.CreateInstance<SpaceController>(serviceProvider);
 
         const int transactionCount = 1000;
         var stopwatch = Stopwatch.StartNew();

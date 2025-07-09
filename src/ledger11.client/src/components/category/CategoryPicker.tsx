@@ -25,6 +25,7 @@ export const CategoryPicker: React.FC<CategoryPickerProps> = ({
 
           return (
             <Button
+              aria-label={`Category ${category.name}`}
               key={category.id}
               variant={isSelected ? "default" : "outline"}
               onClick={() => onSelect(category)}

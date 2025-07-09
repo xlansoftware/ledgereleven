@@ -39,6 +39,7 @@ public static class GenerateCommands
 
                 var logger = services.GetRequiredService<ILogger<Program>>();
 
+                await Tools.EnsureDatabaseMigratedAsync(services);
                 var dbContext = services.GetRequiredService<AppDbContext>();
                 var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
@@ -56,12 +57,12 @@ public static class GenerateCommands
                 logger.LogInformation($"Creating {count} records in {space.Name} for user {user.UserName} ...");
 
                 logger.LogTrace($"Using data path {dataPath}");
-                var dbPath = Path.Combine(dataPath, $"space-{CurrentLedgerService.SanitizeFileName(space.Id.ToString())}.db");
+                var dbPath = Path.Combine(dataPath, $"space-{UserSpaceService.SanitizeFileName(space.Id.ToString())}.db");
                 var optionsBuilder = new DbContextOptionsBuilder<LedgerDbContext>()
                     .UseSqlite($"Data Source={dbPath};Pooling=false");
 
                 var context = new LedgerDbContext(optionsBuilder.Options);
-                await CurrentLedgerService.InitializeDbAsync(context);
+                await UserSpaceService.InitializeDbAsync(context);
 
                 await Generate(context, count);
 

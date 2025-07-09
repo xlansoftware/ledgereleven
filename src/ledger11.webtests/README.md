@@ -12,6 +12,7 @@ This project contains the end-to-end tests for the Ledger Eleven application, wr
 
 ```
 npx playwright test
+npx playwright test -g "my test name" --timeout=5000
 ```
     Runs the end-to-end tests.
 

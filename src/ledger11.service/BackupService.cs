@@ -76,6 +76,8 @@ public class BackupService : IBackupService
             t.Id,
             Date = t.Date?.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
             t.Value,
+            t.ExchangeRate,
+            t.Currency,
             Category = t.Category?.Name,
             t.Notes,
             t.User
@@ -118,7 +120,7 @@ public class BackupService : IBackupService
         var writer = new StreamWriter(outputStream, Encoding.UTF8, bufferSize: 1024, leaveOpen: true);
 
         // Write CSV header
-        await writer.WriteLineAsync("Id,DateUTC,Value,Category,Notes,User");
+        await writer.WriteLineAsync("Id,DateUTC,Value,ExchangeRate,Currency,Category,Notes,User");
 
         // Retrieve transactions with associated categories
         var transactions = await db.Transactions
@@ -132,11 +134,13 @@ public class BackupService : IBackupService
             var dateUtc = t.Date?.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") ?? "";
             var value = t.Value.ToString("F2", CultureInfo.InvariantCulture);
             var category = EscapeCsvField(t.Category?.Name ?? "");
+            var exchangeRate = t.ExchangeRate != null ? t.ExchangeRate.Value.ToString("F2", CultureInfo.InvariantCulture) : "";
+            var currency = t.Currency ?? "";
             var notes = EscapeCsvField(t.Notes ?? "");
             var user = EscapeCsvField(t.User ?? "");
 
             // Combine fields into a CSV line
-            var line = $"{id},{dateUtc},{value},{category},{notes},{user}";
+            var line = $"{id},{dateUtc},{value},{exchangeRate},{currency},{category},{notes},{user}";
 
             // Write the line asynchronously
             await writer.WriteLineAsync(line);
@@ -312,6 +316,8 @@ public class BackupService : IBackupService
                 int? id = columnMap.TryGetValue("Id", out var idCol) ? row.Cell(idCol).GetValue<int?>() : null;
                 string? dateStr = columnMap.TryGetValue("Date", out var dateCol) ? row.Cell(dateCol).GetValue<string>() : null;
                 decimal value = columnMap.TryGetValue("Value", out var valueCol) ? row.Cell(valueCol).GetValue<decimal>() : 0;
+                decimal? exchangeRate = columnMap.TryGetValue("ExchangeRate", out var exchangeRateCol) ? row.Cell(exchangeRateCol).GetValue<decimal?>() : null;
+                string? currency = columnMap.TryGetValue("Currency", out var currencyCol) ? row.Cell(currencyCol).GetValue<string?>() : null;
                 string? categoryName = columnMap.TryGetValue("Category", out var catCol) ? row.Cell(catCol).GetValue<string>() : null;
                 string? notes = columnMap.TryGetValue("Notes", out var notesCol) ? row.Cell(notesCol).GetValue<string?>() : null;
                 string? user = columnMap.TryGetValue("User", out var userCol) ? row.Cell(userCol).GetValue<string?>() : null;
@@ -331,6 +337,8 @@ public class BackupService : IBackupService
                 {
                     transaction.Date = date;
                     transaction.Value = value;
+                    transaction.ExchangeRate = exchangeRate;
+                    transaction.Currency = currency;
                     transaction.CategoryId = category?.Id;
                     transaction.Notes = notes;
                     transaction.User = user;
@@ -342,6 +350,8 @@ public class BackupService : IBackupService
                     {
                         Date = date,
                         Value = value,
+                        ExchangeRate = exchangeRate,
+                        Currency = currency,
                         CategoryId = category?.Id,
                         Notes = notes,
                         User = user
@@ -475,6 +485,8 @@ public class BackupService : IBackupService
                 id = TryGetInt(fields, columnMap, "Id");
                 DateTime? date = TryGetDate(fields, columnMap, "DateUTC");
                 decimal? value = TryGetDecimal(fields, columnMap, "Value");
+                decimal? exchangeRate = TryGetDecimal(fields, columnMap, "ExchangeRate");
+                string? currency = TryGetString(fields, columnMap, "Currency");
                 string? categoryName = TryGetString(fields, columnMap, "Category");
                 string? notes = TryGetString(fields, columnMap, "Notes");
                 string? user = TryGetString(fields, columnMap, "User");
@@ -505,6 +517,8 @@ public class BackupService : IBackupService
 
                 transaction.Date = date;
                 transaction.Value = value.Value;
+                transaction.ExchangeRate = exchangeRate;
+                transaction.Currency = currency;
                 transaction.Notes = notes;
                 transaction.User = user;
 
@@ -549,6 +563,7 @@ public class BackupService : IBackupService
         if (columnMap.TryGetValue(key, out var index)
             && index < fields.Length)
         {
+            if (string.IsNullOrWhiteSpace(fields[index])) return null;
             return decimal.Parse(fields[index], NumberStyles.Any, CultureInfo.InvariantCulture);
         }
         return null;

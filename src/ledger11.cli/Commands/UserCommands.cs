@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ledger11.model.Data;
+using ledger11.data;
 
 namespace ledger11.cli;
 
@@ -33,6 +34,7 @@ public static class UserCommands
                 using var scope = host.Services.CreateScope();
                 var services = scope.ServiceProvider;
 
+                await Tools.EnsureDatabaseMigratedAsync(services);
                 var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
                 var users = await userManager.Users.ToListAsync();
@@ -75,6 +77,7 @@ public static class UserCommands
                 using var scope = host.Services.CreateScope();
                 var services = scope.ServiceProvider;
 
+                await Tools.EnsureDatabaseMigratedAsync(services);
                 var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
                 var user = await userManager.FindByEmailAsync(email);
