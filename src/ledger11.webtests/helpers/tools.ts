@@ -11,3 +11,9 @@ export async function dumpAllTestIds(page: Page) {
         console.log(await item.getAttribute('data-testid'));
     }
 }
+
+export function generateRandomUsername() {
+  const timestamp = Date.now(); // current time in ms
+  const randomNum = Math.floor(Math.random() * 100000); // random number from 0 to 99999
+  return `testuser+${timestamp}${randomNum}@example.com`;
+}

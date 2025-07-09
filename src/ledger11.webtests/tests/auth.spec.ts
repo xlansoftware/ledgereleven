@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-import { APP_URL } from '../helpers/tools';
+import { APP_URL, generateRandomUsername } from '../helpers/tools';
 import { login, logout } from '../helpers/auth';
 
 test('has title', async ({ page }) => {
@@ -10,7 +10,7 @@ test('has title', async ({ page }) => {
 });
 
 test('Register flow works correctly', async ({ page }) => {
-    const uniqueEmail = `testuser+${Date.now()}@example.com`
+    const uniqueEmail = generateRandomUsername()
     const password = 'MySecurePassword123!'
 
     // 1. Navigate to the app

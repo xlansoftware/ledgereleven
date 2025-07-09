@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-import { APP_URL } from '../helpers/tools';
+import { APP_URL, generateRandomUsername } from '../helpers/tools';
 import { login, logout, createUser } from '../helpers/auth';
 
 test.use({
@@ -8,7 +8,7 @@ test.use({
 });
 
 test('Add 42.0', async ({ page }) => {
-    const uniqueEmail = `testuser+${Date.now()}@example.com`;
+    const uniqueEmail = generateRandomUsername();
     const password = 'MySecurePassword123!';
 
     await page.goto(APP_URL);
@@ -44,7 +44,7 @@ test('Add 42.0', async ({ page }) => {
 })
 
 test('Add expression 2+2', async ({ page }) => {
-    const uniqueEmail = `testuser+${Date.now()}@example.com`;
+    const uniqueEmail = generateRandomUsername();
     const password = 'MySecurePassword123!';
 
     await page.goto(APP_URL);
@@ -62,7 +62,7 @@ test('Add expression 2+2', async ({ page }) => {
 })
 
 test('Add with currency 20 BGL', async ({ page }) => {
-    const uniqueEmail = `testuser+${Date.now()}@example.com`;
+    const uniqueEmail = generateRandomUsername();
     const password = 'MySecurePassword123!';
 
     await page.goto(APP_URL);
@@ -86,7 +86,7 @@ test('Add with currency 20 BGL', async ({ page }) => {
 
 
 test('Add with currency BGL20', async ({ page }) => {
-    const uniqueEmail = `testuser+${Date.now()}@example.com`;
+    const uniqueEmail = generateRandomUsername();
     const password = 'MySecurePassword123!';
 
     await page.goto(APP_URL);
