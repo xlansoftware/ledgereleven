@@ -84,6 +84,11 @@ public class LedgerDbContext : DbContext
     public DbSet<Widget> Widgets { get; set; }
 
     /// <summary>
+    /// Gets or sets the <see cref="DbSet{TEntity}"/> for ledger-specific settings.
+    /// </summary>
+    public DbSet<Setting> Settings { get; set; }
+
+    /// <summary>
     /// Configures the model for the ledger database context.
     /// </summary>
     /// <param name="modelBuilder">The builder being used to construct the model for this context.</param>
@@ -130,6 +135,11 @@ public class LedgerDbContext : DbContext
             .WithMany()
             .HasForeignKey(t => t.CategoryId)
             .OnDelete(DeleteBehavior.NoAction);
+
+        // Configure the Setting entity to have a unique index on the Key property.
+        modelBuilder.Entity<Setting>()
+            .HasIndex(s => s.Key)
+            .IsUnique();
 
     }
 }
