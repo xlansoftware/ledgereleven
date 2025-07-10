@@ -6,6 +6,7 @@ namespace ledger11.model.Config;
 /// </summary>
 public static class LedgerSettings
 {
+    
     /// <summary>
     /// A boolean setting ("true" or "false") indicating whether the ledger is closed to new entries.
     /// </summary>
@@ -20,4 +21,21 @@ public static class LedgerSettings
     /// A string setting containing the ID of the ledger to which the closing balance was transferred.
     /// </summary>
     public const string ClosingBalanceTransferLedger = "ClosingBalanceTransferLedger";
+
+    /// <summary>
+    /// A string setting that specifies the default language for the ledger (e.g., "English", "Bulgarian").
+    /// This is used for operations like receipt translation. Defaults to "English" if not set.
+    /// </summary>
+    public const string DefaultLanguage = "DefaultLanguage";
+
+    /// <summary>
+    /// A string setting for the ISO 4217 currency code (e.g., "USD", "EUR") that the ledger uses for reporting.
+    /// Defaults to "USD" if not set.
+    /// </summary>
+    public const string Currency = "Currency";
+
+    /// <summary>
+    /// A string setting for an ARGB color (e.g., "#FF00FF00") used for UI elements related to the ledger.
+    /// </summary>
+    public const string Tint = "Tint";
 }
