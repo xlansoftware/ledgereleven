@@ -18,7 +18,7 @@ export default function PerPeriodComponent({
 }: {
   period: "day" | "week" | "month";
 }) {
-  const { categories } = useBookStore();
+  const { transactions, categories } = useBookStore();
   const [data, setData] = useState<PerPeriodData[]>([]);
   const [start, setStart] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -60,7 +60,7 @@ export default function PerPeriodComponent({
     setStart(0);
     setHasMore(true);
     fetchData(0);
-  }, [period, fetchData]);
+  }, [period, fetchData, transactions]);
 
   const handleLoadMore = () => {
     fetchData(start);

@@ -21,7 +21,7 @@ interface TotalByPeriodByCategoryComponentProps {
 export default function TotalByPeriodByCategoryComponent(
   props: TotalByPeriodByCategoryComponentProps
 ) {
-  const { categories } = useBookStore();
+  const { transactions, categories } = useBookStore();
   const colors = categories.reduce((acc, category) => {
     acc[category.name] = category;
     return acc;
@@ -41,7 +41,8 @@ export default function TotalByPeriodByCategoryComponent(
         }
       }
     );
-  }, []);
+    // when transactions change, re-fetch the data
+  }, [transactions]);
 
   const { expense, income } = data ?? {};
 
