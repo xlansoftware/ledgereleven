@@ -26,7 +26,7 @@ public static class LedgerSettings
     /// A string setting that specifies the default language for the ledger (e.g., "English", "Bulgarian").
     /// This is used for operations like receipt translation. Defaults to "English" if not set.
     /// </summary>
-    public const string DefaultLanguage = "DefaultLanguage";
+    public const string Language = "Language";
 
     /// <summary>
     /// A string setting for the ISO 4217 currency code (e.g., "USD", "EUR") that the ledger uses for reporting.
