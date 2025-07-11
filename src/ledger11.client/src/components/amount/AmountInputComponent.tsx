@@ -73,21 +73,23 @@ export function AmountInputComponent({ onConfirm }: AmountInputComponentProps) {
       <Button type="submit" className="h-14 px-6 text-lg font-medium rounded-m">
         Add
       </Button>
-      <ExchangeRateDialog
-        onConfirm={(result) => {
-          onConfirm({
-            value: result.value,
-            currency: result.currency,
-            exchangeRate: result.exchangeRate,
-          });
-          setExchangeRateDialogProps({ isOpen: false });
-          setValue("");
-        }}
-        onCancel={() => setExchangeRateDialogProps({ isOpen: false })}
-        title="Exchange Rate"
-        description={`Are you sure you want to add a transaction for ${value}?`}
-        {...exchangeRateDialogProps}
-      />
+      {exchangeRateDialogProps.isOpen && (
+        <ExchangeRateDialog
+          onConfirm={(result) => {
+            onConfirm({
+              value: result.value,
+              currency: result.currency,
+              exchangeRate: result.exchangeRate,
+            });
+            setExchangeRateDialogProps({ isOpen: false });
+            setValue("");
+          }}
+          onCancel={() => setExchangeRateDialogProps({ isOpen: false })}
+          title="Exchange Rate"
+          description={`Are you sure you want to add a transaction for ${value}?`}
+          {...exchangeRateDialogProps}
+        />
+      )}
     </form>
   );
 }

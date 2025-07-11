@@ -108,11 +108,10 @@ public class CurrencyController : ControllerBase
     {
         var client = _httpClientFactory.CreateClient();
         var url = $"{FrankfurterBaseUrl}/latest?from={from}&to={to}";
-
         var response = await client.GetAsync(url);
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogWarning("API call failed: {StatusCode} - {Reason}", response.StatusCode, response.ReasonPhrase);
+            _logger.LogWarning("API call failed: GET {url} [{StatusCode}] - {Reason}", url, response.StatusCode, response.ReasonPhrase);
             return null;
         }
 
