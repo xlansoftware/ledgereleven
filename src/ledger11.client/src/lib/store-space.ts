@@ -13,7 +13,7 @@ interface SpaceStoreState {
   updateSpace: (id: string, updatedFields: Partial<Space>) => Promise<void>;
   removeSpace: (id: string) => Promise<void>;
   setCurrentSpace: (id: string) => Promise<void>;
-  loadSpaces: (includeDetails?: boolean) => Promise<Space[]>;
+  loadSpaces: (includeDetails?: boolean) => Promise<Space | undefined>;
 }
 
 export const useSpaceStore = create<SpaceStoreState>()(
@@ -98,7 +98,7 @@ export const useSpaceStore = create<SpaceStoreState>()(
           spaces: result.spaces,
         });
 
-        return result.spaces;
+        return result.current;
       },
     }),
     {

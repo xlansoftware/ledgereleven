@@ -7,22 +7,20 @@ import {
   } from "../ui/dialog";
   import { Button } from "../ui/button";
   import { ScrollArea } from "../ui/scroll-area";
-import { useTransactionStore } from "@/lib/store-transaction";
 import TransactionRow from "./TransactionRow";
+import { Transaction } from "@/lib/types";
   
   interface ConfirmTransactionFormProps {
-    id: number;
+    transaction: Transaction;
     onConfirm?: () => void;
     onUndo?: () => void;
   }
   
   export default function ConfirmTransactionForm({
-    id,
+    transaction,
     onConfirm,
     onUndo,
   }: ConfirmTransactionFormProps) {
-    const { transactions } = useTransactionStore();
-    const transaction = transactions.find((t) => t.id === id)!;
 
     return (
       <Dialog open={true}>

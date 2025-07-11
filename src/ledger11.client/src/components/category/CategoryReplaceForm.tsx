@@ -1,4 +1,4 @@
-import { useCategoryStore } from "@/lib/store-category";
+import { useBookStore } from "@/lib/store-book";
 import { Category } from "@/lib/types";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ export default function CategoryReplaceDialog({
   trigger,
   onConfirm,
 }: Props) {
-  const { categories } = useCategoryStore();
+  const { categories } = useBookStore();
   const [open, setOpen] = useState(false);
   const [replacementId, setReplacementId] = useState<number | null>(null);
 

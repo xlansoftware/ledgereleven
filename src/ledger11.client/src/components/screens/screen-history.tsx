@@ -1,8 +1,7 @@
-import { useTransactionStore } from "@/lib/store-transaction";
-import { useEffect, useState } from "react";
+import { useBookStore } from "@/lib/store-book";
+import { useState } from "react";
 import TransactionRow from "../history/TransactionRow";
 import { Button } from "../ui/button";
-import { useCategoryStore } from "@/lib/store-category";
 import DonutSkeleton from "../DonutSkeleton";
 import { SearchIcon, X } from "lucide-react";
 import Filter from "../history/Filter";
@@ -49,10 +48,14 @@ function getTransactionGroup(
 }
 
 export default function HistoryScreen() {
-  const [initialLoading, setInitialLoading] = useState(true);
   const [loading, setLoading] = useState(false);
-  const { transactions, totalCount, loadTransactions } = useTransactionStore();
-  const { categories, loadCategories } = useCategoryStore();
+  const {
+    transactions,
+    totalCount,
+    loadTransactions,
+    categories,
+    isLoading: initialLoading,
+  } = useBookStore();
   const [showFilter, setShowFilter] = useState(false);
   const [filter, setFilter] = useState<FilterRequest | undefined>();
   const today = new Date();
@@ -61,17 +64,6 @@ export default function HistoryScreen() {
     categories: number[];
     users: string[];
   }>({ categories: [], users: [] });
-
-  useEffect(() => {
-    const load = async () => {
-      await loadCategories();
-      await loadTransactions(true, 0, PAGE_SIZE * 2, filter);
-    };
-    load().finally(() => {
-      setInitialLoading(false);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handleLoadMore = async () => {
     setLoading(true);
@@ -158,7 +150,7 @@ export default function HistoryScreen() {
         </div>
       )}
 
-      {transactions.length === 0 && (
+      {!initialLoading && transactions.length === 0 && (
         <div className="flex items-center justify-center pt-16">
           No records.
         </div>
@@ -177,16 +169,19 @@ export default function HistoryScreen() {
           </div>
         );
       })}
-      {transactions.length > 0 && (
-        <Button
-          disabled={loading}
-          className="w-full mt-4"
-          variant={"secondary"}
-          onClick={handleLoadMore}
-        >
-          {loading ? "Loading..." : "Load more"}
-        </Button>
-      )}
+      {transactions.length > 0 &&
+        totalCount &&
+        transactions.length < totalCount && (
+          <Button
+            disabled={loading}
+            className="w-full mt-4"
+            variant={"secondary"}
+            onClick={handleLoadMore}
+          >
+            {loading ? "Loading..." : "Load more"}
+          </Button>
+        )}
     </>
   );
 }
+

@@ -4,7 +4,6 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import MobileNavigation from "@/components/mobile-navigation";
 import { useSpaceStore } from "@/lib/store-space";
 import { cn } from "@/lib/utils";
-import { useEffect } from "react";
 
 interface HeaderProps {
   currentPath: string;
@@ -14,15 +13,8 @@ export default function Header({ currentPath }: HeaderProps) {
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
 
-  const { current, loadSpaces } = useSpaceStore();
+  const { current } = useSpaceStore();
   const tint = current?.tint;
-
-  useEffect(() => {
-    if (!current) {
-      loadSpaces();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const getPathValue = () => {
     if (currentPath === "/") return "/";

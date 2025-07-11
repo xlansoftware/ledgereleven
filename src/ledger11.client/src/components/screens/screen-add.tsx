@@ -1,5 +1,4 @@
-import { useCategoryStore } from "@/lib/store-category";
-import { useTransactionStore } from "@/lib/store-transaction";
+import { useBookStore } from "@/lib/store-book";
 import { useEffect, useState } from "react";
 import { Input } from "../ui/input";
 import { CategoryPicker } from "../category/CategoryPicker";
@@ -12,22 +11,20 @@ import { AmountInputComponent } from "../amount/AmountInputComponent";
 const audio = new Audio("/sounds/success.mp3");
 
 export default function AddScreen() {
-  const { addTransaction } = useTransactionStore();
-  const { categories, loadCategories } = useCategoryStore();
+  const { addTransaction, categories } = useBookStore();
   const [notes, setNotes] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
-    categories[0] || null
+    null
   );
 
   const { showSuccess } = useSuccessOverlay();
 
   useEffect(() => {
-    if (categories.length === 0) {
-      loadCategories().catch((error) => {
-        console.error("Error loading categories:", error);
-      });
+    // Set the first category as selected by default when they are loaded
+    if (categories.length > 0 && !selectedCategory) {
+      setSelectedCategory(categories[0]);
     }
-  }, [categories, loadCategories]);
+  }, [categories, selectedCategory]);
 
   const handleAdd = async (transaction: Partial<Transaction>) => {
     try {

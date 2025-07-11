@@ -2,7 +2,7 @@ import { Transaction, TransactionDetails } from "@/lib/types";
 import { Button } from "../ui/button";
 import { Edit, MoreHorizontal } from "lucide-react";
 import { useState } from "react";
-import { useTransactionStore } from "@/lib/store-transaction";
+import { useBookStore } from "@/lib/store-book";
 import { toast } from "sonner";
 import EditDetailForm from "./EditDetailForm";
 
@@ -18,7 +18,7 @@ export default function DetailRowMenu({
   transaction,
   detail,
 }: DetailRowMenuProps) {
-  const { updateTransaction } = useTransactionStore();
+  const { updateTransaction } = useBookStore();
   const [edit, setEdit] = useState(false);
 
   const handleEdit = () => {

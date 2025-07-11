@@ -29,17 +29,17 @@ import {
   SelectValue,
 } from "../ui/select";
 import { useSpaceStore } from "@/lib/store-space";
-import { useTransactionStore } from "@/lib/store-transaction";
 import { fetchWithAuth } from "@/api";
 import { useConfirmDialog } from "../dialog/ConfirmDialogContext";
 import useVersion from "@/hooks/useVersion";
+import { useBookStore } from "@/lib/store-book";
 
 export default function Settings() {
   const navigate = useNavigate();
   const { setTheme } = useTheme();
   const { name } = useUser();
   const { current, spaces, setCurrentSpace, loadSpaces } = useSpaceStore();
-  const { loadTransactions } = useTransactionStore();
+  const { openBook } = useBookStore();
   const { confirm } = useConfirmDialog();
 
   const [isImporting, setIsImporting] = useState(false);
@@ -47,14 +47,14 @@ export default function Settings() {
   const { appVersion } = useVersion();
 
   useEffect(() => {
-    loadSpaces();
+    loadSpaces(true);
   }, [loadSpaces]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleChangeSpace = async (value: string) => {
     await setCurrentSpace(value);
-    await loadTransactions(true);
+    await openBook(value);
     toast(`Current space changed`);
   };
 
@@ -102,7 +102,9 @@ export default function Settings() {
         toast.success("File imported successfully!");
       }
 
-      await loadTransactions(true);
+      if (current?.id) {
+        await openBook(current.id);
+      }
     } catch (error) {
       console.error("An error occurred while uploading the file:", error);
       toast.error("An unexpected error occurred. Please try again.");
@@ -123,8 +125,10 @@ export default function Settings() {
         await fetchWithAuth("/api/transaction/clear", {
           method: "POST",
         });
-        await loadSpaces();
-        await loadTransactions(true);
+        await loadSpaces(true);
+        if (current?.id) {
+          await openBook(current.id);
+        }
         toast("All your purchase records have been deleted.");
       },
     });
@@ -335,3 +339,4 @@ export default function Settings() {
     </div>
   );
 }
+

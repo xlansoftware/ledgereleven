@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Category } from "@/lib/types";
-import { useCategoryStore } from "@/lib/store-category";
+import { useBookStore } from "@/lib/store-book";
 import { Input } from "../ui/input";
 import { ResponsiveIconPicker } from "../responsive/ResponsiveIconPicker";
 import { ResponsiveColorPicker } from "../responsive/ResponsiveColorPicker";
@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function CategoryEditor({ category }: Props) {
-  const { updateCategory } = useCategoryStore();
+  const { updateCategory } = useBookStore();
 
   const [local, setLocal] = useState<Category>(category);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);

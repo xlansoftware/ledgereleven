@@ -3,7 +3,7 @@ import { Button } from "../ui/button";
 import ResponsiveMenu from "../responsive/ResponsiveMenu";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useTransactionStore } from "@/lib/store-transaction";
+import { useBookStore } from "@/lib/store-book";
 import EditTransactionForm from "./EditTransactionForm";
 import { Transaction } from "@/lib/types";
 import ConfirmMenuItem from "./ConfirmMenuItem";
@@ -13,7 +13,7 @@ export default function TransactionRowMenu({
 }: {
   transaction: Transaction;
 }) {
-  const { removeTransaction } = useTransactionStore();
+  const { removeTransaction } = useBookStore();
   const [edit, setEdit] = useState(false);
 
   const handleEdit = () => {

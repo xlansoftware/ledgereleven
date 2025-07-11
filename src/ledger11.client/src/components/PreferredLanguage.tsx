@@ -19,7 +19,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { languageList } from "@/lib/language";
-import { useSettingsStore } from "@/lib/store-settings";
+import { useBookStore } from "@/lib/store-book";
 
 interface PreferredLanguageProps {
   id?: string;
@@ -27,10 +27,9 @@ interface PreferredLanguageProps {
 }
 
 export function PreferredLanguage({ id, disabled }: PreferredLanguageProps) {
-  const { getLanguage, setLanguage } =
-    useSettingsStore();
+  const { getSetting, setSetting } = useBookStore();
 
-  const value = getLanguage();
+  const value = getSetting("Language", "eng");
 
   const [open, setOpen] = React.useState(false);
 
@@ -46,7 +45,7 @@ export function PreferredLanguage({ id, disabled }: PreferredLanguageProps) {
           disabled={disabled}
         >
           {value
-            ? languageList.find((framework) => framework.code === value)?.name
+            ? languageList.find((language) => language.code === value)?.name
             : "Select language..."}
           <ChevronsUpDown className="opacity-50" />
         </Button>
@@ -62,7 +61,8 @@ export function PreferredLanguage({ id, disabled }: PreferredLanguageProps) {
                   key={language.code}
                   value={language.code}
                   onSelect={async (currentValue) => {
-                    await setLanguage(
+                    await setSetting(
+                      "Language",
                       currentValue === value ? "" : currentValue
                     );
                     setOpen(false);

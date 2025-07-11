@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { MoreHorizontalIcon, PencilIcon, UserPlus2Icon } from "lucide-react";
 import { useSpaceStore } from "@/lib/store-space";
-// import SpaceEditor from "@/components/space/SpaceEditor";
 import ShareSpaceDialog from "@/components/space/ShareSpaceDialog";
 import { cn } from "@/lib/utils";
 import ResponsiveMenu from "../responsive/ResponsiveMenu";
@@ -15,6 +14,7 @@ import { Space } from "@/lib/types";
 import SpaceEditForm from "../space/SpaceEditForm";
 import SpaceRow from "../space/SpaceRow";
 import { fetchWithAuth } from "@/api";
+import { useBookStore } from "@/lib/store-book";
 
 export default function SpacesScreen() {
   const {
@@ -26,6 +26,8 @@ export default function SpacesScreen() {
     updateSpace,
     setCurrentSpace,
   } = useSpaceStore();
+
+  const { openBook } = useBookStore();
 
   const [newSpaceName, setNewSpaceName] = useState("");
   const [sharingSpaceId, setSharingSpaceId] = useState<string | null>(null);
@@ -114,7 +116,10 @@ export default function SpacesScreen() {
           >
             <SpaceRow
               space={space}
-              onClick={setCurrentSpace}
+              onClick={async (spaceId) => {
+                await setCurrentSpace(spaceId);
+                await openBook(spaceId);
+              }}
               className="w-full"
             />
 

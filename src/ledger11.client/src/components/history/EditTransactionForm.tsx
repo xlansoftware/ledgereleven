@@ -11,8 +11,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useTransactionStore } from "@/lib/store-transaction";
-import { useCategoryStore } from "@/lib/store-category";
+import { useBookStore } from "@/lib/store-book";
 import { Transaction } from "@/lib/types";
 import { toast } from "sonner";
 import { ResponsiveSelect } from "../responsive/ResponsiveSelect";
@@ -26,8 +25,7 @@ export default function EditTransactionForm({
   transaction,
   onClose,
 }: EditTransactionFormProps) {
-  const { categories } = useCategoryStore();
-  const { updateTransaction } = useTransactionStore();
+  const { categories, updateTransaction } = useBookStore();
 
   const [editValues, setEditValues] = useState({
     value: `${transaction.value}`,
