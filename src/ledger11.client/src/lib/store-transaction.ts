@@ -43,7 +43,7 @@ export const createTransactionSlice: StateCreator<
     const created: Transaction = await response.json();
 
     set((state) => ({
-      transactions: [...state.transactions, created],
+      transactions: [created, ...state.transactions],
     }));
 
     return created;
