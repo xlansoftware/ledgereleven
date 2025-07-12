@@ -84,3 +84,49 @@ test('Remove item', async ({ page }) => {
     // Assert the page does NOT shows the item
     await expect(page.getByTestId('Item: Groceries, 42.00')).not.toBeVisible();
 })
+
+test('Filter by category', async ({ page }) => {
+    const uniqueEmail = generateRandomUsername();
+    const password = 'MySecurePassword123!';
+
+    await page.goto(APP_URL);
+    await createUser(page, uniqueEmail, password);
+
+    await expect(page.url()).toBe(`${APP_URL}app`);
+  
+    // Create record Groceries 42.0
+    await page.getByRole('textbox', { name: "Amount" }).fill('42.0');
+    await page.getByRole('button', { name: "Category Groceries" }).click();
+    await page.getByRole('button', { name: "Add", exact: true }).click();
+
+    // Create record Education 11.0
+    await page.getByRole('textbox', { name: "Amount" }).fill('11.0');
+    await page.getByRole('button', { name: "Category Education" }).click();
+    await page.getByRole('button', { name: "Add", exact: true }).click();
+
+    // Go to the History tab
+    await page.getByRole('button', { name: "History Screen" }).click();
+
+    // Assert the page shows the items
+    await expect(page.getByTestId('Item: Groceries, 42.00')).toBeVisible();
+    await expect(page.getByTestId('Item: Education, 11.00')).toBeVisible();
+
+    // Filter by catrgory
+    await page.getByRole('button', { name: "Filter" }).click();
+    await page.getByRole('switch', { name: "Any category" }).click();
+    await page.getByRole('combobox', { name: "Select categories..." }).click();
+    await page.getByRole('option', { name: "Education" }).click();
+    await page.getByRole('button', { name: "Apply Filters" }).click();
+
+    // Assert the page shows only Education item
+    await expect(page.getByTestId('Item: Groceries, 42.00')).not.toBeVisible();
+    await expect(page.getByTestId('Item: Education, 11.00')).toBeVisible();
+
+    // Clear filters
+    await page.getByText('1 record').click();
+
+    // Assert the page shows only two items again
+    await expect(page.getByTestId('Item: Groceries, 42.00')).toBeVisible();
+    await expect(page.getByTestId('Item: Education, 11.00')).toBeVisible();
+
+})
