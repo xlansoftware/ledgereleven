@@ -44,7 +44,7 @@ function detailValue(detail: TransactionDetails, transaction: Transaction) {
 function explainValue(value: number, exchangeRate?: number, currency?: string) {
   if (!currency) return null;
   if (!exchangeRate) return null;
-  return `${formatCurrency(value, 2)} x ${exchangeRate ?? 1.0} ${currency}`;
+  return `${formatCurrency(value, 2)} x ${formatCurrency(exchangeRate, 4) ?? 1.0} ${currency}`;
 }
 
 function explainTransactionValue(transaction: Transaction) {

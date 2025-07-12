@@ -104,7 +104,7 @@ export function formatCurrency(
   const options: Intl.NumberFormatOptions = {
     // style: "currency",
     // currency: "USD",
-    minimumFractionDigits: fractionDigits, // Set minimum decimal places
+    minimumFractionDigits: 2, // Set minimum decimal places
     maximumFractionDigits: fractionDigits, // Set maximum decimal places
   };
 

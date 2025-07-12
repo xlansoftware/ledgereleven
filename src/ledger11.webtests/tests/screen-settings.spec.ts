@@ -74,3 +74,37 @@ test('Create book', async ({ page }) => {
     await expect(page.getByTestId('Item: Education, 11.00')).not.toBeVisible();
 
 })
+
+test('Book settings', async ({ page }) => {
+    const uniqueEmail = generateRandomUsername();
+    const password = 'MySecurePassword123!';
+
+    await page.goto(APP_URL);
+    await createUser(page, uniqueEmail, password);
+
+    await expect(page.url()).toBe(`${APP_URL}app`);
+  
+    // Go to the Settings tab
+    await page.getByRole('button', { name: "Settings Screen" }).click();
+
+    await page.getByRole('button', { name: "Edit Books..." }).click();
+
+    // The default book should be visible
+    await expect(page.getByTestId('Space: Ledger')).toBeVisible();
+
+    await page.getByRole('button', { name: "Actions" }).click();
+
+    const dialogActions = page.getByRole('dialog', { name: "Actions" });
+    await expect(dialogActions).toBeVisible();
+
+    await dialogActions.getByRole('button', { name: "Edit" }).click();
+    const dialogEdit = page.getByRole('dialog', { name: "Edit Book" });
+    await expect(dialogEdit).toBeVisible();
+
+    await dialogEdit.getByRole('textbox', { name: "Name" }).fill("Ledger 11");
+    await dialogEdit.getByRole('textbox', { name: "Currency" }).fill("EUR");
+    await dialogEdit.getByRole('button', { name: "Save" }).click();
+
+    await expect(page.getByTestId('Space: Ledger 11')).toBeVisible();
+
+})

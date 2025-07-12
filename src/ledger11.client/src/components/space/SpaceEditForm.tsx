@@ -39,7 +39,7 @@ export default function SpaceEditForm({ space, onClose }: SpaceEditFormProps) {
     <Dialog open={true} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Space</DialogTitle>
+          <DialogTitle>Edit Book</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>

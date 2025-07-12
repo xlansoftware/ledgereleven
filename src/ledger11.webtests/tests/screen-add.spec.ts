@@ -76,7 +76,7 @@ test('Add with currency 20 BGL', async ({ page }) => {
     await page.getByRole('button', { name: "Add", exact: true }).click();
 
     await page.getByRole('spinbutton', { name: 'Exchange Rate' }).fill("2");
-    await expect(page.getByRole('spinbutton', { name: 'Result (EUR)' })).toHaveValue('40');
+    await expect(page.getByRole('spinbutton', { name: 'Result (USD)' })).toHaveValue('40');
     await page.getByRole('button', { name: 'Confirm' }).click();
 
     await page.getByRole('button', { name: "History Screen" }).click();
@@ -100,7 +100,7 @@ test('Add with currency BGL20', async ({ page }) => {
     await page.getByRole('button', { name: "Add", exact: true }).click();
 
     await page.getByRole('spinbutton', { name: 'Exchange Rate' }).fill("2");
-    await expect(page.getByRole('spinbutton', { name: 'Result (EUR)' })).toHaveValue('40');
+    await expect(page.getByRole('spinbutton', { name: 'Result (USD)' })).toHaveValue('40');
     await page.getByRole('button', { name: 'Confirm' }).click();
 
     await page.getByRole('button', { name: "History Screen" }).click();
