@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "publish": "rimraf ../ledger11.web/wwwroot/app && copyfiles -u 1 ./dist/* ../ledger11.web/wwwroot/app && copyfiles -u 1 ./dist/**/* ../ledger11.web/wwwroot/app"
+    "publish": "rimraf ../ledger11.web/wwwroot/app && copyfiles -u 1 ./dist/* ../ledger11.web/wwwroot/app && copyfiles -u 1 ./dist/**/* ../ledger11.web/wwwroot/app",
+    "republish": "npm run build && npm run publish"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.13",

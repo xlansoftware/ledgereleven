@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 import { APP_URL, generateRandomUsername } from '../helpers/tools';
-import { login, logout, createUser } from '../helpers/auth';
+import { createUser } from '../helpers/auth';
 
 test.use({
   viewport: { width: 640, height: 480 },

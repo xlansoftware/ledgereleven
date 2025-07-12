@@ -95,6 +95,7 @@ const ScanReceiptButton: React.FC<ScanReceiptButtonProps> = ({
         onClick={handleButtonClick}
         className={className}
         disabled={isLoading} // Disable button while loading
+        aria-label="Scan Receipt"
       >
         {isLoading ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" /> // Show spinner when loading

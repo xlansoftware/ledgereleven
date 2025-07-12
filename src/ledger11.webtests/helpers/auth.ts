@@ -36,8 +36,18 @@ export async function createUser(page: Page, email: string, password: string) {
     // 1. Navigate to the app
     await page.goto(APP_URL)
 
-    // 2. Click the "Login" link
-    await page.getByRole('link', { name: /Start managing your expenses/i }).click()
+    const signIn = page.getByRole('button', { name: "Sign in" });
+    const devMode = await signIn.isVisible();
+    if (devMode) {
+        // we are in dev mode - the react app is hosted separately from the backend
+        await signIn.click();
+    } else {
+        // If not, we are already on the start page
+        
+        // 2. Click the "Login" link
+        await page.getByRole('link', { name: /Start managing your expenses/i }).click()
+    }
+
 
     // 3. Click the "Register as a new user" link
     await page.getByRole('link', { name: /register as a new user/i }).click()
@@ -54,8 +64,13 @@ export async function createUser(page: Page, email: string, password: string) {
     // 7. Click "Register" button
     await page.getByRole('button', { name: /register/i }).click()
 
-    // 8. Assert the page shows confirmation
-    await expect(page.url().startsWith(APP_URL)).toBe(true);
+    if (devMode) {
+        // return back to the react app
+        await page.goto(APP_URL);
+    } else {
+        // 8. Assert the page shows confirmation
+        await expect(page.url().startsWith(APP_URL)).toBe(true);
+    }
 
 }
 

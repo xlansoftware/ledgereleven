@@ -41,6 +41,7 @@ export function PreferredLanguage({ id, disabled }: PreferredLanguageProps) {
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          aria-label="Select language"
           className="w-[200px] justify-between"
           disabled={disabled}
         >

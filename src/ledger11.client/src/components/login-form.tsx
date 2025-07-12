@@ -71,6 +71,7 @@ export function LoginForm({
                   id="email"
                   type="email"
                   placeholder="m@example.com"
+                  aria-label="Email"
                   required
                   ref={emailRef} // Added ref
                 />
@@ -88,11 +89,12 @@ export function LoginForm({
                 <Input
                   id="password"
                   type="password"
+                  aria-label="Password"
                   required
                   ref={passwordRef} // Added ref
                 />
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" aria-label="Login">
                 Login
               </Button>
             </div>
