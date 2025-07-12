@@ -57,7 +57,9 @@ public class SpaceController : ControllerBase
         // Convert to DTOs for API response
         var dto = new SpaceListResponseDto
         {
-            Spaces = spaces.ToDtoList()
+            Spaces = spaces
+                .OrderByDescending(s => s.CreatedAt)
+                .ToDtoList(),
         };
 
         // Add settings to each space
