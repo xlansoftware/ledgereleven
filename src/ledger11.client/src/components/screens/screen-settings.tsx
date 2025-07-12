@@ -55,7 +55,7 @@ export default function Settings() {
   const handleChangeSpace = async (value: string) => {
     await setCurrentSpace(value);
     await openBook(value);
-    toast(`Current space changed`);
+    toast(`Current book changed`);
   };
 
   const handleLogout = () => {
@@ -141,15 +141,15 @@ export default function Settings() {
       <div className="space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle>Current Space</CardTitle>
+            <CardTitle>Current Book</CardTitle>
             <CardDescription>
-              Spaces let you separate purchases by context—like home, work, or
-              family — and you can collaborate with others by sharing access.
+              Books let you separate purchases by context-like home, work, or
+              family - and you can collaborate with others by sharing access.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-2">
-              <Label htmlFor="space-select">Current Space:</Label>
+              <Label htmlFor="space-select">Current Book:</Label>
               <Select
                 value={current?.id ?? ""}
                 onValueChange={(value) => handleChangeSpace(value)}
@@ -172,7 +172,7 @@ export default function Settings() {
               size="sm"
               onClick={() => navigate("/spaces")}
             >
-              Edit Spaces...
+              Edit Books...
             </Button>
           </CardContent>
         </Card>

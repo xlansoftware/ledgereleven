@@ -98,17 +98,18 @@ export default function SpacesScreen() {
     <div className="p-4 space-y-4">
       <div className="flex items-center gap-2">
         <Input
-          placeholder="New space name"
+          placeholder="New book name"
           value={newSpaceName}
           onChange={(e) => setNewSpaceName(e.target.value)}
         />
-        <Button onClick={handleAdd}>Add</Button>
+        <Button onClick={handleAdd}>Create</Button>
       </div>
 
       <div className="space-y-4">
         {spaces.map((space) => (
           <div
             key={space.id}
+            data-testid={`Space: ${space.name}`}
             className={cn(
               "flex items-center gap-2",
               current?.id === space.id && "bg-muted border border-border"
@@ -127,6 +128,7 @@ export default function SpacesScreen() {
               <ResponsiveMenu.Trigger>
                 <Button variant="ghost" size="icon">
                   <MoreHorizontalIcon className="w-4 h-4" />
+                  <span className="sr-only">Actions</span>
                 </Button>
               </ResponsiveMenu.Trigger>
               <ResponsiveMenu.Content>
