@@ -6,8 +6,17 @@ using ledger11.model.Api;
 using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using ledger11.data;
+using ledger11.model.Config;
+using ledger11.data.Extensions;
 
 namespace ledger11.web.Controllers;
+
+public class MergeSpaceRequestDto
+{
+    public Guid SourceSpaceId { get; set; }
+    public Guid TargetSpaceId { get; set; }
+    public int TargetCategoryId { get; set; }
+}
 
 [Authorize]
 [ApiController]
@@ -18,17 +27,20 @@ public class SpaceController : ControllerBase
     private readonly IUserSpaceService _userSpace;
     private readonly ICurrentLedgerService _currentLedgerService;
     private readonly AppDbContext _appDbContext;
+    private readonly IExchangeRateService _exchangeRateService;
 
     public SpaceController(
         ILogger<SpaceController> logger,
         IUserSpaceService userSpace,
         ICurrentLedgerService currentLedgerService,
-        AppDbContext appDbContext)
+        AppDbContext appDbContext,
+        IExchangeRateService exchangeRateService)
     {
         _logger = logger;
         _userSpace = userSpace;
         _currentLedgerService = currentLedgerService;
         _appDbContext = appDbContext;
+        _exchangeRateService = exchangeRateService;
     }
 
     // GET: api/space
@@ -252,6 +264,66 @@ public class SpaceController : ControllerBase
         {
             await transaction.RollbackAsync();
             throw; // Re-throw the exception after rollback
+        }
+    }
+
+    // POST: api/space/merge
+    [HttpPost("merge")]
+    public async Task<IActionResult> Merge([FromBody] MergeSpaceRequestDto request)
+    {
+        if (request.SourceSpaceId == Guid.Empty || request.TargetSpaceId == Guid.Empty)
+        {
+            return BadRequest("Source and target space IDs must be provided.");
+        }
+
+        if (request.SourceSpaceId == request.TargetSpaceId)
+        {
+            return BadRequest("Source and target spaces cannot be the same.");
+        }
+
+        try
+        {
+            var spaces = await _userSpace.GetAvailableSpacesAsync();
+
+            var sourceSpace = spaces.FirstOrDefault(s => s.Id == request.SourceSpaceId);
+            if (sourceSpace == null)
+                return Ok(); // Source space does not exist, nothing to merge
+
+            var sourceLedger = await _userSpace.GetLedgerDbContextAsync(request.SourceSpaceId, false);
+            if (sourceLedger == null)
+                return Ok(); // Source space does not exist, nothing to merge
+
+            var targetLedger = await _userSpace.GetLedgerDbContextAsync(request.TargetSpaceId, true);
+
+            var sourceDto = sourceSpace.ToDto();
+            await AddSpaceDetailsAsync(sourceDto); // read totals and settings from the source ledger
+
+            var currency = sourceDto.Settings.FirstOrDefault((s) => s.Key == LedgerSettings.Currency).Value ?? "USD";
+            var targetCurrency = (await targetLedger.Settings.FirstOrDefaultAsync(s => s.Key == LedgerSettings.Currency))?.Value ?? "USD";
+            var exchangeRate = await _exchangeRateService.GetExchangeRateAsync(currency, targetCurrency);
+            var targetCategory = await targetLedger.Categories.FirstOrDefaultAsync(c => c.Id == request.TargetCategoryId);
+            targetLedger.Transactions.Add(new Transaction()
+            {
+                Value = sourceDto.TotalValue ?? 0,
+                Currency = currency,
+                ExchangeRate = exchangeRate,
+                Date = DateTime.UtcNow,
+                Notes = sourceDto.Name,
+                CategoryId = targetCategory?.Id,
+            });
+            await targetLedger.SaveChangesAsync();
+
+            // Mark the source space as closed
+            _logger.LogInformation("Marking source space {SourceSpaceId} as closed", request.SourceSpaceId);
+            await sourceLedger.SetSettingValue(LedgerSettings.Status, "Closed");
+            await sourceLedger.SetSettingValue(LedgerSettings.ClosingBalanceTransferLedger, request.TargetSpaceId.ToString());
+
+            return Ok("Spaces merged successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error merging spaces.");
+            return StatusCode(500, "An error occurred while merging the spaces.");
         }
     }
 }

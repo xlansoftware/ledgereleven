@@ -8,14 +8,10 @@ public static class LedgerSettings
 {
     
     /// <summary>
-    /// A boolean setting ("true" or "false") indicating whether the ledger is closed to new entries.
+    /// The key for the ledger's status setting, which indicates whether the ledger is open or closed.
+    /// This is used to manage the state of the ledger, such as preventing further transactions when closed.
     /// </summary>
-    public const string IsClosed = "IsClosed";
-
-    /// <summary>
-    /// A string setting containing the UTC date (ISO 8601 format) when the ledger was closed.
-    /// </summary>
-    public const string ClosingDate = "ClosingDate";
+    public const string Status = "Status";
 
     /// <summary>
     /// A string setting containing the ID of the ledger to which the closing balance was transferred.

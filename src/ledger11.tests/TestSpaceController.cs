@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using ledger11.data;
 using Microsoft.EntityFrameworkCore;
+using ledger11.service;
 
 namespace ledger11.tests;
 
@@ -245,5 +246,54 @@ public class TestSpaceController
         Assert.NotEmpty(listData2.Spaces[0].Members);
         Assert.Contains(listData2.Spaces[0].Members, m => m == otherUser.Email);
 
+    }
+
+    [Fact]
+    public async Task Test_Merge()
+    {
+        // Arrange
+        using var serviceProvider = await TestExtesions.MockLedgerServiceProviderAsync("xuser_merge");
+        var controller = ActivatorUtilities.CreateInstance<SpaceController>(serviceProvider);
+        var userSpaceService = serviceProvider.GetRequiredService<IUserSpaceService>();
+
+        // 1. Create source space and add a transaction to it
+        var sourceSpaceResponse = await controller.Create(new Space { Name = "Source Space", Currency = "USD" });
+        var sourceSpace = Assert.IsType<SpaceDto>(((CreatedAtActionResult)sourceSpaceResponse).Value);
+
+        var sourceLedger = await userSpaceService.GetLedgerDbContextAsync(sourceSpace.Id, true);
+        sourceLedger.Transactions.Add(new Transaction { Value = 100, Date = DateTime.UtcNow, Notes = "Source Tx 1" });
+        sourceLedger.Transactions.Add(new Transaction { Value = 50, Date = DateTime.UtcNow, Notes = "Source Tx 2" });
+        await sourceLedger.SaveChangesAsync();
+
+        // 2. Create target space
+        var targetSpaceResponse = await controller.Create(new Space { Name = "Target Space", Currency = "USD" });
+        var targetSpace = Assert.IsType<SpaceDto>(((CreatedAtActionResult)targetSpaceResponse).Value);
+        var targetLedger = await userSpaceService.GetLedgerDbContextAsync(targetSpace.Id, true);
+        var targetCategory = await targetLedger.Categories.FirstAsync();
+
+        // 3. Prepare merge request
+        var mergeRequest = new MergeSpaceRequestDto
+        {
+            SourceSpaceId = sourceSpace.Id,
+            TargetSpaceId = targetSpace.Id,
+            TargetCategoryId = targetCategory.Id
+        };
+
+        // Act
+        var mergeResult = await controller.Merge(mergeRequest);
+
+        // Assert
+        Assert.IsType<OkObjectResult>(mergeResult);
+
+        var targetTransactions = await targetLedger.Transactions.ToListAsync();
+        targetTransactions.Should().HaveCount(1);
+        var mergedTransaction = targetTransactions.First();
+        mergedTransaction.Value.Should().Be(150); // 100 + 50
+        mergedTransaction.Notes.Should().Be("Source Space");
+        mergedTransaction.CategoryId.Should().Be(targetCategory.Id);
+
+        var sourceSettings = await sourceLedger.Settings.ToListAsync();
+        sourceSettings.Should().Contain(s => s.Key == "Status" && s.Value == "Closed");
+        sourceSettings.Should().Contain(s => s.Key == "ClosingBalanceTransferLedger" && s.Value == targetSpace.Id.ToString());
     }
 }

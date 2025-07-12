@@ -4,7 +4,12 @@ import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { MergeIcon, MoreHorizontalIcon, PencilIcon, UserPlus2Icon } from "lucide-react";
+import {
+  MergeIcon,
+  MoreHorizontalIcon,
+  PencilIcon,
+  UserPlus2Icon,
+} from "lucide-react";
 import { useSpaceStore } from "@/lib/store-space";
 import ShareSpaceDialog from "@/components/space/ShareSpaceDialog";
 import { cn } from "@/lib/utils";
@@ -15,6 +20,7 @@ import SpaceEditForm from "../space/SpaceEditForm";
 import SpaceRow from "../space/SpaceRow";
 import { fetchWithAuth } from "@/api";
 import { useBookStore } from "@/lib/store-book";
+import SpaceMergeDialog from "../space/SpaceMergeDialog";
 
 export default function SpacesScreen() {
   const {
@@ -79,11 +85,11 @@ export default function SpacesScreen() {
       return;
     }
 
-    await fetchWithAuth('/api/space/share', {
-      method: 'POST',
+    await fetchWithAuth("/api/space/share", {
+      method: "POST",
       body: JSON.stringify({ spaceId, email }),
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -93,6 +99,21 @@ export default function SpacesScreen() {
 
     // Reset sharing state
     setSharingSpaceId(null);
+  };
+
+  const handleMerge = async (sourceId: string, targetId: string) => {
+    console.log("Merging space", sourceId, "into", targetId);
+
+    await fetchWithAuth("/api/space/merge", {
+      method: "POST",
+      body: JSON.stringify({ sourceSpaceId: sourceId, targetSpaceId: targetId }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    await loadSpaces(true); // Reload spaces after merge
+    setMergeSpace(null);
   };
 
   return (
@@ -211,7 +232,12 @@ export default function SpacesScreen() {
       )}
 
       {mergeSpace && (
-        <>{/* open the merge form here */}</>        
+        <SpaceMergeDialog
+          spaces={spaces}
+          space={mergeSpace}
+          onMerge={handleMerge}
+          onCancel={() => setMergeSpace(null)}
+        ></SpaceMergeDialog>
       )}
     </div>
   );
