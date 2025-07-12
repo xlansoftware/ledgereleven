@@ -61,7 +61,7 @@ export default function AddScreen() {
   return (
     <div className="flex flex-col gap-4 h-full justify-between">
       <div
-        className="flex flex-col items-center gap-4 p-[2px] pt-4 w-full max-w-md mx-auto"
+        className="flex flex-col items-center gap-4 p-[2px] w-full max-w-md mx-auto"
       >
         {/* Amount Input and Add Button */}
         <AmountInputComponent onConfirm={handleAdd} />
