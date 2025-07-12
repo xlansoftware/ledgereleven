@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { MoreHorizontalIcon, PencilIcon, UserPlus2Icon } from "lucide-react";
+import { MergeIcon, MoreHorizontalIcon, PencilIcon, UserPlus2Icon } from "lucide-react";
 import { useSpaceStore } from "@/lib/store-space";
 import ShareSpaceDialog from "@/components/space/ShareSpaceDialog";
 import { cn } from "@/lib/utils";
@@ -32,6 +32,7 @@ export default function SpacesScreen() {
   const [newSpaceName, setNewSpaceName] = useState("");
   const [sharingSpaceId, setSharingSpaceId] = useState<string | null>(null);
   const [editSpace, setEditSpace] = useState<Space | null>(null);
+  const [mergeSpace, setMergeSpace] = useState<Space | null>(null);
 
   useEffect(() => {
     loadSpaces(true);
@@ -156,6 +157,18 @@ export default function SpacesScreen() {
                   <UserPlus2Icon className="w-4 h-4 mr-2" />
                   Share
                 </ResponsiveMenu.Item>
+                <ResponsiveMenu.Item
+                  onClick={() => {
+                    // allow the menu item to close...
+                    requestAnimationFrame(() => {
+                      // open the merge dialog
+                      setMergeSpace(space);
+                    });
+                  }}
+                >
+                  <MergeIcon className="w-4 h-4 mr-2" />
+                  Close and Merge
+                </ResponsiveMenu.Item>
                 <ConfirmMenuItem
                   title="Remove"
                   description="This will remove the space and all data inside it."
@@ -195,6 +208,10 @@ export default function SpacesScreen() {
             }
           }}
         />
+      )}
+
+      {mergeSpace && (
+        <>{/* open the merge form here */}</>        
       )}
     </div>
   );
