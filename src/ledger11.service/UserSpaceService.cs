@@ -5,6 +5,7 @@ using ledger11.model.Data;
 using ledger11.model.Config;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace ledger11.service;
 
@@ -351,14 +352,97 @@ public class UserSpaceService : IUserSpaceService
 
         if (insensitive.ContainsKey("name"))
             membership.Space.Name = $"{insensitive["name"]}";
-        if (insensitive.ContainsKey("tint"))
-            membership.Space.Tint = $"{insensitive["tint"]}";
-        if (insensitive.ContainsKey("currency"))
-            membership.Space.Currency = $"{insensitive["currency"]}";
+
+        if (insensitive.TryGetValue("settings", out var settingsValue))
+        {
+            Dictionary<string, string>? settings = settingsValue switch
+            {
+                Dictionary<string, string> s => s,
+                JsonElement jsonElement when jsonElement.ValueKind == JsonValueKind.Object =>
+                    JsonElementToDictionary(jsonElement),
+                _ => null
+            };
+
+            if (settings != null && settings.Count > 0)
+            {
+                await UpdateSpaceSettings(membership.Space, settings);
+            }
+        }
 
         await _dbContext.SaveChangesAsync();
         return membership.Space;
     }
+
+    // Helper method to convert JsonElement to Dictionary<string, string>
+    private static Dictionary<string, string> JsonElementToDictionary(JsonElement element)
+    {
+        var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var prop in element.EnumerateObject())
+        {
+            dict[prop.Name] = prop.Value.GetString() ?? string.Empty;
+        }
+        return dict;
+    }
+
+    private async Task UpdateSpaceSettings(Space space, Dictionary<string, string> settings)
+    {
+        if (space == null)
+        {
+            _logger.LogWarning("UpdateSpaceSettings called with null space.");
+            return;
+        }
+
+        if (settings == null || settings.Count == 0)
+        {
+            _logger.LogInformation("No settings provided to update for space {SpaceId}.", space.Id);
+            return;
+        }
+
+        try
+        {
+            _logger.LogDebug("Attempting to get ledger context for space {SpaceId}.", space.Id);
+            var ledgerContext = await GetLedgerDbContextAsync(space.Id, true);
+
+            if (ledgerContext == null)
+            {
+                _logger.LogWarning("Ledger context not found for space {SpaceId}.", space.Id);
+                return;
+            }
+
+            _logger.LogInformation("Updating {SettingsCount} settings for space {SpaceId}.", settings.Count, space.Id);
+
+            foreach (var setting in settings)
+            {
+                var existingSetting = await ledgerContext.Settings
+                    .FirstOrDefaultAsync(s => s.Key == setting.Key);
+
+                if (existingSetting != null)
+                {
+                    _logger.LogDebug("Updating existing setting '{SettingKey}' for space {SpaceId}.", setting.Key, space.Id);
+                    existingSetting.Value = setting.Value;
+                }
+                else
+                {
+                    _logger.LogDebug("Adding new setting '{SettingKey}' for space {SpaceId}.", setting.Key, space.Id);
+                    ledgerContext.Settings.Add(new Setting
+                    {
+                        Key = setting.Key,
+                        Value = setting.Value
+                    });
+                }
+            }
+
+            await ledgerContext.SaveChangesAsync();
+            _logger.LogInformation("Successfully updated settings for space {SpaceId}.", space.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating space settings for space {SpaceId}.", space.Id);
+        }
+    }
+
+
+    // Calculate total value and transaction count
 
     /// <summary>
     /// Shares a space with another user by their email address.

@@ -10,6 +10,7 @@ import {
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import { getCurrencySetting, getTintSetting } from "@/lib/spaceSettings";
 
 interface SpaceEditFormProps {
   space: Space;
@@ -18,8 +19,8 @@ interface SpaceEditFormProps {
 
 export default function SpaceEditForm({ space, onClose }: SpaceEditFormProps) {
   const [name, setName] = useState(space.name ?? "");
-  const [tint, setTint] = useState<string | undefined>(space.tint ?? "");
-  const [currency, setCurrency] = useState(space.currency ?? "");
+  const [tint, setTint] = useState<string | undefined>(getTintSetting(space));
+  const [currency, setCurrency] = useState(getCurrencySetting(space));
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
@@ -28,7 +29,10 @@ export default function SpaceEditForm({ space, onClose }: SpaceEditFormProps) {
   };
 
   const handleSubmit = () => {
-    onClose({ ...space, name, tint, currency });
+    onClose({ ...space, name, settings: {
+      Tint: tint || "#FFFFFF", // Default to white
+      Currency: currency || "USD", // Default to USD
+    }});
   };
 
   return (

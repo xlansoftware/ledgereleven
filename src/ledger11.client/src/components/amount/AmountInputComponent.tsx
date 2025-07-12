@@ -5,6 +5,7 @@ import { Transaction } from "@/lib/types";
 import { ExchangeRateDialog } from "./ExchangeRateDialog";
 import { parseMoneyInput } from "@/lib/parseMoneyInput";
 import { useSpaceStore } from "@/lib/store-space";
+import { getCurrencySetting } from "@/lib/spaceSettings";
 
 interface AmountInputComponentProps {
   onConfirm: (transaction: Partial<Transaction>) => void;
@@ -38,7 +39,8 @@ export function AmountInputComponent({ onConfirm }: AmountInputComponentProps) {
     if (!amount) return;
 
     if (amount?.currency) {
-      if (amount.currency === (current?.currency || "USD")) {
+      const ledgerCurrency = getCurrencySetting(current);
+      if (amount.currency === ledgerCurrency) {
         onConfirm({ value: amount.value });
         setValue("");
         return;
@@ -46,7 +48,7 @@ export function AmountInputComponent({ onConfirm }: AmountInputComponentProps) {
       // allow the user to provide exchange rate
       setExchangeRateDialogProps({
         isOpen: true,
-        ledgerCurrency: current?.currency,
+        ledgerCurrency: ledgerCurrency,
         value: amount.value,
         currency: amount.currency,
       });

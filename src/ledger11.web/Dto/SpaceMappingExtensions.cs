@@ -9,8 +9,6 @@ public static class SpaceMappingExtensions
         {
             Id = space.Id,
             Name = space.Name,
-            Tint = space.Tint,
-            Currency = space.Currency
         };
 
     public static List<SpaceDto> ToDtoList(this IEnumerable<Space> spaces) =>

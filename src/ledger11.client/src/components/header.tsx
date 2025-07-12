@@ -4,6 +4,7 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import MobileNavigation from "@/components/mobile-navigation";
 import { useSpaceStore } from "@/lib/store-space";
 import { cn } from "@/lib/utils";
+import { getTintSetting } from "@/lib/spaceSettings";
 
 interface HeaderProps {
   currentPath: string;
@@ -14,7 +15,7 @@ export default function Header({ currentPath }: HeaderProps) {
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   const { current } = useSpaceStore();
-  const tint = current?.tint;
+  const tint = getTintSetting(current);
 
   const getPathValue = () => {
     if (currentPath === "/") return "/";
@@ -60,7 +61,7 @@ export default function Header({ currentPath }: HeaderProps) {
         )}
 
         {isMobile && (
-          <MobileNavigation tint={current?.tint} currentPath={currentPath} />
+          <MobileNavigation tint={tint} currentPath={currentPath} />
         )}
       </div>
     </header>

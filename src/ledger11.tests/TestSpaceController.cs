@@ -28,16 +28,12 @@ public class TestSpaceController
         var response = await controller.Create(new Space
         {
             Name = "Test Space",
-            Tint = "#FF0000",
-            Currency = "USD"
         });
 
         // Assert
         var createdResult = Assert.IsType<CreatedAtActionResult>(response);
         var result = Assert.IsType<SpaceDto>(createdResult.Value);
         result.Name.Should().Be("Test Space");
-        result.Tint.Should().Be("#FF0000");
-        result.Currency.Should().Be("USD");
     }
 
     [Fact]
@@ -111,8 +107,6 @@ public class TestSpaceController
         var createResult = await controller.Create(new Space
         {
             Name = "ToUpdate",
-            Tint = "#222",
-            Currency = "GBP"
         });
         var created = Assert.IsType<CreatedAtActionResult>(createResult);
         var space = Assert.IsType<SpaceDto>(created.Value);
@@ -120,7 +114,12 @@ public class TestSpaceController
         var updates = new Dictionary<string, object>
         {
             ["Name"] = "Updated Name",
-            ["Tint"] = "#333"
+            ["Settings"] = new Dictionary<string, string>
+            {
+                ["Tint"] = "#333", // updated
+                ["Currency"] = "GBP", // unchanged
+            },
+
         };
 
         // Act
@@ -130,8 +129,20 @@ public class TestSpaceController
         var okResult = Assert.IsType<OkObjectResult>(updateResult);
         var updated = Assert.IsType<SpaceDto>(okResult.Value);
         updated.Name.Should().Be("Updated Name");
-        updated.Tint.Should().Be("#333");
-        updated.Currency.Should().Be("GBP"); // unchanged
+        updated.Settings["Tint"].Should().Be("#333");
+        updated.Settings["Currency"].Should().Be("GBP"); // unchanged
+
+        // Assert trough list
+        var listResult = await controller.List();
+        var okList = Assert.IsType<OkObjectResult>(listResult);
+        var listData = Assert.IsType<SpaceListResponseDto>(okList.Value);
+        listData.Current.Should().NotBeNull();
+        listData.Current?.Id.Should().Be(space.Id);
+        listData.Spaces.Should().ContainSingle(s => s.Id == space.Id);
+        var updatedSpace = listData.Spaces.Single(s => s.Id == space.Id);
+        updatedSpace.Name.Should().Be("Updated Name");
+        updatedSpace.Settings["Tint"].Should().Be("#333");
+        updatedSpace.Settings["Currency"].Should().Be("GBP"); // unchanged
     }
 
     [Fact]
@@ -226,7 +237,7 @@ public class TestSpaceController
         Assert.NotEmpty(sharedSpaces);
 
         // Check via list
-        var list2 = await controller.List(includeDetails: true);
+        var list2 = await controller.List();
         var okList2 = Assert.IsType<OkObjectResult>(list2);
         var listData2 = Assert.IsType<SpaceListResponseDto>(okList2.Value);
         Assert.NotEmpty(listData.Spaces);
