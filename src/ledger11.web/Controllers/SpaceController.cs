@@ -307,8 +307,8 @@ public class SpaceController : ControllerBase
             targetLedger.Transactions.Add(new Transaction()
             {
                 Value = sourceDto.TotalValue ?? 0,
-                Currency = currency,
-                ExchangeRate = exchangeRate,
+                Currency = currency == targetCurrency ? null : targetCurrency,
+                ExchangeRate = currency == targetCurrency ? null : exchangeRate,
                 Date = DateTime.UtcNow,
                 Notes = sourceDto.Name,
                 CategoryId = targetCategory?.Id,
