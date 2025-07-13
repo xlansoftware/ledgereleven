@@ -494,3 +494,5 @@ bundle-stats.html
 
 .devops/test/web/certs/*.key
 .devops/test/web/certs/*.crt
+/src/ledger11.web/wwwroot/app/*
+!/src/ledger11.web/wwwroot/app/
