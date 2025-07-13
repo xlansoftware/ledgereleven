@@ -2,9 +2,9 @@ name: Test frontend
 
 on:
   workflow_dispatch:
-  # pull_request:
-  #   branches:
-  #     - main
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
