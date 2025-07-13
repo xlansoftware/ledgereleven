@@ -11,8 +11,27 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
-    name: Run Unit Tests
+  test-frontend:
+    name: Run Frontend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build and test
+        working-directory: ./.devops/test/web
+        run: |
+          docker compose run --build --rm test
+
+      - name: Publish Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Playwright Tests
+          path: ./.devops/test/web/test-results/
+
+  test-backend:
+    name: Run Backend Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -32,7 +51,9 @@ jobs:
 
   build-and-push:
     name: Build and Push Docker Images
-    needs: test
+    needs: 
+      - test-backend
+      - test-frontend
     runs-on: ubuntu-latest
     permissions:
       packages: write
