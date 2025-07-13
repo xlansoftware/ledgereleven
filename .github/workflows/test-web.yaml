@@ -24,6 +24,9 @@ jobs:
         working-directory: ./.devops/test/web
         run: docker compose run --build --rm test
 
+      - name: Fix Permissions
+        run: sudo chown -R runner:docker ./.devops/test/web/test-results/
+
       - name: List Test Results
         run: ls -la ./.devops/test/web/test-results/
 
