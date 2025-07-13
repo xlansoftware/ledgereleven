@@ -1,14 +1,12 @@
 import { accountInfo, login } from "@/api";
-import { useCategoryStore } from "@/lib/store-category";
 import { useSpaceStore } from "@/lib/store-space";
-import { useTransactionStore } from "@/lib/store-transaction";
 import { useEffect, useState } from "react";
+import { useBookStore } from "@/lib/store-book";
 
 export default function useUser() {
   const [user, setUser] = useState<string | null>(null);
   const { loadSpaces } = useSpaceStore();
-  const { loadCategories } = useCategoryStore();
-  const { loadTransactions } = useTransactionStore();
+  const { openBook } = useBookStore();
 
   useEffect(() => {
     accountInfo().then(({ name }) => {
@@ -21,9 +19,10 @@ export default function useUser() {
 
   const callLogin = async (username: string, password: string): Promise<void> => {
     await login(username, password);
-    await loadCategories();
-    await loadSpaces();
-    await loadTransactions(true);
+    const current = await loadSpaces();
+    if (current) {
+      await openBook(current.id!);
+    }
     const { name } = await accountInfo();
     setUser(name);
   };

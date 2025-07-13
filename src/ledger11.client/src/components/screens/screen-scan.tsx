@@ -7,35 +7,32 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
-import { Receipt } from "@/lib/types";
+import { Receipt, Transaction } from "@/lib/types";
 import { toast } from "sonner";
 import { useState } from "react";
 import { parsePurchaseRecords, receiptToTransaction } from "@/api";
-import { useTransactionStore } from "@/lib/store-transaction";
 import ConfirmTransactionForm from "../history/ConfirmTransactionForm";
-import { useCategoryStore } from "@/lib/store-category";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
+import { useBookStore } from "@/lib/store-book";
 
 export default function ScanScreen() {
-  const { loadCategories } = useCategoryStore();
-  const [showConfirmation, setShowConfirmation] = useState(0);
-  const { addTransaction, removeTransaction } = useTransactionStore();
+  const [showConfirmation, setShowConfirmation] = useState<Transaction | null>(null);
+  const { categories, addTransaction, removeTransaction } = useBookStore();
 
   const [description, setDescription] = useState("");
 
   const saveParsedRecords = async (receipt: Partial<Receipt>) => {
-    const categories = await loadCategories();
     const transaction = receiptToTransaction(categories, receipt);
     if (!transaction) {
       toast.error("Could not understand... try another language?");
       return;
     }
 
-    const id = await addTransaction(transaction);
+    const created = await addTransaction(transaction);
 
-    console.log("Master purchase ID:", id);
-    setShowConfirmation(id);
+    console.log("Master purchase:", created);
+    setShowConfirmation(created);
   };
 
   const handleScanCompletion = (receipt: Partial<Receipt>) => {
@@ -98,16 +95,16 @@ export default function ScanScreen() {
           </CardContent>
         </Card>
 
-        {showConfirmation !== 0 && (
+        {showConfirmation && (
           <ConfirmTransactionForm
-            id={showConfirmation}
+            transaction={showConfirmation}
             onConfirm={() => {
-              setShowConfirmation(0);
+              setShowConfirmation(null);
               toast.success("Done!");
             }}
             onUndo={() => {
-              setShowConfirmation(0);
-              removeTransaction(showConfirmation).catch((error) => {
+              setShowConfirmation(null);
+              removeTransaction(showConfirmation.id!).catch((error) => {
                 console.error("Error removing transaction:", error);
                 toast.error("Error removing transaction");
               });

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchWithAuth } from "@/api";
 import { InsightComponent } from "../widgets/InsightComponent";
-import { useCategoryStore } from "@/lib/store-category";
+import { useBookStore } from "@/lib/store-book";
 import { Category } from "@/lib/types";
 import DonutSkeleton from "../DonutSkeleton";
 import ViewMoreLink from "./ViewMoreLink";
@@ -21,7 +21,7 @@ interface TotalByPeriodByCategoryComponentProps {
 export default function TotalByPeriodByCategoryComponent(
   props: TotalByPeriodByCategoryComponentProps
 ) {
-  const { categories, loadCategories } = useCategoryStore();
+  const { transactions, categories } = useBookStore();
   const colors = categories.reduce((acc, category) => {
     acc[category.name] = category;
     return acc;
@@ -29,11 +29,6 @@ export default function TotalByPeriodByCategoryComponent(
   const [data, setData] = useState<TotalByPeriodByCategory | null>(null);
 
   useEffect(() => {
-    if (categories.length === 0) {
-      loadCategories().catch((error) => {
-        console.error("Error loading categories:", error);
-      });
-    }
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     fetchWithAuth(`/api/insight/${encodeURIComponent(timeZone)}`).then(
       (response) => {
@@ -46,7 +41,8 @@ export default function TotalByPeriodByCategoryComponent(
         }
       }
     );
-  }, [categories.length, loadCategories]);
+    // when transactions change, re-fetch the data
+  }, [transactions]);
 
   const { expense, income } = data ?? {};
 

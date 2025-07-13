@@ -1,6 +1,6 @@
 "use client";
 
-import { useCategoryStore } from "@/lib/store-category";
+import { useBookStore } from "@/lib/store-book";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,16 +13,15 @@ import { Badge } from "../ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function CategoriesScreen() {
-  const { categories, addCategory, removeCategory, loadCategories } =
-    useCategoryStore();
+  const { categories, addCategory, removeCategory } = useBookStore();
 
   const [order, setOrder] = useState<number[]>([]);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [reordering, setReordering] = useState(false);
 
   useEffect(() => {
-    loadCategories().then((c) => setOrder(c.map((_, index) => index)));
-  }, [loadCategories]);
+    setOrder(categories.map((_, index) => index));
+  }, [categories]);
 
   const handleAdd = async () => {
     if (!newCategoryName.trim()) return;
@@ -39,7 +38,7 @@ export default function CategoriesScreen() {
   const handleRemove = async (id: number, replaceWithId?: number) => {
     try {
       const c = await removeCategory(id, replaceWithId);
-      setOrder(c.map((_, index) => index))
+      setOrder(c.map((_, index) => index));
       toast.success("Category removed");
     } catch (err) {
       toast.error("Remove failed");

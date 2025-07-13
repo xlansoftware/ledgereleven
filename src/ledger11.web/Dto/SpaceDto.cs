@@ -4,8 +4,8 @@ public class SpaceDto
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
-    public string? Tint { get; set; } = "#FFFFFF";
-    public string? Currency { get; set; } = "USD";
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public Dictionary<string, string?> Settings { get; set; } = new();
 
     public decimal? TotalValue { get; set; } = null;
     public int? CountTransactions { get; set; } = null;

@@ -84,6 +84,12 @@ public static class TestExtesions
         services.AddScoped<IUserSpaceService, UserSpaceService>();
         services.AddScoped<ICurrentLedgerService, CurrentLedgerService>();
 
+        var mockExchangeRateService = new Mock<IExchangeRateService>();
+        mockExchangeRateService
+            .Setup(s => s.GetExchangeRateAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(1.0m);
+        services.AddScoped<IExchangeRateService>(provider => mockExchangeRateService.Object);
+
         configureServices?.Invoke(services);
 
         // services.DumpServices();

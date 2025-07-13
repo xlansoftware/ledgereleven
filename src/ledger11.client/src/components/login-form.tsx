@@ -13,9 +13,8 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { login } from "@/api";
-import { useCategoryStore } from "@/lib/store-category";
 import { useSpaceStore } from "@/lib/store-space";
-import { useTransactionStore } from "@/lib/store-transaction";
+import { useBookStore } from "@/lib/store-book";
 
 export function LoginForm({
   className,
@@ -25,15 +24,17 @@ export function LoginForm({
   const passwordRef = useRef<HTMLInputElement>(null); // Added ref for password
   const navigate = useNavigate();
 
-  const { loadCategories } = useCategoryStore();
   const { loadSpaces } = useSpaceStore();
-  const { loadTransactions } = useTransactionStore();
+  const { openBook } = useBookStore();
 
   const handleLogin = async (userName: string, password: string) => {
     await login(userName, password);
-    await loadCategories();
-    await loadSpaces();
-    await loadTransactions(true);
+    const current = await loadSpaces();
+    if (current) {
+      await openBook(current.id!);
+    } else {
+      toast.error("No space found. Please create a space first.");
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -70,6 +71,7 @@ export function LoginForm({
                   id="email"
                   type="email"
                   placeholder="m@example.com"
+                  aria-label="Email"
                   required
                   ref={emailRef} // Added ref
                 />
@@ -87,11 +89,12 @@ export function LoginForm({
                 <Input
                   id="password"
                   type="password"
+                  aria-label="Password"
                   required
                   ref={passwordRef} // Added ref
                 />
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" aria-label="Login">
                 Login
               </Button>
             </div>

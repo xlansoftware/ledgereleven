@@ -6,8 +6,17 @@ using ledger11.model.Api;
 using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using ledger11.data;
+using ledger11.model.Config;
+using ledger11.data.Extensions;
 
 namespace ledger11.web.Controllers;
+
+public class MergeSpaceRequestDto
+{
+    public Guid SourceSpaceId { get; set; }
+    public Guid TargetSpaceId { get; set; }
+    public int TargetCategoryId { get; set; }
+}
 
 [Authorize]
 [ApiController]
@@ -18,99 +27,115 @@ public class SpaceController : ControllerBase
     private readonly IUserSpaceService _userSpace;
     private readonly ICurrentLedgerService _currentLedgerService;
     private readonly AppDbContext _appDbContext;
+    private readonly IExchangeRateService _exchangeRateService;
 
     public SpaceController(
         ILogger<SpaceController> logger,
         IUserSpaceService userSpace,
         ICurrentLedgerService currentLedgerService,
-        AppDbContext appDbContext)
+        AppDbContext appDbContext,
+        IExchangeRateService exchangeRateService)
     {
         _logger = logger;
         _userSpace = userSpace;
         _currentLedgerService = currentLedgerService;
         _appDbContext = appDbContext;
+        _exchangeRateService = exchangeRateService;
     }
 
     // GET: api/space
     [HttpGet]
-    public async Task<IActionResult> List([FromQuery] bool includeDetails = true)
+    // Returns a list of user-accessible spaces with optional detailed statistics.
+    public async Task<IActionResult> List()
     {
-        Stopwatch stopwatch = Stopwatch.StartNew();
+        var stopwatch = Stopwatch.StartNew();
+
+        // Get the current space and all accessible spaces for the user
         var current = await _userSpace.GetUserSpaceAsync();
         var spaces = await _userSpace.GetAvailableSpacesAsync();
 
+        // Convert to DTOs for API response
         var dto = new SpaceListResponseDto
         {
-            Current = current?.ToDto(),
-            Spaces = spaces.ToDtoList()
+            Spaces = spaces
+                .OrderByDescending(s => s.CreatedAt)
+                .ToDtoList(),
         };
 
-        if (includeDetails)
+        // Add settings to each space
+        foreach (var space in dto.Spaces)
         {
-            foreach (var space in dto.Spaces)
-            {
-                try
-                {
-                    var ledgerContext = await _userSpace.GetLedgerDbContextAsync(space.Id, false);
-                    var result = await ledgerContext.Transactions
-                        .GroupBy(t => 1)
-                        .Select(g => new
-                        {
-                            Count = g.Count(),
-                            Sum = g.Sum(t => t.Value * (t.ExchangeRate ?? 1.0m))
-                        })
-                        .FirstOrDefaultAsync();
-
-                    space.TotalValue = result?.Sum;
-                    space.CountTransactions = result?.Count;
-                    space.CountCategories = await ledgerContext.Categories.CountAsync();
-
-                    if (dto.Current?.Id == space.Id)
-                    {
-                        dto.Current.TotalValue = space.TotalValue;
-                        dto.Current.CountTransactions = space.CountTransactions;
-                        dto.Current.CountCategories = space.CountCategories;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // if the space is not yet initialized, then the
-                    // number of transactions and categories will be null
-                    _logger.LogTrace(ex, "Error processing details info for space {SpaceId}", space.Id);
-                }
-
-                var members = await _appDbContext.SpaceMembers
-                    .Include(m => m.User)
-                    .Where(m => m.SpaceId == space.Id)
-                    .Select(m => m.User.Email)
-                    .ToListAsync();
-                if (members != null)
-                {
-                    space.Members = members;
-                }
-
-            }
+            await AddDetailsSpacesAsync(space);
         }
-        else
-        {
-            // count the transactions in current only
-            if (dto.Current != null)
-            {
-                try
-                {
-                    var ledgerContext = await _userSpace.GetLedgerDbContextAsync(dto.Current.Id, false);
-                    dto.Current.CountTransactions = await ledgerContext.Transactions.CountAsync();
-                }
-                catch
-                {
-                    // the ledger does not exists yet, so 0 transactions
-                }
-            }
-        }
+
+        dto.Current = dto.Spaces.FirstOrDefault(s => s.Id == current?.Id);
 
         stopwatch.Stop();
         _logger.LogInformation("Retrieved spaces in {ElapsedMilliseconds} ms", stopwatch.ElapsedMilliseconds);
         return Ok(dto);
+    }
+
+    // Adds detailed statistics and member info to all spaces
+    private async Task AddDetailsSpacesAsync(SpaceDto space)
+    {
+        // Add transaction/category stats and settings
+        await AddSpaceDetailsAsync(space);
+
+        // Add member emails for the space
+        await AddSpaceMembersAsync(space);
+    }
+
+    // Adds transaction count, total value, and category count to a space
+    private async Task AddSpaceDetailsAsync(SpaceDto space)
+    {
+        try
+        {
+            // Get the ledger context for the space (ledger might not be initialized)
+            var ledgerContext = await _userSpace.GetLedgerDbContextAsync(space.Id, false);
+            if (ledgerContext == null)
+                return; // No ledger context means no data to process
+
+            // Group transactions to calculate total count and sum of value
+            var result = await ledgerContext.Transactions
+                .GroupBy(t => 1)
+                .Select(g => new
+                {
+                    Count = g.Count(),
+                    Sum = g.Sum(t => t.Value * (t.ExchangeRate ?? 1.0m)) // handle null exchange rate
+                })
+                .FirstOrDefaultAsync();
+
+            // Populate stats in the space DTO
+            space.TotalValue = result?.Sum;
+            space.CountTransactions = result?.Count;
+            space.CountCategories = await ledgerContext.Categories.CountAsync();
+
+            // Read settings from the ledger context
+            space.Settings = await ledgerContext
+                .Settings
+                .ToDictionaryAsync((s) => s.Key, (s) => s.Value);
+
+        }
+        catch (Exception ex)
+        {
+            // If ledger isn't set up yet, log and continue gracefully
+            _logger.LogTrace(ex, "Error processing details info for space {SpaceId}", space.Id);
+        }
+    }
+
+    // Adds the list of member emails to the space DTO
+    private async Task AddSpaceMembersAsync(SpaceDto space)
+    {
+        var members = await _appDbContext.SpaceMembers
+            .Include(m => m.User)
+            .Where(m => m.SpaceId == space.Id)
+            .Select(m => m.User.Email)
+            .ToListAsync();
+
+        if (members != null)
+        {
+            space.Members = members;
+        }
     }
 
     // POST: api/space
@@ -160,7 +185,11 @@ public class SpaceController : ControllerBase
     public async Task<IActionResult> Update(Guid id, [FromBody] Dictionary<string, object> updatedFields)
     {
         var result = await _userSpace.UpdateSpace(id, updatedFields);
-        return Ok(result.ToDto());
+
+        var resultDto = result.ToDto();
+        await AddDetailsSpacesAsync(resultDto);
+
+        return Ok(resultDto);
     }
 
     // POST: api/space/current
@@ -189,7 +218,7 @@ public class SpaceController : ControllerBase
             _logger.LogError(ex, "Error sharing space {SpaceId} with {Email}", request.SpaceId, request.Email);
             return BadRequest("The space could not be shared...");
         }
-    
+
         return Ok("Space shared successfully.");
     }
 
@@ -237,6 +266,66 @@ public class SpaceController : ControllerBase
         {
             await transaction.RollbackAsync();
             throw; // Re-throw the exception after rollback
+        }
+    }
+
+    // POST: api/space/merge
+    [HttpPost("merge")]
+    public async Task<IActionResult> Merge([FromBody] MergeSpaceRequestDto request)
+    {
+        if (request.SourceSpaceId == Guid.Empty || request.TargetSpaceId == Guid.Empty)
+        {
+            return BadRequest("Source and target space IDs must be provided.");
+        }
+
+        if (request.SourceSpaceId == request.TargetSpaceId)
+        {
+            return BadRequest("Source and target spaces cannot be the same.");
+        }
+
+        try
+        {
+            var spaces = await _userSpace.GetAvailableSpacesAsync();
+
+            var sourceSpace = spaces.FirstOrDefault(s => s.Id == request.SourceSpaceId);
+            if (sourceSpace == null)
+                return Ok(); // Source space does not exist, nothing to merge
+
+            var sourceLedger = await _userSpace.GetLedgerDbContextAsync(request.SourceSpaceId, false);
+            if (sourceLedger == null)
+                return Ok(); // Source space does not exist, nothing to merge
+
+            var targetLedger = await _userSpace.GetLedgerDbContextAsync(request.TargetSpaceId, true);
+
+            var sourceDto = sourceSpace.ToDto();
+            await AddSpaceDetailsAsync(sourceDto); // read totals and settings from the source ledger
+
+            var currency = sourceDto.Settings.FirstOrDefault((s) => s.Key == LedgerSettings.Currency).Value ?? "USD";
+            var targetCurrency = (await targetLedger.Settings.FirstOrDefaultAsync(s => s.Key == LedgerSettings.Currency))?.Value ?? "USD";
+            var exchangeRate = await _exchangeRateService.GetExchangeRateAsync(currency, targetCurrency);
+            var targetCategory = await targetLedger.Categories.FirstOrDefaultAsync(c => c.Id == request.TargetCategoryId);
+            targetLedger.Transactions.Add(new Transaction()
+            {
+                Value = sourceDto.TotalValue ?? 0,
+                Currency = currency == targetCurrency ? null : targetCurrency,
+                ExchangeRate = currency == targetCurrency ? null : exchangeRate,
+                Date = DateTime.UtcNow,
+                Notes = sourceDto.Name,
+                CategoryId = targetCategory?.Id,
+            });
+            await targetLedger.SaveChangesAsync();
+
+            // Mark the source space as closed
+            _logger.LogInformation("Marking source space {SourceSpaceId} as closed", request.SourceSpaceId);
+            await sourceLedger.SetSettingValue(LedgerSettings.Status, "Closed");
+            await sourceLedger.SetSettingValue(LedgerSettings.ClosingBalanceTransferLedger, request.TargetSpaceId.ToString());
+
+            return Ok("Spaces merged successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error merging spaces.");
+            return StatusCode(500, "An error occurred while merging the spaces.");
         }
     }
 }

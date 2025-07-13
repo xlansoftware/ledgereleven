@@ -4,7 +4,7 @@ import { useState } from "react";
 import { count, formatCurrency, formatDate, invertColor } from "@/lib/utils";
 import TransactionRowMenu from "./TransactionRowMenu";
 import DetailRowMenu from "./DetailRowMenu";
-import { useCategoryStore } from "@/lib/store-category";
+import { useBookStore } from "@/lib/store-book";
 import { Badge } from "../ui/badge";
 import { getIcon } from "@/lib/getIcon";
 
@@ -16,6 +16,7 @@ interface TransactionRowProps {
 function convertValue(
   value: number,
   exchangeRate?: number,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _currency?: string
 ) {
   const convertedValue = value * (exchangeRate ?? 1.0);
@@ -43,7 +44,7 @@ function detailValue(detail: TransactionDetails, transaction: Transaction) {
 function explainValue(value: number, exchangeRate?: number, currency?: string) {
   if (!currency) return null;
   if (!exchangeRate) return null;
-  return `${formatCurrency(value, 2)} x ${exchangeRate ?? 1.0} ${currency}`;
+  return `${formatCurrency(value, 2)} x ${formatCurrency(exchangeRate, 4) ?? 1.0} ${currency}`;
 }
 
 function explainTransactionValue(transaction: Transaction) {
@@ -71,7 +72,7 @@ export default function TransactionRow({
   transaction,
   expanded
 }: TransactionRowProps) {
-  const { categoryById } = useCategoryStore();
+  const { categoryById } = useBookStore();
   const [expandedDetails, setExpandedDetails] = useState(expanded || false);
   const hasDetails =
     transaction.transactionDetails && transaction.transactionDetails.length > 0;

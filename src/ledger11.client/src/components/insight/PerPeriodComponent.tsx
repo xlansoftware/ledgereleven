@@ -1,5 +1,5 @@
 import { InsightComponent } from "../widgets/InsightComponent";
-import { useCategoryStore } from "@/lib/store-category";
+import { useBookStore } from "@/lib/store-book";
 import { useEffect, useState, useCallback } from "react";
 import { fetchWithAuth } from "@/api";
 import { Category } from "@/lib/types";
@@ -18,7 +18,7 @@ export default function PerPeriodComponent({
 }: {
   period: "day" | "week" | "month";
 }) {
-  const { categories, loadCategories } = useCategoryStore();
+  const { transactions, categories } = useBookStore();
   const [data, setData] = useState<PerPeriodData[]>([]);
   const [start, setStart] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -56,15 +56,11 @@ export default function PerPeriodComponent({
   );
 
   useEffect(() => {
-    loadCategories();
-  }, [loadCategories]);
-
-  useEffect(() => {
     setData([]);
     setStart(0);
     setHasMore(true);
     fetchData(0);
-  }, [period, fetchData]);
+  }, [period, fetchData, transactions]);
 
   const handleLoadMore = () => {
     fetchData(start);

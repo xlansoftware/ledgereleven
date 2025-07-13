@@ -56,7 +56,7 @@ export function ExchangeRateDialog({
 
     setExchangeRate(initialRate);
     setResult((props.value || 0) * initialRate);
-  }, [props.value, fromCurrency, toCurrency, fetchedRate]);
+  }, [props.value, fromCurrency, toCurrency, fetchedRate, cacheKey]);
 
   if (!isOpen) return null;
 

@@ -20,8 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Transaction, TransactionDetails } from "@/lib/types";
-import { useCategoryStore } from "@/lib/store-category";
-import { useTransactionStore } from "@/lib/store-transaction";
+import { useBookStore } from "@/lib/store-book";
 import { toast } from "sonner";
 
 interface EditDetailFormProps {
@@ -35,9 +34,8 @@ export default function EditDetailForm({
   detail,
   onClose,
 }: EditDetailFormProps) {
-  const { categories } = useCategoryStore();
-  const { updateTransaction } = useTransactionStore();
-
+  const { categories, updateTransaction } = useBookStore();
+  
   const [editValues, setEditValues] = useState({
     value: `${detail.value}`,
     quantity: `${detail.quantity}`,

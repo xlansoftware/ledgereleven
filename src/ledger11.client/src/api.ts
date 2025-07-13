@@ -1,6 +1,6 @@
 import { Category, Receipt, Transaction } from "./lib/types";
 
-export async function fetchWithAuth(url: string, options = {}) {
+export async function fetchWithAuth(url: string, options = {}, navigateToStartOn401: boolean = true) {
   const res = await fetch(url, {
     headers: {
       "X-Requested-With": "XMLHttpRequest",
@@ -11,8 +11,11 @@ export async function fetchWithAuth(url: string, options = {}) {
 
   if (res.status === 401) {
     console.log("Unauthorized. Redirecting to login...");
-    window.location.href = "/start";
-    throw new Error("Unauthorized");
+    if (navigateToStartOn401) {
+      window.location.href = "/start";
+    } else {
+      throw new Error("Unauthorized");
+    }
   }
 
   if (!res.ok) {
@@ -138,16 +141,16 @@ export function receiptToTransaction(categories: Category[], receipt: Receipt): 
       const category = matchCategory(categories, item.category);
       return isCloseEnough(total_price, unit_price, quantity)
         ? {
-            value: unit_price,
-            description: item.name,
-            quantity: quantity,
-            categoryId: category?.id,
-          }
+          value: unit_price,
+          description: item.name,
+          quantity: quantity,
+          categoryId: category?.id,
+        }
         : {
-            value: total_price,
-            description: item.name,
-            categoryId: category?.id,
-          };
+          value: total_price,
+          description: item.name,
+          categoryId: category?.id,
+        };
     }),
   };
 

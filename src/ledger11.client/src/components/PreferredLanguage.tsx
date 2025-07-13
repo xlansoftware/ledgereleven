@@ -19,7 +19,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { languageList } from "@/lib/language";
-import useSettingsStore from "@/lib/settings-store";
+import { useBookStore } from "@/lib/store-book";
 
 interface PreferredLanguageProps {
   id?: string;
@@ -27,10 +27,9 @@ interface PreferredLanguageProps {
 }
 
 export function PreferredLanguage({ id, disabled }: PreferredLanguageProps) {
-  const { getPreferredReceiptLanguage, setPreferredReceiptLanguage } =
-    useSettingsStore();
+  const { getSetting, setSetting } = useBookStore();
 
-  const value = getPreferredReceiptLanguage();
+  const value = getSetting("Language", "eng");
 
   const [open, setOpen] = React.useState(false);
 
@@ -42,37 +41,39 @@ export function PreferredLanguage({ id, disabled }: PreferredLanguageProps) {
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          aria-label="Select language"
           className="w-[200px] justify-between"
           disabled={disabled}
         >
           {value
-            ? languageList.find((framework) => framework.code === value)?.name
+            ? languageList.find((language) => language.code === value)?.name
             : "Select language..."}
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[200px] p-0">
         <Command>
-          <CommandInput placeholder="Search framework..." className="h-9" />
+          <CommandInput placeholder="Search language..." className="h-9" />
           <CommandList>
-            <CommandEmpty>No framework found.</CommandEmpty>
+            <CommandEmpty>No language found.</CommandEmpty>
             <CommandGroup>
-              {languageList.map((framework) => (
+              {languageList.map((language) => (
                 <CommandItem
-                  key={framework.code}
-                  value={framework.code}
-                  onSelect={(currentValue) => {
-                    setPreferredReceiptLanguage(
+                  key={language.code}
+                  value={language.code}
+                  onSelect={async (currentValue) => {
+                    await setSetting(
+                      "Language",
                       currentValue === value ? "" : currentValue
                     );
                     setOpen(false);
                   }}
                 >
-                  {framework.name}
+                  {language.name}
                   <Check
                     className={cn(
                       "ml-auto",
-                      value === framework.code ? "opacity-100" : "opacity-0"
+                      value === language.code ? "opacity-100" : "opacity-0"
                     )}
                   />
                 </CommandItem>

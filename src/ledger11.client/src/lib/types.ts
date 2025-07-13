@@ -46,10 +46,9 @@ export interface Item
 export interface Space {
   id?: string;
   name?: string;
-  tint?: string;
-  currency?: string; // default currency
   createdAt?: Date;
   createdByUserId?: string;
+  settings?: Record<string, string>; // Additional settings for the space like currency, tint, etc.
 
   // Denormalized fields
   countTransactions?: number;

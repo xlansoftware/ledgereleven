@@ -2,6 +2,7 @@ import { Space } from "@/lib/types";
 import { useState } from "react";
 import { cn, formatCurrency } from "@/lib/utils";
 import { Badge } from "../ui/badge";
+import { getCurrencySetting } from "@/lib/spaceSettings";
 
 interface SpaceRowProps {
   className?: string;
@@ -31,7 +32,7 @@ export default function SpaceRow({ className, space, onClick }: SpaceRowProps) {
       >
         <span className="text-base flex items-center gap-2">
           <h1 className="text-xl">{space.name}</h1>
-          {space.currency && <span>({space.currency})</span>}
+          <span>({getCurrencySetting(space)})</span>
           {space.totalValue && (
             <Badge variant={"outline"}>
               Total: {formatCurrency(space.totalValue)}

@@ -41,6 +41,27 @@ namespace ledger11.data.Migrations.Ledger
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("ledger11.model.Data.Setting", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("Settings");
+                });
+
             modelBuilder.Entity("ledger11.model.Data.Transaction", b =>
                 {
                     b.Property<int>("Id")

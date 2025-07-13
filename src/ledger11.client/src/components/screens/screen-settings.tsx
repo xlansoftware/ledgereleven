@@ -29,17 +29,17 @@ import {
   SelectValue,
 } from "../ui/select";
 import { useSpaceStore } from "@/lib/store-space";
-import { useTransactionStore } from "@/lib/store-transaction";
 import { fetchWithAuth } from "@/api";
 import { useConfirmDialog } from "../dialog/ConfirmDialogContext";
 import useVersion from "@/hooks/useVersion";
+import { useBookStore } from "@/lib/store-book";
 
 export default function Settings() {
   const navigate = useNavigate();
   const { setTheme } = useTheme();
   const { name } = useUser();
   const { current, spaces, setCurrentSpace, loadSpaces } = useSpaceStore();
-  const { loadTransactions } = useTransactionStore();
+  const { openBook } = useBookStore();
   const { confirm } = useConfirmDialog();
 
   const [isImporting, setIsImporting] = useState(false);
@@ -47,15 +47,15 @@ export default function Settings() {
   const { appVersion } = useVersion();
 
   useEffect(() => {
-    loadSpaces();
+    loadSpaces(true);
   }, [loadSpaces]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleChangeSpace = async (value: string) => {
     await setCurrentSpace(value);
-    await loadTransactions(true);
-    toast(`Current space changed`);
+    await openBook(value);
+    toast(`Current book changed`);
   };
 
   const handleLogout = () => {
@@ -102,7 +102,9 @@ export default function Settings() {
         toast.success("File imported successfully!");
       }
 
-      await loadTransactions(true);
+      if (current?.id) {
+        await openBook(current.id);
+      }
     } catch (error) {
       console.error("An error occurred while uploading the file:", error);
       toast.error("An unexpected error occurred. Please try again.");
@@ -123,8 +125,10 @@ export default function Settings() {
         await fetchWithAuth("/api/transaction/clear", {
           method: "POST",
         });
-        await loadSpaces();
-        await loadTransactions(true);
+        await loadSpaces(true);
+        if (current?.id) {
+          await openBook(current.id);
+        }
         toast("All your purchase records have been deleted.");
       },
     });
@@ -137,15 +141,15 @@ export default function Settings() {
       <div className="space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle>Current Space</CardTitle>
+            <CardTitle>Current Book</CardTitle>
             <CardDescription>
-              Spaces let you separate purchases by context—like home, work, or
-              family — and you can collaborate with others by sharing access.
+              Books let you separate purchases by context-like home, work, or
+              family - and you can collaborate with others by sharing access.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-2">
-              <Label htmlFor="space-select">Current Space:</Label>
+              <Label htmlFor="space-select">Current Book:</Label>
               <Select
                 value={current?.id ?? ""}
                 onValueChange={(value) => handleChangeSpace(value)}
@@ -168,7 +172,7 @@ export default function Settings() {
               size="sm"
               onClick={() => navigate("/spaces")}
             >
-              Edit Spaces...
+              Edit Books...
             </Button>
           </CardContent>
         </Card>
@@ -335,3 +339,4 @@ export default function Settings() {
     </div>
   );
 }
+

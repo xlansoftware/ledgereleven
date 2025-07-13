@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchWithAuth } from "@/api";
-import { useCategoryStore } from "@/lib/store-category";
+import { useBookStore } from "@/lib/store-book";
 import { Category } from "@/lib/types";
 import BarChartComponent from "@/components/insight/BarChartComponent";
 import HorizontalBarChartComponent from "./HorizontalBarChartComponent";
@@ -27,7 +27,7 @@ function ChartTitle({ title }: { title: string }) {
 }
 
 export default function HistoryComponent() {
-  const { categories, loadCategories } = useCategoryStore();
+  const { categories } = useBookStore();
   const colors = categories.reduce((acc, category) => {
     acc[category.name] = category;
     return acc;
@@ -35,11 +35,6 @@ export default function HistoryComponent() {
   const [data, setData] = useState<HistoryResult | null>(null);
 
   useEffect(() => {
-    if (categories.length === 0) {
-      loadCategories().catch((error) => {
-        console.error("Error loading categories:", error);
-      });
-    }
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     fetchWithAuth(`/api/insight/history/${encodeURIComponent(timeZone)}`).then(
       (response) => {
@@ -52,7 +47,7 @@ export default function HistoryComponent() {
         }
       }
     );
-  }, [categories.length, loadCategories]);
+  }, [categories.length]);
 
   const { dayly, weekly, monthly } = data ?? {};
 

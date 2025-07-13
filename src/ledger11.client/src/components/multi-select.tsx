@@ -70,6 +70,7 @@ export function MultiSelect({
             variant="outline"
             role="combobox"
             aria-expanded={open}
+            aria-label={placeholder}
             className="w-full justify-between !h-auto min-h-9"
           >
             <div className="flex flex-wrap gap-1 overflow-hidden">

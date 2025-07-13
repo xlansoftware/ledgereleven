@@ -70,6 +70,7 @@ public class Program
         builder.Services.AddScoped<IUserSpaceService, UserSpaceService>();
         builder.Services.AddScoped<ICurrentLedgerService, CurrentLedgerService>();
         builder.Services.AddScoped<IBackupService, BackupService>();
+        builder.Services.AddScoped<IExchangeRateService, ExchangeRateService>();
 
         builder.Services.AddHttpClient<IChatGptService, ChatGptService>();
 

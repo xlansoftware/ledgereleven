@@ -61,7 +61,7 @@ export default function ShareSpaceDialog({
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Share Space</DialogTitle>
+          <DialogTitle>Share Book</DialogTitle>
           <DialogDescription>
             Enter the email address of the user you want to share this space
             with.

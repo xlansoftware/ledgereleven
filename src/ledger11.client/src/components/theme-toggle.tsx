@@ -14,7 +14,7 @@ export function ThemeToggle() {
   };
 
   return (
-    <Button variant="outline" size="icon" onClick={toggleTheme}>
+    <Button variant="outline" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
       {(theme === "default" ? resolvedTheme : theme) === "dark" ? (
         <Sun />
       ) : (
