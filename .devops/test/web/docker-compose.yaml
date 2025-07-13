@@ -22,6 +22,7 @@ services:
       - ledgerapp
     environment:
       APP_URL: http://ledgerapp:8080/
+      CI: true
     volumes:
       - ./test-results:/src/test-results
       - ./certs:/usr/local/share/ca-certificates:ro
