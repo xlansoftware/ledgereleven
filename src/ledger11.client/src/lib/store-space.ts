@@ -8,6 +8,7 @@ import { fetchWithAuth } from "@/api";
 interface SpaceStoreState {
   current?: Space;
   spaces: Space[];
+  closedSpaces: Space[];
 
   addSpace: (category: Omit<Space, "id">) => Promise<string>;
   updateSpace: (id: string, updatedFields: Partial<Space>) => Promise<void>;
@@ -21,6 +22,7 @@ export const useSpaceStore = create<SpaceStoreState>()(
     (set, get) => ({
       current: undefined,
       spaces: [],
+      closedSpaces: [],
 
       addSpace: async (space) => {
         const response = await fetchWithAuth("/api/space", {
@@ -93,9 +95,22 @@ export const useSpaceStore = create<SpaceStoreState>()(
 
         const result: SpaceStoreState = await response.json();
 
+        const { spaces, closedSpaces } = result.spaces.reduce(
+          (acc, space) => {
+            if (space.settings && space.settings["Status"] === "Closed") {
+              acc.closedSpaces.push(space);
+            } else {
+              acc.spaces.push(space);
+            }
+            return acc;
+          },
+          { spaces: [], closedSpaces: [] } as { spaces: Space[]; closedSpaces: Space[] }
+        );
+
         set({
           current: result.current,
-          spaces: result.spaces,
+          spaces: spaces,
+          closedSpaces: closedSpaces,
         });
 
         return result.current;

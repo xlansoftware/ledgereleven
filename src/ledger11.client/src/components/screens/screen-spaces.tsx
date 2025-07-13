@@ -8,6 +8,7 @@ import {
   MergeIcon,
   MoreHorizontalIcon,
   PencilIcon,
+  Trash2,
   UserPlus2Icon,
 } from "lucide-react";
 import { useSpaceStore } from "@/lib/store-space";
@@ -26,6 +27,7 @@ export default function SpacesScreen() {
   const {
     current,
     spaces,
+    closedSpaces,
     addSpace,
     removeSpace,
     loadSpaces,
@@ -63,6 +65,7 @@ export default function SpacesScreen() {
     try {
       await removeSpace(spaceToDelete);
       toast.success("Space removed");
+      await loadSpaces(true); // Reload spaces to reflect changes
     } catch (err) {
       toast.error("Failed to remove space");
       console.error(err);
@@ -106,7 +109,10 @@ export default function SpacesScreen() {
 
     await fetchWithAuth("/api/space/merge", {
       method: "POST",
-      body: JSON.stringify({ sourceSpaceId: sourceId, targetSpaceId: targetId }),
+      body: JSON.stringify({
+        sourceSpaceId: sourceId,
+        targetSpaceId: targetId,
+      }),
       headers: {
         "Content-Type": "application/json",
       },
@@ -200,6 +206,69 @@ export default function SpacesScreen() {
           </div>
         ))}
       </div>
+
+      {closedSpaces.length > 0 && (
+        <>
+          <h2 className="text-lg font-semibold">Closed Spaces</h2>
+          <div className="space-y-4">
+            {closedSpaces.map((space) => (
+              <div
+                key={space.id}
+                data-testid={`Closed space: ${space.name}`}
+                className={cn(
+                  "flex items-center gap-2",
+                  current?.id === space.id && "bg-muted border border-border"
+                )}
+              >
+                <SpaceRow
+                  space={space}
+                  onClick={async (spaceId) => {
+                    await setCurrentSpace(spaceId);
+                    await openBook(spaceId);
+                  }}
+                  className="w-full"
+                />
+
+                <ResponsiveMenu>
+                  <ResponsiveMenu.Trigger>
+                    <Button variant="ghost" size="icon">
+                      <MoreHorizontalIcon className="w-4 h-4" />
+                      <span className="sr-only">Actions</span>
+                    </Button>
+                  </ResponsiveMenu.Trigger>
+                  <ResponsiveMenu.Content>
+                    <ResponsiveMenu.Title>Actions</ResponsiveMenu.Title>
+                    <ResponsiveMenu.Item
+                      onClick={() => {
+                        // allow the menu item to close...
+                        requestAnimationFrame(() => {
+                          setEditSpace(space);
+                        });
+                      }}
+                    >
+                      <PencilIcon className="w-4 h-4 mr-2" />
+                      Reopen
+                    </ResponsiveMenu.Item>
+
+                    <ResponsiveMenu.Item
+                      className="text-destructive"
+                      onClick={() => {
+                        // allow the menu item to close...
+                        requestAnimationFrame(() => {
+                          confirmRemove(space.id!);
+                        });
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Remove
+                    </ResponsiveMenu.Item>
+                  </ResponsiveMenu.Content>
+                </ResponsiveMenu>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       <ShareSpaceDialog
         spaceId={sharingSpaceId || ""}
