@@ -56,6 +56,48 @@ test('Edit item', async ({ page }) => {
 
 })
 
+test('Edit item currency', async ({ page }) => {
+    const uniqueEmail = generateRandomUsername();
+    const password = 'MySecurePassword123!';
+
+    await page.goto(APP_URL);
+    await createUser(page, uniqueEmail, password);
+
+    await expect(page.url()).toBe(`${APP_URL}app`);
+  
+    // Create record Groceries 42.0
+    await page.getByRole('textbox', { name: "Amount" }).fill('42.0');
+    await page.getByRole('button', { name: "Category Groceries" }).click();
+    await page.getByRole('button', { name: "Add", exact: true }).click();
+
+    // Go to the History tab
+    await page.getByRole('button', { name: "History Screen" }).click();
+
+    // Assert the page shows the item
+    await expect(page.getByTestId('Item: Groceries, 42.00')).toBeVisible();
+
+    // Open edit form
+    await page.getByRole('button', { name: "Actions" }).click();
+    await page.getByRole('button', { name: "Edit" }).click();
+
+    // Change currency and exchange rate
+    const editDialog = page.getByRole('dialog', { name: 'Edit Transaction' });
+    expect(editDialog).toBeVisible();
+
+    await editDialog.getByRole('textbox', { name: "Currency" }).fill('EUR');
+    await editDialog.getByRole('spinbutton', { name: "Exchange rate" }).fill('1.2');
+    await editDialog.getByRole('button', { name: "Save Changes" }).click();
+
+    // Assert the page does NOT shows the item
+    await expect(page.getByTestId('Item: Groceries, 42.00')).not.toBeVisible();
+    
+    // Assert the page shows the updated item
+    const editedItem = page.getByTestId('Item: Groceries, 50.40');
+    await expect(editedItem).toBeVisible();
+    await expect(editedItem.getByText("42.00 x 1.20 EUR")).toBeVisible();
+
+})
+
 test('Remove item', async ({ page }) => {
     const uniqueEmail = generateRandomUsername();
     const password = 'MySecurePassword123!';

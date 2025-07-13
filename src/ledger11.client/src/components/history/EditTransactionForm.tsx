@@ -31,25 +31,28 @@ export default function EditTransactionForm({
     value: `${transaction.value}`,
     notes: transaction.notes ? `${transaction.notes}` : "",
     categoryId: transaction.categoryId,
+    currency: transaction.currency,
+    exchangeRate: transaction.exchangeRate,
   });
 
   const saveEdit = async () => {
-    updateTransaction(transaction.id!, {
-      ...transaction,
-      value: editValues.value ? Number.parseFloat(editValues.value) : undefined,
-      notes: editValues.notes,
-      categoryId: editValues.categoryId || undefined,
-    })
-      .then(() => {
-        toast.success("Done!");
-      })
-      .catch((error) => {
-        console.error("Error updating transaction:", error);
-        toast.error("Error updating transaction");
-      })
-      .finally(() => {
-        onClose();
+    try {
+      await updateTransaction(transaction.id!, {
+        ...transaction,
+        value: editValues.value
+          ? Number.parseFloat(editValues.value)
+          : undefined,
+        notes: editValues.notes,
+        categoryId: editValues.categoryId || undefined,
+        currency: editValues.currency || undefined,
+        exchangeRate: editValues.exchangeRate || undefined,
       });
+      toast.success("Done!");
+    } catch (error) {
+      console.error("Error updating transaction:", error);
+      toast.error("Error updating transaction");
+    }
+    onClose();
   };
 
   return (
@@ -63,6 +66,7 @@ export default function EditTransactionForm({
           <div className="space-y-2">
             <Label htmlFor="edit-total">Value</Label>
             <Input
+              autoFocus
               id="edit-total"
               type="number"
               placeholder="0.00"
@@ -101,6 +105,37 @@ export default function EditTransactionForm({
               }))}
               placeholder="Select a category"
               title="Choose Category"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-currency">Currency</Label>
+            <Input
+              id="edit-currency"
+              type="text"
+              placeholder="USD"
+              value={editValues.currency || ""}
+              onChange={(e) => {
+                const update = { ...editValues, currency: e.target.value };
+                setEditValues(update);
+              }}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-exchangeRate">Exchange Rate</Label>
+            <Input
+              id="edit-exchangeRate"
+              type="number"
+              placeholder="1.00"
+              value={editValues.exchangeRate || ""}
+              onChange={(e) => {
+                const update = {
+                  ...editValues,
+                  exchangeRate: parseFloat(e.target.value),
+                };
+                setEditValues(update);
+              }}
             />
           </div>
         </div>
