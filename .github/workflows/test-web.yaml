@@ -22,7 +22,7 @@ jobs:
 
       - name: Build and test
         working-directory: ./.devops/test/web
-        run: docker compose run --build --rm test
+        run: CI=true docker compose run --build --rm test
 
       - name: Fix Permissions
         run: sudo chown -R runner:docker ./.devops/test/web/test-results/
