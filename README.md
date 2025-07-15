@@ -56,6 +56,15 @@ To get a local copy up and running, follow these simple steps.
 
 The application will be available at `http://localhost:5173`.
 
+Alternatively, to run the application in a production-like environment, you can build the React application and have the .NET backend serve the static files. The React app's static assets are copied into the `wwwroot/app` folder of the .NET backend app. This `wwwroot/app` folder is included in the `.gitignore` file.
+
+To build the React app and copy it into the `ledger11.web` app, run the following command in the `ledger11.client` folder:
+```bash
+npm run republish
+```
+
+The `ledger11.web` folder contains a `restart.sh` script that automates this process by stopping the backend, republishing the client, and restarting the backend.
+
 ### Running in a Container
 
 (_Requires: Docker or Docker for Desktop installed._)

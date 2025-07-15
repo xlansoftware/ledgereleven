@@ -89,7 +89,19 @@ If you are using ```Visual Studio Code```, you may appreciate the ```C# Dev Kit`
 
 **Frontend Tests:**
 
-Running the Playwright tests locally requires two steps:
+Running the Playwright tests locally requires the web application to be running with the frontend assets.
+
+The frontend tests run against the .NET backend application, which serves the static assets of the React application from its `wwwroot/app` folder. You need to build the React client and copy the assets to the correct location first. The `wwwroot/app` folder is ignored by git.
+
+To build the client application and copy the static assets, run the `republish` script from the client folder:
+```bash
+cd src/ledger11.client
+npm run republish
+```
+
+The `ledger11.web` folder contains a `restart.sh` script that helps automate this process.
+
+Once the assets are in place, you can run the tests:
 
 1.  **Start the web application:**
 
@@ -133,7 +145,7 @@ Developing the app requires two steps:
 
 Open a browser and navigate to ```http://localhost:5173```. When you first open the app, you will be prompted to register a new user. During development, email verification is disabled, so you can use any email address.
 
-Alternatively, you can use the ```lefger11.cli``` cli tool to create a demo user and seed it with random data:
+Alternatively, you can use the ```ledger11.cli``` cli tool to create a demo user and seed it with random data:
 
 ```bash
 cd src/ledger11.cli
