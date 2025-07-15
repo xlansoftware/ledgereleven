@@ -30,7 +30,10 @@ public class Program
             var config = provider.GetRequiredService<IOptions<AppConfig>>().Value;
             // Console.WriteLine($"2:DataPath: {config.DataPath}");
             options.UseSqlite($"Data Source={Path.Combine(config.DataPath, "appdata.db")};Pooling={config.Pooling}");
-            options.EnableSensitiveDataLogging();
+            if (builder.Environment.IsDevelopment())
+            {
+                options.EnableSensitiveDataLogging();
+            }
         });
 
         builder.Services
