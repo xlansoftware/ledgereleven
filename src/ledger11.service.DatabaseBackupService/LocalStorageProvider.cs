@@ -3,6 +3,9 @@ using System.Threading.Tasks;
 
 namespace ledger11.service.DatabaseBackupService;
 
+/// <summary>
+/// An implementation of IRemoteStorageProvider that stores backups to a local file path.
+/// </summary>
 public class LocalStorageProvider : IRemoteStorageProvider
 {
     private readonly DatabaseBackupServiceConfig _config;

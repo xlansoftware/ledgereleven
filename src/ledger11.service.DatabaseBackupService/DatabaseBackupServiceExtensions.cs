@@ -4,10 +4,17 @@ using Microsoft.Extensions.Hosting;
 
 namespace ledger11.service.DatabaseBackupService;
 
+/// <summary>
+/// Provides extension methods for registering the DatabaseBackupService and its dependencies.
+/// </summary>
 public static class DatabaseBackupServiceExtensions
 {
+    /// <summary>
+    /// Adds the DatabaseBackupService to the service collection.
+    /// </summary>
     public static IServiceCollection AddDatabaseBackupService(this IServiceCollection services, Action<DatabaseBackupServiceConfig> configure)
     {
+
         var config = new DatabaseBackupServiceConfig();
         configure(config);
         services.AddSingleton(config);

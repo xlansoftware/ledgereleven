@@ -4,6 +4,9 @@ using Renci.SshNet;
 
 namespace ledger11.service.DatabaseBackupService;
 
+/// <summary>
+/// An implementation of IRemoteStorageProvider that uploads backups to an SFTP server.
+/// </summary>
 public class SftpStorageProvider : IRemoteStorageProvider
 {
     private readonly DatabaseBackupServiceConfig _config;

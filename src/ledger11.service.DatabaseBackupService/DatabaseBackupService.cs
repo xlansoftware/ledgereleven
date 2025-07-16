@@ -6,6 +6,11 @@ using Microsoft.Extensions.Logging;
 
 namespace ledger11.service.DatabaseBackupService;
 
+/// <summary>
+/// A background service that monitors a queue of database files to be backed up.
+/// When a file is added to the queue, the service creates a local backup,
+/// then uploads it to a remote storage provider.
+/// </summary>
 public class DatabaseBackupService : IHostedService, IDisposable, IDatabaseBackupService
 {
     private readonly IRemoteStorageProvider _storageProvider;
