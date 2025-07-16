@@ -2,6 +2,7 @@ namespace ledger11.service.DatabaseBackupService;
 
 public enum StorageType
 {
+    None,
     Sftp,
     File
 }

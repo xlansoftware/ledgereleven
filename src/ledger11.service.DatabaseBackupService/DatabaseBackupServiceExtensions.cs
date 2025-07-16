@@ -12,6 +12,12 @@ public static class DatabaseBackupServiceExtensions
         configure(config);
         services.AddSingleton(config);
 
+        if (config.StorageType == StorageType.None)
+        {
+            // Do not register any services if storage is disabled.
+            return services;
+        }
+
         switch (config.StorageType)
         {
             case StorageType.Sftp:
