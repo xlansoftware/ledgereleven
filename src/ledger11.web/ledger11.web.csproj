@@ -39,6 +39,7 @@
     <ProjectReference Include="..\ledger11.data\ledger11.data.csproj" />
     <ProjectReference Include="..\ledger11.lib\ledger11.lib.csproj" />
     <ProjectReference Include="..\ledger11.service.SmtpEmailSenderService\ledger11.service.SmtpEmailSenderService.csproj" />
+    <ProjectReference Include="..\ledger11.service.BackupService\ledger11.service.BackupService.csproj" />
   </ItemGroup>
 
 </Project>
