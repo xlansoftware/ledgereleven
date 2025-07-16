@@ -30,8 +30,13 @@ public static class DatabaseBackupServiceExtensions
                 throw new ArgumentOutOfRangeException(nameof(config.StorageType), config.StorageType, null);
         }
 
-        services.AddSingleton<IDatabaseBackupService, DatabaseBackupService>();
-        services.AddHostedService(provider => (IHostedService)provider.GetRequiredService<IDatabaseBackupService>());
+        // Register the concrete type as a singleton
+        services.AddSingleton<DatabaseBackupService>();
+        // Forward the interface to the concrete type
+        services.AddSingleton<IDatabaseBackupService>(p => p.GetRequiredService<DatabaseBackupService>());
+        // Register the hosted service to resolve to the same singleton instance
+        services.AddHostedService(p => p.GetRequiredService<DatabaseBackupService>());
+
         return services;
     }
 }
