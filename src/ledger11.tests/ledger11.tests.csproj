@@ -27,6 +27,7 @@
     <ProjectReference Include="..\ledger11.data\ledger11.data.csproj" />
     <ProjectReference Include="..\ledger11.model\ledger11.model.csproj" />
     <ProjectReference Include="..\ledger11.web\ledger11.web.csproj" />
+    <ProjectReference Include="..\ledger11.service.DatabaseBackupService\ledger11.service.DatabaseBackupService.csproj" />
   </ItemGroup>
 
   <ItemGroup>

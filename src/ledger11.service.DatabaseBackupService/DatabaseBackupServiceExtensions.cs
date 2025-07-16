@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace ledger11.service.BackupService;
+namespace ledger11.service.DatabaseBackupService;
 
 public static class DatabaseBackupServiceExtensions
 {

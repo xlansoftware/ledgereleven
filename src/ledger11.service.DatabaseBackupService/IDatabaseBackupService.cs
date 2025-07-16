@@ -1,4 +1,4 @@
-namespace ledger11.service.BackupService;
+namespace ledger11.service.DatabaseBackupService;
 
 public interface IDatabaseBackupService
 {

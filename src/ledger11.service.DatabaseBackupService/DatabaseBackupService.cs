@@ -4,7 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Renci.SshNet;
 
-namespace ledger11.service.BackupService;
+namespace ledger11.service.DatabaseBackupService;
 
 public class DatabaseBackupService : IHostedService, IDisposable, IDatabaseBackupService
 {
