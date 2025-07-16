@@ -6,14 +6,14 @@ using Renci.SshNet;
 
 namespace ledger11.service.BackupService;
 
-public class BackupService : IHostedService, IDisposable, IBackupService
+public class DatabaseBackupService : IHostedService, IDisposable, IDatabaseBackupService
 {
-    private readonly BackupServiceConfig _config;
-    private readonly ILogger<BackupService> _logger;
+    private readonly DatabaseBackupServiceConfig _config;
+    private readonly ILogger<DatabaseBackupService> _logger;
     private readonly ConcurrentQueue<string> _queue = new();
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
-    public BackupService(BackupServiceConfig config, ILogger<BackupService> logger)
+    public DatabaseBackupService(DatabaseBackupServiceConfig config, ILogger<DatabaseBackupService> logger)
     {
         _config = config;
         _logger = logger;
@@ -27,14 +27,14 @@ public class BackupService : IHostedService, IDisposable, IBackupService
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("BackupService is starting.");
+        _logger.LogInformation("DatabaseBackupService is starting.");
         Task.Run(() => ProcessQueue(), _cancellationTokenSource.Token);
         return Task.CompletedTask;
     }
 
     private void ProcessQueue()
     {
-        _logger.LogInformation("BackupService queue processing started.");
+        _logger.LogInformation("DatabaseBackupService queue processing started.");
         while (!_cancellationTokenSource.IsCancellationRequested)
         {
             if (_queue.TryDequeue(out var dbFilePath))
@@ -53,7 +53,7 @@ public class BackupService : IHostedService, IDisposable, IBackupService
                 Thread.Sleep(1000);
             }
         }
-        _logger.LogInformation("BackupService queue processing stopped.");
+        _logger.LogInformation("DatabaseBackupService queue processing stopped.");
     }
 
     private void Backup(string dbFilePath)
@@ -87,7 +87,7 @@ public class BackupService : IHostedService, IDisposable, IBackupService
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("BackupService is stopping.");
+        _logger.LogInformation("DatabaseBackupService is stopping.");
         _cancellationTokenSource.Cancel();
         return Task.CompletedTask;
     }

@@ -1,6 +1,6 @@
 namespace ledger11.service.BackupService;
 
-public class BackupServiceConfig
+public class DatabaseBackupServiceConfig
 {
     public string SftpHost { get; set; } = string.Empty;
     public int SftpPort { get; set; }

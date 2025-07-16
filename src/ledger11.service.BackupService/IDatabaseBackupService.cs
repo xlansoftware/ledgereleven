@@ -1,6 +1,6 @@
 namespace ledger11.service.BackupService;
 
-public interface IBackupService
+public interface IDatabaseBackupService
 {
     void Notify(string dbFilePath);
 }
