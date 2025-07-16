@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ledger11.model.Data;
 using ledger11.service;
+using ledger11.service.DatabaseBackupService;
+using ledger11.lib.Extensions;
 
 namespace ledger11.web.Controllers;
 
@@ -12,11 +14,15 @@ namespace ledger11.web.Controllers;
 public class TransactionController : ControllerBase
 {
     private readonly ICurrentLedgerService _currentLedger;
+    private readonly IDatabaseBackupService? _databaseBackupService;
 
     public TransactionController(
-        ICurrentLedgerService currentLedger)
+        ICurrentLedgerService currentLedger,
+        IServiceProvider serviceProvider)
     {
         _currentLedger = currentLedger;
+        // The service is optional. It will not be registered if it is not configured.
+        _databaseBackupService = serviceProvider.GetService<DatabaseBackupService>();
     }
 
     // GET: api/transaction?start=0&limit=100
@@ -72,7 +78,8 @@ public class TransactionController : ControllerBase
         }
         transaction.User = User?.Identity?.Name;
         db.Transactions.Add(transaction);
-        db.SaveChanges();
+        await db.SaveChangesAsync();
+        _databaseBackupService?.Notify(db.GetDbFilePath());
 
         var result = await db.Transactions.FirstOrDefaultAsync(t => t.Id == transaction.Id);
 
@@ -138,6 +145,7 @@ public class TransactionController : ControllerBase
         }
 
         await db.SaveChangesAsync();
+        _databaseBackupService?.Notify(db.GetDbFilePath());
 
         return Ok(existingTransaction);
     }
@@ -153,7 +161,8 @@ public class TransactionController : ControllerBase
             return NotFound();
 
         db.Transactions.Remove(transaction);
-        db.SaveChanges();
+        await db.SaveChangesAsync();
+        _databaseBackupService?.Notify(db.GetDbFilePath());
         return NoContent();
     }
 
@@ -164,6 +173,7 @@ public class TransactionController : ControllerBase
         using var db = await _currentLedger.GetLedgerDbContextAsync();
         await db.Transactions.ExecuteDeleteAsync();
         await db.SaveChangesAsync();
+        _databaseBackupService?.Notify(db.GetDbFilePath());
 
         return NoContent();   
     }
