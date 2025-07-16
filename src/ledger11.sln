@@ -19,7 +19,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ledger11.lib", "ledger11.li
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ledger11.service.SmtpEmailSenderService", "ledger11.service.SmtpEmailSenderService\ledger11.service.SmtpEmailSenderService.csproj", "{05AA18A7-5CC5-4F47-8687-F72475E35880}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ledger11.service.BackupService", "ledger11.service.BackupService\ledger11.service.BackupService.csproj", "{0CFC66DE-8A3F-4DA3-8829-001D6FC22476}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ledger11.service.DatabaseBackupService", "ledger11.service.DatabaseBackupService\ledger11.service.DatabaseBackupService.csproj", "{0CFC66DE-8A3F-4DA3-8829-001D6FC22476}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
