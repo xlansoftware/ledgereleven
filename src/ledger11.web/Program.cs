@@ -13,6 +13,8 @@ using Microsoft.AspNetCore.HttpOverrides;
 using ledger11.service.Models;
 using System.Text.Json.Serialization;
 
+using ledger11.service.DatabaseBackupService;
+
 namespace ledger11.web;
 
 public class Program
@@ -76,6 +78,11 @@ public class Program
         builder.Services.AddScoped<IExchangeRateService, ExchangeRateService>();
 
         builder.Services.AddHttpClient<IChatGptService, ChatGptService>();
+
+        builder.Services.AddDatabaseBackupService(config =>
+        {
+            builder.Configuration.GetSection("DatabaseBackup").Bind(config);
+        });
 
         builder.AddOpenTelemetry();
 
