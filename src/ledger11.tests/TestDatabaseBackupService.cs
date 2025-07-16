@@ -1,11 +1,11 @@
 using System.Data.SQLite;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ledger11.service.DatabaseBackupService;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Renci.SshNet;
 using Xunit;
 
 namespace ledger11.tests;
@@ -14,16 +14,15 @@ public class TestDatabaseBackupService
 {
     private readonly DatabaseBackupServiceConfig _config;
     private readonly Mock<ILogger<DatabaseBackupService>> _loggerMock;
+    private readonly string _backupPath;
 
     public TestDatabaseBackupService()
     {
+        _backupPath = Path.Combine(Path.GetTempPath(), "backups");
         _config = new DatabaseBackupServiceConfig
         {
-            SftpHost = "localhost",
-            SftpPort = 2222,
-            SftpUsername = "testuser",
-            SftpPassword = "testpassword",
-            SftpPath = "/backups"
+            StorageType = StorageType.File,
+            SftpPath = _backupPath
         };
         _loggerMock = new Mock<ILogger<DatabaseBackupService>>();
     }
@@ -31,7 +30,8 @@ public class TestDatabaseBackupService
     [Fact]
     public async Task TestStartAndStop()
     {
-        var service = new DatabaseBackupService(_config, _loggerMock.Object);
+        var storageProvider = new LocalStorageProvider(_config);
+        var service = new DatabaseBackupService(storageProvider, _loggerMock.Object);
         await service.StartAsync(CancellationToken.None);
         await service.StopAsync(CancellationToken.None);
     }
@@ -39,7 +39,8 @@ public class TestDatabaseBackupService
     [Fact]
     public void TestNotify()
     {
-        var service = new DatabaseBackupService(_config, _loggerMock.Object);
+        var storageProvider = new LocalStorageProvider(_config);
+        var service = new DatabaseBackupService(storageProvider, _loggerMock.Object);
         service.Notify("test.db");
     }
 
@@ -56,7 +57,8 @@ public class TestDatabaseBackupService
             command.ExecuteNonQuery();
         }
 
-        var service = new DatabaseBackupService(_config, _loggerMock.Object);
+        var storageProvider = new LocalStorageProvider(_config);
+        var service = new DatabaseBackupService(storageProvider, _loggerMock.Object);
         await service.StartAsync(CancellationToken.None);
 
         service.Notify(dbFilePath);
@@ -66,11 +68,12 @@ public class TestDatabaseBackupService
 
         await service.StopAsync(CancellationToken.None);
 
-        // Verify that the backup file was created and uploaded
-        // This part is tricky to test without a real SFTP server.
-        // We can mock the SftpClient, but that would require significant changes to the service.
-        // For now, we will just verify that the service runs without errors.
+        // Verify that the backup file was created
+        Assert.True(Directory.Exists(_backupPath));
+        Assert.Single(Directory.GetFiles(_backupPath));
 
+        // Cleanup
         File.Delete(dbFilePath);
+        Directory.Delete(_backupPath, true);
     }
 }

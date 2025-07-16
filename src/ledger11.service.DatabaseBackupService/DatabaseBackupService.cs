@@ -1,21 +1,21 @@
 using System.Collections.Concurrent;
 using System.Data.SQLite;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Renci.SshNet;
 
 namespace ledger11.service.DatabaseBackupService;
 
 public class DatabaseBackupService : IHostedService, IDisposable, IDatabaseBackupService
 {
-    private readonly DatabaseBackupServiceConfig _config;
+    private readonly IRemoteStorageProvider _storageProvider;
     private readonly ILogger<DatabaseBackupService> _logger;
     private readonly ConcurrentQueue<string> _queue = new();
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
-    public DatabaseBackupService(DatabaseBackupServiceConfig config, ILogger<DatabaseBackupService> logger)
+    public DatabaseBackupService(IRemoteStorageProvider storageProvider, ILogger<DatabaseBackupService> logger)
     {
-        _config = config;
+        _storageProvider = storageProvider;
         _logger = logger;
     }
 
@@ -32,7 +32,7 @@ public class DatabaseBackupService : IHostedService, IDisposable, IDatabaseBacku
         return Task.CompletedTask;
     }
 
-    private void ProcessQueue()
+    private async Task ProcessQueue()
     {
         _logger.LogInformation("DatabaseBackupService queue processing started.");
         while (!_cancellationTokenSource.IsCancellationRequested)
@@ -41,7 +41,7 @@ public class DatabaseBackupService : IHostedService, IDisposable, IDatabaseBacku
             {
                 try
                 {
-                    Backup(dbFilePath);
+                    await Backup(dbFilePath);
                 }
                 catch (Exception ex)
                 {
@@ -50,13 +50,13 @@ public class DatabaseBackupService : IHostedService, IDisposable, IDatabaseBacku
             }
             else
             {
-                Thread.Sleep(1000);
+                await Task.Delay(1000, _cancellationTokenSource.Token);
             }
         }
         _logger.LogInformation("DatabaseBackupService queue processing stopped.");
     }
 
-    private void Backup(string dbFilePath)
+    private async Task Backup(string dbFilePath)
     {
         _logger.LogInformation("Backing up {FilePath}", dbFilePath);
         var backupFileName = $"{Path.GetFileNameWithoutExtension(dbFilePath)}-{DateTime.UtcNow:yyyyMMddHHmmss}.db.bak";
@@ -66,20 +66,21 @@ public class DatabaseBackupService : IHostedService, IDisposable, IDatabaseBacku
         using (var source = new SQLiteConnection($"Data Source={dbFilePath}; Version=3;"))
         using (var destination = new SQLiteConnection($"Data Source={backupFilePath}; Version=3;"))
         {
-            source.Open();
-            destination.Open();
+            await source.OpenAsync(_cancellationTokenSource.Token);
+            if (_cancellationTokenSource.IsCancellationRequested) return;
+
+            await destination.OpenAsync(_cancellationTokenSource.Token);
+            if (_cancellationTokenSource.IsCancellationRequested) return;
             source.BackupDatabase(destination, "main", "main", -1, null, 0);
         }
         _logger.LogDebug("Local backup created successfully.");
 
-        _logger.LogDebug("Uploading {BackupFileName} to SFTP host {SftpHost}", backupFileName, _config.SftpHost);
-        using (var sftp = new SftpClient(_config.SftpHost, _config.SftpPort, _config.SftpUsername, _config.SftpPassword))
+        _logger.LogDebug("Uploading {BackupFileName}", backupFileName);
+        using (var backupStream = File.OpenRead(backupFilePath))
         {
-            sftp.Connect();
-            sftp.UploadFile(File.OpenRead(backupFilePath), Path.Combine(_config.SftpPath, backupFileName));
-            sftp.Disconnect();
+            await _storageProvider.StoreAsync(backupStream, backupFileName);
         }
-        _logger.LogInformation("Successfully uploaded backup to {SftpHost}", _config.SftpHost);
+        _logger.LogInformation("Successfully uploaded backup.");
 
         _logger.LogDebug("Deleting local backup file {BackupFilePath}", backupFilePath);
         File.Delete(backupFilePath);
