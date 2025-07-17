@@ -15,13 +15,17 @@ services:
     # restart: unless-stopped
 
   litestream:
-    image: litestream/litestream
+    build:
+      dockerfile: ./Dockerfile.litestream
     volumes:
       - ./data:/data
       # - ./litestream.yml:/etc/litestream.yml
       - ./replicate-all.sh:/replicate-all.sh
+      - ./known_hosts:/root/.ssh/known_hosts:ro
     environment:
       SFTP_PASSWORD: ${SFTP_PASSWORD}
     entrypoint: /bin/sh
-    command: -c "chmod +x /replicate-all.sh && /replicate-all.sh && litestream replicate -config /etc/litestream.yml"
+    # make sure known_hosts has no BOM!
+    # command: -c "cat /root/.ssh/known_hosts"
     # command: -c "chmod +x /replicate-all.sh && /replicate-all.sh && cat /etc/litestream.yml"
+    command: -c "chmod +x /replicate-all.sh && /replicate-all.sh && litestream replicate -config /etc/litestream.yml"

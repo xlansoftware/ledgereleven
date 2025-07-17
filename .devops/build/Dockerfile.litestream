@@ -1,0 +1,5 @@
+FROM litestream/litestream
+
+# Install sshpass and openssh-client (Alpine-based)
+RUN apk add --no-cache lftp openssh
+RUN mkdir -p /root/.ssh && chmod 700 /root/.ssh
