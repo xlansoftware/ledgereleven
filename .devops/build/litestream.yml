@@ -1,0 +1,9 @@
+addr: ":9090"
+dbs:
+  - path: /data/appdata.db
+    replicas:
+      - type: sftp
+        host: neptun.superhosting.bg:1022
+        user: xlansoft
+        password: ${SFTP_PASSWORD}
+        path: /home/xlansoft/xlansoftware.com/ledgerbackup/preview
