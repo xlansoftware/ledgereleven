@@ -48,9 +48,9 @@ public class TransactionController : ControllerBase
     public async Task<IActionResult> Get(int id)
     {
         using var db = await _currentLedger.GetLedgerDbContextAsync();
-        var transaction = db.Transactions
+        var transaction = await db.Transactions
             .Include(t => t.TransactionDetails)
-            .FirstOrDefault(t => t.Id == id);
+            .FirstOrDefaultAsync(t => t.Id == id);
 
         if (transaction == null)
             return NotFound();
@@ -72,7 +72,7 @@ public class TransactionController : ControllerBase
         }
         transaction.User = User?.Identity?.Name;
         db.Transactions.Add(transaction);
-        db.SaveChanges();
+        await db.SaveChangesAsync();
 
         var result = await db.Transactions.FirstOrDefaultAsync(t => t.Id == transaction.Id);
 
@@ -153,7 +153,7 @@ public class TransactionController : ControllerBase
             return NotFound();
 
         db.Transactions.Remove(transaction);
-        db.SaveChanges();
+        await db.SaveChangesAsync();
         return NoContent();
     }
 
