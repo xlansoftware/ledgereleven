@@ -15,6 +15,7 @@ import { useBookStore } from "@/lib/store-book";
 import { Transaction } from "@/lib/types";
 import { toast } from "sonner";
 import { ResponsiveSelect } from "../responsive/ResponsiveSelect";
+import { parseMoneyInput } from "@/lib/parseMoneyInput";
 
 interface EditTransactionFormProps {
   transaction: Transaction;
@@ -35,24 +36,32 @@ export default function EditTransactionForm({
     exchangeRate: transaction.exchangeRate,
   });
 
-  const saveEdit = async () => {
-    try {
-      await updateTransaction(transaction.id!, {
-        ...transaction,
-        value: editValues.value
-          ? Number.parseFloat(editValues.value)
-          : undefined,
-        notes: editValues.notes,
-        categoryId: editValues.categoryId || undefined,
-        currency: editValues.currency || undefined,
-        exchangeRate: editValues.exchangeRate || undefined,
+  // console.log(JSON.stringify(editValues, null, 2));
+
+  const saveEdit = (currentValues: typeof editValues) => {
+    const computedValue = parseMoneyInput(currentValues.value);
+    if (!computedValue) return currentValues;
+
+    updateTransaction(transaction.id!, {
+      ...transaction,
+      value: computedValue.value,
+      notes: currentValues.notes,
+      categoryId: currentValues.categoryId || undefined,
+      currency: computedValue.currency
+        ? computedValue.currency
+        : currentValues.currency || undefined,
+      exchangeRate: currentValues.exchangeRate || undefined,
+    })
+      .then(() => {
+        toast.success("Done!");
+      })
+      .catch((error) => {
+        console.error("Error updating transaction:", error);
+        toast.error("Error updating transaction");
+      })
+      .finally(() => {
+        onClose();
       });
-      toast.success("Done!");
-    } catch (error) {
-      console.error("Error updating transaction:", error);
-      toast.error("Error updating transaction");
-    }
-    onClose();
   };
 
   return (
@@ -68,12 +77,14 @@ export default function EditTransactionForm({
             <Input
               autoFocus
               id="edit-total"
-              type="number"
+              type="text"
               placeholder="0.00"
               value={editValues.value}
               onChange={(e) => {
-                const update = { ...editValues, value: e.target.value };
-                setEditValues(update);
+                setEditValues((prev) => ({
+                  ...prev,
+                  value: e.target.value,
+                }));
               }}
             />
           </div>
@@ -86,8 +97,10 @@ export default function EditTransactionForm({
               placeholder="Notes"
               value={editValues.notes}
               onChange={(e) => {
-                const update = { ...editValues, notes: e.target.value };
-                setEditValues(update);
+                setEditValues((prev) => ({
+                  ...prev,
+                  notes: e.target.value,
+                }));
               }}
             />
           </div>
@@ -97,7 +110,10 @@ export default function EditTransactionForm({
             <ResponsiveSelect
               value={editValues.categoryId?.toString()}
               onValueChange={(value) =>
-                setEditValues({ ...editValues, categoryId: Number(value) })
+                setEditValues((prev) => ({
+                  ...prev,
+                  categoryId: Number(value),
+                }))
               }
               options={categories.map((cat) => ({
                 value: cat.id.toString(),
@@ -116,8 +132,10 @@ export default function EditTransactionForm({
               placeholder="USD"
               value={editValues.currency || ""}
               onChange={(e) => {
-                const update = { ...editValues, currency: e.target.value };
-                setEditValues(update);
+                setEditValues((prev) => ({
+                  ...prev,
+                  currency: e.target.value,
+                }));
               }}
             />
           </div>
@@ -130,11 +148,10 @@ export default function EditTransactionForm({
               placeholder="1.00"
               value={editValues.exchangeRate || ""}
               onChange={(e) => {
-                const update = {
-                  ...editValues,
+                setEditValues((prev) => ({
+                  ...prev,
                   exchangeRate: parseFloat(e.target.value),
-                };
-                setEditValues(update);
+                }));
               }}
             />
           </div>
@@ -144,7 +161,7 @@ export default function EditTransactionForm({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={saveEdit}>Save Changes</Button>
+          <Button onClick={() => { saveEdit(editValues); }}>Save Changes</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
