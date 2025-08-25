@@ -7,8 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { useSuccessOverlay } from "@/components/success";
 import { AmountInputComponent } from "../amount/AmountInputComponent";
-
-const audio = new Audio("/sounds/success.mp3");
+import { playSound } from "@/lib/playSound";
 
 export default function AddScreen() {
   const { addTransaction, categories } = useBookStore();
@@ -49,8 +48,7 @@ export default function AddScreen() {
       // reset controls
       setNotes("");
 
-      audio.play().catch((e) => console.warn("Playback blocked:", e));
-
+      playSound("/sounds/success.mp3", 0.8); // don't wait for finish
       await showSuccess({ playSound: false });
     } catch (error) {
       console.error("Error adding transaction:", error);

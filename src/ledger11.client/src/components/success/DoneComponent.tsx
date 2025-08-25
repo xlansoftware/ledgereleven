@@ -12,24 +12,16 @@ export interface DoneComponentProps {
 export function DoneComponent({
   duration = 500,
   waitAfter = 500,
-  playSound = true,
   onComplete,
 }: DoneComponentProps) {
   useEffect(() => {
-    if (playSound) {
-      const audio = new Audio("/sounds/success.wav")
-      audio.play().catch((e) => {
-        console.warn("Could not play success sound:", e)
-      })
-    }
-
     const totalTime = duration + waitAfter
     const timeout = setTimeout(() => {
       onComplete?.()
     }, totalTime)
 
     return () => clearTimeout(timeout)
-  }, [duration, waitAfter, playSound, onComplete])
+  }, [duration, waitAfter, onComplete])
 
   return createPortal(
     <motion.div
