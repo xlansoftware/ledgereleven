@@ -6,7 +6,7 @@ import {
   ClipboardList,
   BarChart2,
   Settings,
-  Sparkles,
+  // Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +34,7 @@ export default function MobileNavigation({
           : {}
       }
     >
-      <div className="grid grid-cols-5 h-full">
+      <div className="grid grid-cols-4 h-full">
         <button
           aria-label="Add Screen"
           onClick={() => navigate("/")}
@@ -46,7 +46,7 @@ export default function MobileNavigation({
           <span className="text-xs mt-1">Add</span>
         </button>
 
-        <button
+        {/* <button
           aria-label="Scan Screen"
           onClick={() => navigate("/scan")}
           className={`flex flex-col items-center justify-center ${
@@ -55,7 +55,7 @@ export default function MobileNavigation({
         >
           <Sparkles size={20} />
           <span className="text-xs mt-1">Scan</span>
-        </button>
+        </button> */}
 
         <button
           aria-label="History Screen"
