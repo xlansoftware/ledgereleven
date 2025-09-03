@@ -52,7 +52,7 @@ export default function Header({ currentPath }: HeaderProps) {
           >
             <TabsList>
               <TabsTrigger aria-label="Add Screen" value="/">Add</TabsTrigger>
-              <TabsTrigger aria-label="Scan Screen" value="/scan">Scan</TabsTrigger>
+              {/* <TabsTrigger aria-label="Scan Screen" value="/scan">Scan</TabsTrigger> */}
               <TabsTrigger aria-label="History Screen" value="/history">History</TabsTrigger>
               <TabsTrigger aria-label="Insights Screen" value="/insights">Insights</TabsTrigger>
               <TabsTrigger aria-label="Settings Screen" value="/settings">Settings</TabsTrigger>
