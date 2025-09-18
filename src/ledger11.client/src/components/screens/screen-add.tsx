@@ -48,7 +48,7 @@ export default function AddScreen() {
       // reset controls
       setNotes("");
 
-      playSound("/sounds/success.mp3", 0.8); // don't wait for finish
+      playSound(); // don't wait for finish
       await showSuccess({ playSound: false });
     } catch (error) {
       console.error("Error adding transaction:", error);
