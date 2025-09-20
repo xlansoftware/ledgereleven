@@ -1,6 +1,6 @@
 import ResponsiveMenu from "@/components/responsive/ResponsiveMenu";
 import { Trash2 } from "lucide-react";
-import { ReactNode } from "react";
+import { type ReactNode } from "react";
 import { useConfirmDialog } from "@/components/dialog/ConfirmDialogContext";
 
 interface ConfirmMenuItemProps {

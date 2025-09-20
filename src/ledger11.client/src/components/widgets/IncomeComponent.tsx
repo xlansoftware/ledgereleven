@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { BarChart, Bar, XAxis, CartesianGrid, YAxis, BarProps, LabelList } from "recharts";
+import { BarChart, Bar, XAxis, CartesianGrid, YAxis, type BarProps, LabelList } from "recharts";
 import { formatCurrency } from "@/lib/utils";
-import { Category } from "@/lib/types";
+import { type Category } from "@/lib/types";
 import { getIcon } from "@/lib/getIcon";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../ui/chart";
 

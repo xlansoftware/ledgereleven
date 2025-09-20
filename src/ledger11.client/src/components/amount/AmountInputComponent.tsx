@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { Transaction } from "@/lib/types";
+import { type Transaction } from "@/lib/types";
 import { ExchangeRateDialog } from "./ExchangeRateDialog";
 import { parseMoneyInput } from "@/lib/parseMoneyInput";
 import { useSpaceStore } from "@/lib/store-space";

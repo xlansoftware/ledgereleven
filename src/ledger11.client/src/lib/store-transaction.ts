@@ -1,9 +1,9 @@
 'use client';
 
-import { StateCreator } from 'zustand';
-import { FilterRequest, Transaction } from './types';
+import { type StateCreator } from 'zustand';
+import { type FilterRequest, type Transaction } from './types';
 import { fetchWithAuth } from '@/api';
-import { BookState } from './store-book';
+import { type BookState } from './store-book';
 
 export interface TransactionSlice {
   transactions: Transaction[];

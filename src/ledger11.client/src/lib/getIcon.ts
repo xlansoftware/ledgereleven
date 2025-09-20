@@ -41,7 +41,7 @@ import {
   Package,
   Tag,
   MoreHorizontal,
-  LucideIcon,
+  type LucideIcon,
   DumbbellIcon,
   VolleyballIcon,
 } from "lucide-react";

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchWithAuth } from "@/api";
 import { useBookStore } from "@/lib/store-book";
-import { Category } from "@/lib/types";
+import { type Category } from "@/lib/types";
 import BarChartComponent from "@/components/insight/BarChartComponent";
 import HorizontalBarChartComponent from "./HorizontalBarChartComponent";
 // import { formatCurrency } from "@/lib/utils";

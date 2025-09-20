@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useBookStore } from "@/lib/store-book";
 import EditTransactionForm from "./EditTransactionForm";
-import { Transaction } from "@/lib/types";
+import { type Transaction } from "@/lib/types";
 import ConfirmMenuItem from "./ConfirmMenuItem";
 
 export default function TransactionRowMenu({

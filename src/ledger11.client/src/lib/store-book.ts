@@ -1,8 +1,8 @@
 import { create } from "zustand";
 import { fetchWithAuth } from "@/api";
-import { CategorySlice, createCategorySlice } from "./store-category";
-import { TransactionSlice, createTransactionSlice } from "./store-transaction";
-import { SettingsSlice, createSettingsSlice } from "./store-settings";
+import { type CategorySlice, createCategorySlice } from "./store-category";
+import { type TransactionSlice, createTransactionSlice } from "./store-transaction";
+import { type SettingsSlice, createSettingsSlice } from "./store-settings";
 
 // 2. Define the combined state
 export interface BookState

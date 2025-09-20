@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Category } from "@/lib/types";
+import { type Category } from "@/lib/types";
 import { useBookStore } from "@/lib/store-book";
 import { Input } from "../ui/input";
 import { ResponsiveIconPicker } from "../responsive/ResponsiveIconPicker";

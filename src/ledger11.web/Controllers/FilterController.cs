@@ -138,7 +138,7 @@ public class FilterController : ControllerBase
         if (start.HasValue)
             query = query.Skip(start.Value);
 
-        if (limit.HasValue)
+        if (limit.HasValue && limit.Value > -1)
             query = query.Take(limit.Value);
 
         var transactions = await query.ToListAsync();

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchWithAuth } from "@/api";
-import { WidgetParams } from "@/types/widget";
+import { type WidgetParams } from "@/types/widget";
 
 export default function useWidget(id: number) {
   const [widget, setWidget] = useState<WidgetParams | null>(null);

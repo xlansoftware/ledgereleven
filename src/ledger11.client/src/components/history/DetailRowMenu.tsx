@@ -1,4 +1,4 @@
-import { Transaction, TransactionDetails } from "@/lib/types";
+import { type Transaction, type TransactionDetails } from "@/lib/types";
 import { Button } from "../ui/button";
 import { Edit, MoreHorizontal } from "lucide-react";
 import { useState } from "react";

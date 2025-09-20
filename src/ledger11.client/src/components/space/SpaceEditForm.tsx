@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Space } from "@/lib/types";
+import { type Space } from "@/lib/types";
 import {
   Dialog,
   DialogContent,

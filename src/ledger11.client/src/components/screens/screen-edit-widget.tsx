@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { WidgetParams } from "@/types/widget";
+import { type WidgetParams } from "@/types/widget";
 import { WidgetComponent } from "@/components/widgets/WidgetComponent";
 
 export default function EditWidgetScreen() {

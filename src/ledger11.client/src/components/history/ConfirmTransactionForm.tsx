@@ -8,7 +8,7 @@ import {
   import { Button } from "../ui/button";
   import { ScrollArea } from "../ui/scroll-area";
 import TransactionRow from "./TransactionRow";
-import { Transaction } from "@/lib/types";
+import { type Transaction } from "@/lib/types";
   
   interface ConfirmTransactionFormProps {
     transaction: Transaction;
