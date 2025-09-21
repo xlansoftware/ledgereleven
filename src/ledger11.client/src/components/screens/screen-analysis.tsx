@@ -43,8 +43,8 @@ async function loadTransactions(
 // Helper function to format currency
 const formatCurrency = (value: number): string => {
   return new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
     useGrouping: true, // This adds thousand separators (commas)
   }).format(value);
 };
