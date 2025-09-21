@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
-import { Receipt, Transaction } from "@/lib/types";
+import { type Receipt, type Transaction } from "@/lib/types";
 import { toast } from "sonner";
 import { useState } from "react";
 import { parsePurchaseRecords, receiptToTransaction } from "@/api";

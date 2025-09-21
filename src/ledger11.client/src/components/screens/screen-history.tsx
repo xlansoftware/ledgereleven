@@ -5,7 +5,7 @@ import { Button } from "../ui/button";
 import DonutSkeleton from "../DonutSkeleton";
 import { SearchIcon, X } from "lucide-react";
 import Filter from "../history/Filter";
-import { FilterRequest } from "@/lib/types";
+import { type FilterRequest } from "@/lib/types";
 import { Badge } from "../ui/badge";
 import { count } from "@/lib/utils";
 import { fetchWithAuth } from "@/api";

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Space } from "@/lib/types";
+import { type Space } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import { Label } from "../ui/label";
 import {

@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Transaction, TransactionDetails } from "@/lib/types";
+import { type Transaction, type TransactionDetails } from "@/lib/types";
 import { useBookStore } from "@/lib/store-book";
 import { toast } from "sonner";
 

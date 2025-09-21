@@ -9,6 +9,7 @@ import SpacesScreen from "./screens/screen-spaces";
 import DonutSkeleton from "./DonutSkeleton";
 import ResponsiveScreens from "@/components/responsive/ResponsiveScreens";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import ScreenAnalysis from "./screens/screen-analysis";
 
 // Use React.lazy to dynamically import the screen components:
 const ScanScreen = lazy(() => import("@/components/screens/screen-scan"));
@@ -71,6 +72,7 @@ export default function AppLayout() {
             <Route path="/spaces" element={<SpacesScreen />} />
             <Route path="/edit-widget" element={<EditWidgetScreen />} />
             <Route path="/start" element={<ScreenLogin />} />
+            <Route path="/analysis" element={<ScreenAnalysis />} />
           </Routes>
         </Suspense>
         <Toaster

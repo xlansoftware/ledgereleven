@@ -1,4 +1,4 @@
-import { Space } from "./types";
+import { type Space } from "./types";
 
 export function getCurrencySetting(space: Space | undefined): string {
     return space?.settings?.Currency || "USD"; // Default to USD

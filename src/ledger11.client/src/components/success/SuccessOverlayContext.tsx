@@ -4,7 +4,7 @@ import {
   useContext,
   useRef,
   useState,
-  ReactNode,
+  type ReactNode,
 } from "react";
 import { AnimatePresence } from "framer-motion";
 import { DoneComponent } from "./DoneComponent";

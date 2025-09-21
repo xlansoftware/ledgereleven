@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchWithAuth } from "@/api";
 import { InsightComponent } from "../widgets/InsightComponent";
 import { useBookStore } from "@/lib/store-book";
-import { Category } from "@/lib/types";
+import { type Category } from "@/lib/types";
 import DonutSkeleton from "../DonutSkeleton";
 import ViewMoreLink from "./ViewMoreLink";
 // import { Button } from "../ui/button";

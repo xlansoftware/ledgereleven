@@ -1,4 +1,4 @@
-import { Category, Receipt, Transaction } from "./lib/types";
+import type { Category, Receipt, Transaction } from "./lib/types";
 
 export async function fetchWithAuth(url: string, options = {}, navigateToStartOn401: boolean = true) {
   const res = await fetch(url, {

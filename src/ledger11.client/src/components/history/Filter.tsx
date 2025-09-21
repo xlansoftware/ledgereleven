@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Category, FilterRequest } from "@/lib/types";
+import { type Category, type FilterRequest } from "@/lib/types";
 import { formatDateWithoutCurrentYear } from "@/lib/utils";
 
 interface FilterProps {
@@ -27,7 +27,7 @@ interface FilterProps {
   users: string[];
   filter: FilterRequest;
   onApply: (filter: FilterRequest) => void;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 export default function Filter({
@@ -337,9 +337,11 @@ export default function Filter({
       </div>
 
       <div className="flex gap-2">
-        <Button variant="outline" className="flex-1" onClick={onClose}>
-          Cancel
-        </Button>
+        {onClose && (
+          <Button variant="outline" className="flex-1" onClick={onClose}>
+            Cancel
+          </Button>
+        )}
         <Button className="flex-1" onClick={handleApply}>
           Apply Filters
         </Button>

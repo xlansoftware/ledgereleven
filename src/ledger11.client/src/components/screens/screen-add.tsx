@@ -2,7 +2,7 @@ import { useBookStore } from "@/lib/store-book";
 import { useEffect, useState } from "react";
 import { Input } from "../ui/input";
 import { CategoryPicker } from "../category/CategoryPicker";
-import { Category, Transaction } from "@/lib/types";
+import { type Category, type Transaction } from "@/lib/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { useSuccessOverlay } from "@/components/success";
@@ -57,7 +57,7 @@ export default function AddScreen() {
   };
 
   return (
-    <div className="flex flex-col gap-4 h-full justify-between">
+    <div className="container flex flex-col gap-4 h-full justify-between">
       <div
         className="flex flex-col items-center gap-4 p-[2px] w-full max-w-md mx-auto"
       >

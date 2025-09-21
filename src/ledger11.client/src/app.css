@@ -1,0 +1,17 @@
+html {
+  font-size: 18px; /* default is 16px */
+}
+
+:root {
+    --body-height: auto;
+}
+
+@media (min-width: 641px) {
+    html, body {
+        height: var(--body-height, 100%);
+    }
+}
+
+.multi-screen {
+    --body-height: 100%;
+}

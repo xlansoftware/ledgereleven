@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useBookStore } from "@/lib/store-book";
-import { Transaction } from "@/lib/types";
+import { type Transaction } from "@/lib/types";
 import { toast } from "sonner";
 import { ResponsiveSelect } from "../responsive/ResponsiveSelect";
 import { parseMoneyInput } from "@/lib/parseMoneyInput";

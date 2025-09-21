@@ -1,4 +1,4 @@
-import { Space } from "@/lib/types";
+import { type Space } from "@/lib/types";
 import { useState } from "react";
 import { cn, formatCurrency } from "@/lib/utils";
 import { Badge } from "../ui/badge";

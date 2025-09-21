@@ -1,6 +1,6 @@
 "use client";
 
-import React, { ReactNode } from "react";
+import React, { type ReactNode } from "react";
 import {
   Label,
   PieChart,
@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { formatCurrency } from "@/lib/utils";
-import { Category } from "@/lib/types";
+import { type Category } from "@/lib/types";
 import { getIcon } from "@/lib/getIcon";
 
 export interface InsightComponentProps {

@@ -16,7 +16,7 @@ import ShareSpaceDialog from "@/components/space/ShareSpaceDialog";
 import { cn } from "@/lib/utils";
 import ResponsiveMenu from "../responsive/ResponsiveMenu";
 import ConfirmMenuItem from "../history/ConfirmMenuItem";
-import { Space } from "@/lib/types";
+import { type Space } from "@/lib/types";
 import SpaceEditForm from "../space/SpaceEditForm";
 import SpaceRow from "../space/SpaceRow";
 import { fetchWithAuth } from "@/api";

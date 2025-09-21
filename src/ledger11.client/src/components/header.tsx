@@ -10,6 +10,16 @@ interface HeaderProps {
   currentPath: string;
 }
 
+const allPages = {
+  // "/scan": true, -- temporary disabled
+  "/history": true,
+  "/insights": true,
+  "/settings": true,
+  "/analysis": true,
+}
+
+const validPage = new Set(Object.keys(allPages));
+
 export default function Header({ currentPath }: HeaderProps) {
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -18,11 +28,7 @@ export default function Header({ currentPath }: HeaderProps) {
   const tint = getTintSetting(current);
 
   const getPathValue = () => {
-    if (currentPath === "/") return "/";
-    if (currentPath === "/scan") return "/scan";
-    if (currentPath === "/history") return "/history";
-    if (currentPath === "/insights") return "/insights";
-    if (currentPath === "/settings") return "/settings";
+    if (validPage.has(currentPath)) return currentPath;
     return "/";
   };
 
@@ -55,6 +61,7 @@ export default function Header({ currentPath }: HeaderProps) {
               {/* <TabsTrigger aria-label="Scan Screen" value="/scan">Scan</TabsTrigger> */}
               <TabsTrigger aria-label="History Screen" value="/history">History</TabsTrigger>
               <TabsTrigger aria-label="Insights Screen" value="/insights">Insights</TabsTrigger>
+              <TabsTrigger aria-label="Analysis Screen" value="/analysis">Analysis</TabsTrigger>
               <TabsTrigger aria-label="Settings Screen" value="/settings">Settings</TabsTrigger>
             </TabsList>
           </Tabs>

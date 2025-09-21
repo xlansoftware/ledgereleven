@@ -1,5 +1,5 @@
 import { useBookStore } from "@/lib/store-book";
-import { Category } from "@/lib/types";
+import { type Category } from "@/lib/types";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {

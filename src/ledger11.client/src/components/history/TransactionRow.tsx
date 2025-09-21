@@ -1,4 +1,4 @@
-import { Transaction, TransactionDetails } from "@/lib/types";
+import { type Transaction, type TransactionDetails } from "@/lib/types";
 import { Card, CardContent } from "../ui/card";
 import { useState } from "react";
 import { count, formatCurrency, formatDate, invertColor } from "@/lib/utils";
@@ -98,7 +98,7 @@ export default function TransactionRow({
     <Card 
       data-testid={`Item: ${title}, ${transactionValue(transaction)}`}
       aria-label={`Item: ${title}, ${transactionValue(transaction)}`}
-      className="overflow-hidden border-t border-b border-l-0 border-r-0 rounded-none">
+      className="overflow-hidden border-t border-b border-l-0 border-r-0 rounded-none p-0">
       <CardContent className="p-0">
         <div className="flex flex-row">
           <div

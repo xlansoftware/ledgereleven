@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { Space } from "./types";
+import { type Space } from "./types";
 import { fetchWithAuth } from "@/api";
 
 interface SpaceStoreState {

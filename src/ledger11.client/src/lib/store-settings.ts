@@ -1,8 +1,8 @@
 'use client';
 
-import { StateCreator } from 'zustand';
+import { type StateCreator } from 'zustand';
 import { fetchWithAuth } from '@/api';
-import { BookState } from './store-book';
+import { type BookState } from './store-book';
 
 export interface SettingsSlice {
   settings: Record<string, string | undefined>;

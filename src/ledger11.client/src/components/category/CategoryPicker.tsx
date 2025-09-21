@@ -1,4 +1,4 @@
-import { Category } from "@/lib/types";
+import { type Category } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { getIcon } from "@/lib/getIcon";
 import { cn, invertColor } from "@/lib/utils";

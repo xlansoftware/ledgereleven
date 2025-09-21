@@ -15,7 +15,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { WidgetParams } from "@/types/widget";
+import { type WidgetParams } from "@/types/widget";
 export const WidgetComponent: React.FC<{ params: WidgetParams }> = ({
   params,
 }) => {

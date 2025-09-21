@@ -1,5 +1,5 @@
-import { Category } from "@/lib/types";
-import { HistoryRecord } from "@/components/insight/HistoryComponent";
+import { type Category } from "@/lib/types";
+import { type HistoryRecord } from "@/components/insight/HistoryComponent";
 import {
   ChartContainer,
 } from "@/components/ui/chart";

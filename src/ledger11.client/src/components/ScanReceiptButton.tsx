@@ -1,8 +1,8 @@
 // src/components/ScanReceiptButton.tsx
-import React, { useState, useRef, ChangeEvent } from "react";
+import React, { useState, useRef, type ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Camera, Loader2 } from "lucide-react"; // Import Loader2 for loading state
-import { Receipt } from "@/lib/types";
+import { type Receipt } from "@/lib/types";
 import { scanReceipt } from "@/api";
 import { scaleImageFile } from "@/lib/imageUtils";
 

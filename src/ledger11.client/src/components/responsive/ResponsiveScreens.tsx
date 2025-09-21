@@ -1,5 +1,5 @@
 import useMultiScreen from "@/hooks/useMultiScreen";
-import { ReactElement } from "react";
+import { type ReactElement } from "react";
 
 interface ResponsiveScreensProps {
   screens: ReactElement[];

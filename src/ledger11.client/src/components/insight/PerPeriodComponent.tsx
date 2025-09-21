@@ -2,7 +2,7 @@ import { InsightComponent } from "../widgets/InsightComponent";
 import { useBookStore } from "@/lib/store-book";
 import { useEffect, useState, useCallback } from "react";
 import { fetchWithAuth } from "@/api";
-import { Category } from "@/lib/types";
+import { type Category } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 
 type PerPeriodData = {
