@@ -3,17 +3,20 @@ import Filter from "../history/Filter";
 import { type FilterRequest, type Transaction } from "@/lib/types";
 import { useBookStore } from "@/lib/store-book";
 import { fetchWithAuth } from "@/api";
-import { SectionCards } from "../analysis/SectionCards";
-
-// interface Stat {
-//   avg: number;
-//   total: number;
-// }
+import { DataCard } from "../analysis/DataCard";
+import {
+  aggregateAllCategories,
+  analyzeCategoryData,
+  groupTransactionsByDateAndCategory,
+  type TimeframeAnalysis,
+} from "../analysis/dataGroup";
+import CategoryTable from "../analysis/CategoryTable";
 
 async function loadTransactions(
   filter?: FilterRequest
 ): Promise<{ transactions: Transaction[]; totalCount: number }> {
   const params = new URLSearchParams();
+  params.append("limit", "-1");
 
   if (filter) {
     Object.entries(filter).forEach(([key, value]) => {
@@ -37,15 +40,31 @@ async function loadTransactions(
   return result;
 }
 
+// Helper function to format currency
+const formatCurrency = (value: number): string => {
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    useGrouping: true, // This adds thousand separators (commas)
+  }).format(value);
+};
+
 export default function ScreenAnalysis() {
   const { categories } = useBookStore();
-
   const [filter, setFilter] = useState<FilterRequest | undefined>();
+  const [total, setTotal] = useState<{
+    total: number;
+    dailyAverage: number;
+    weeklyAverage: number;
+    monthlyAverage: number;
+  }>();
 
   const [filterArgument, setFilterArgument] = useState<{
     categories: number[];
     users: string[];
   }>({ categories: [], users: [] });
+
+  const [timeframe, setTimeframe] = useState<TimeframeAnalysis>();
 
   // const [perDay, setPerDay] = useState<Stat>();
 
@@ -60,33 +79,67 @@ export default function ScreenAnalysis() {
     }
   };
 
+  const applyFilter = async () => {
+    const result = await loadTransactions(filter);
+    const grouped = groupTransactionsByDateAndCategory(
+      result.transactions,
+      categories
+    );
+    // setData(grouped);
+    const tf = analyzeCategoryData(grouped);
+    setTimeframe(tf);
+
+    const total = {
+      total: result.transactions.reduce((pv, c) => pv + (c.value || 0), 0),
+      dailyAverage: aggregateAllCategories(tf.daily).average,
+      weeklyAverage: aggregateAllCategories(tf.weekly).average,
+      monthlyAverage: aggregateAllCategories(tf.monthly).average,
+    };
+    setTotal(total);
+  };
+
   useEffect(() => {
     initFilter();
   }, []);
 
   return (
-    <div className="container flex items-center justify-center max-w-80">
-      <Filter
-        filter={filter || {}}
-        categories={categories.filter(
-          (c) => filterArgument.categories.indexOf(c.id) !== -1
-        )}
-        users={filterArgument.users}
-        onApply={async (filter) => {
-          setFilter(filter);
-          await loadTransactions(filter);
-        }}
-      />
+    <div className="flex items-center justify-start items-start h-full">
+      <div className="max-w-80">
+        <Filter
+          filter={filter || {}}
+          categories={categories.filter(
+            (c) => filterArgument.categories.indexOf(c.id) !== -1
+          )}
+          users={filterArgument.users}
+          onApply={async (filter) => {
+            setFilter(filter);
+            applyFilter();
+          }}
+        />
+      </div>
 
-      <div className="flex flex-1 flex-col">
-        <div className="@container/main flex flex-1 flex-col gap-2">
-          <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-            <SectionCards />
-            <div className="px-4 lg:px-6">
-              {/* <ChartAreaInteractive /> */}
-            </div>
-            {/* <DataTable data={data} /> */}
-          </div>
+      <div className="flex flex-1 flex-col gap-4">
+        <div className="grid auto-rows-min gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
+          {total && (
+            <>
+              <DataCard title="Total">{formatCurrency(total.total)}</DataCard>
+              <DataCard title="Daily Avg">
+                {formatCurrency(total.dailyAverage)}
+              </DataCard>
+              <DataCard title="Weekly Avg">
+                {formatCurrency(total.weeklyAverage)}
+              </DataCard>
+              <DataCard title="Monthly Avg">
+                {formatCurrency(total.monthlyAverage)}
+              </DataCard>
+            </>
+          )}
+        </div>
+        <div className="bg-muted/50 min-h-[200vh] flex-1 rounded-xl md:min-h-min">
+          {!timeframe && "No data"}
+          {timeframe && (
+            <CategoryTable analysis={timeframe} categories={categories} />
+          )}
         </div>
       </div>
     </div>
