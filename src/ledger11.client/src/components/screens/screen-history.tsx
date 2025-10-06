@@ -1,5 +1,5 @@
 import { useBookStore } from "@/lib/store-book";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TransactionRow from "../history/TransactionRow";
 import { Button } from "../ui/button";
 import DonutSkeleton from "../DonutSkeleton";
@@ -60,6 +60,14 @@ export default function HistoryScreen() {
   const [filter, setFilter] = useState<FilterRequest | undefined>();
   const today = new Date();
 
+  useEffect(() => {
+    // auto refresh on visit
+    loadTransactions(true).then(() => {
+      console.log(`refresh complete`);
+    });
+  }, [loadTransactions])
+
+
   const [filterArgument, setFilterArgument] = useState<{
     categories: number[];
     users: string[];
@@ -108,6 +116,7 @@ export default function HistoryScreen() {
       </div>
     );
   }
+
   return (
     <>
       {showFilter && (
