@@ -42,4 +42,12 @@ public class TestEndpoints : IClassFixture<CustomWebApplicationFactory>
         Assert.Equal(HttpStatusCode.Found, response1.StatusCode); // 302 Found
     }
 
+    [Fact]
+    public async Task GET_Api_Report()
+    {
+        // This require X-Api-Key which is not provided here
+        var response1 = await _client.GetAsync("/api/report");
+        Assert.Equal(HttpStatusCode.Unauthorized, response1.StatusCode); // 401 Unauthorized
+    }
+
 }
