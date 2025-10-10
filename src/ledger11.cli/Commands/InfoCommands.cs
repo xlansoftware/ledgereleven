@@ -10,7 +10,7 @@ namespace ledger11.cli;
 public static class InfoCommands
 {
 
-    public static RootCommand AddInfoComand(this RootCommand rootCommand)
+    public static RootCommand AddInfoCommand(this RootCommand rootCommand)
     {
         var command = new Command("info", "Show info");
 

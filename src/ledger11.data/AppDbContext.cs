@@ -32,6 +32,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
     {
     }
 
+    public DbSet<ApiKey> ApiKeys { get; set; }
+
     /// <summary>
     /// Gets or sets the <see cref="DbSet{TEntity}"/> for user "spaces" (ledgers/books).
     /// Each space represents a collection of transactions stored in its own dedicated database.

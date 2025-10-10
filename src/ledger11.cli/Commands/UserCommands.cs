@@ -11,7 +11,7 @@ namespace ledger11.cli;
 public static class UserCommands
 {
 
-    public static RootCommand AddListUsersComand(this RootCommand rootCommand)
+    public static RootCommand AddListUsersCommand(this RootCommand rootCommand)
     {
         var listUsersCommand = new Command("list-users", "Show the users");
 
@@ -51,7 +51,7 @@ public static class UserCommands
         return rootCommand;
     }
 
-    public static RootCommand AddCreateUserComand(this RootCommand rootCommand)
+    public static RootCommand AddCreateUserCommand(this RootCommand rootCommand)
     {
         var createUserCommand = new Command("create-user", "Create a new identity user");
 
