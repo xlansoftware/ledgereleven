@@ -11,7 +11,7 @@ namespace ledger11.cli;
 public static class TestUpgradeCommands
 {
 
-    public static RootCommand AddTestUpgradeComand(this RootCommand rootCommand)
+    public static RootCommand AddTestUpgradeCommand(this RootCommand rootCommand)
     {
         var command = new Command("test-upgrade", "Test the migration on the DB files.");
 

@@ -12,7 +12,7 @@ namespace ledger11.cli;
 public static class GenerateCommands
 {
 
-    public static RootCommand AddGenerateComand(this RootCommand rootCommand)
+    public static RootCommand AddGenerateCommand(this RootCommand rootCommand)
     {
         var command = new Command("generate-data", "Generate random data");
 

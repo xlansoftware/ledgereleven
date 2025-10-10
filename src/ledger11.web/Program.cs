@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.FeatureManagement;
 using ledger11.data;
 using ledger11.model.Data;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
@@ -58,6 +59,8 @@ public class Program
         var logger = loggerFactory.CreateLogger("Authentication");
 
         builder.Services.AddAuthentication()
+            .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(
+                ApiKeyAuthenticationHandler.SchemeName, null)
             .AddMultiProviderAuthentication(builder.Configuration, logger);
 
         builder.Services.Configure<SecurityStampValidatorOptions>(options =>
