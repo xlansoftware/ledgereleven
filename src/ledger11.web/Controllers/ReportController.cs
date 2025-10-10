@@ -24,7 +24,7 @@ public class ReportController : ControllerBase
 
     // GET: api/report?start=0&limit=100
     [HttpGet]
-    public async Task<IActionResult> Report(
+    public async Task<IActionResult> MonthlyReport(
         [FromQuery] ReportRequest filter
     )
     {
@@ -33,81 +33,23 @@ public class ReportController : ControllerBase
         using var db = await _currentLedger.GetLedgerDbContextAsync();
 
         var query = db.Transactions
-            .Include(t => t.TransactionDetails)
+            .Include(t => t.Category)
             .OrderByDescending(t => t.Date)
             .AsQueryable();
 
         // Apply filters
-        if (!string.IsNullOrWhiteSpace(filter.Period))
-        {
-            var period = filter.Period.ToLower();
-            if (period == "today")
-            {
-                query = query.Where(t => t.Date.HasValue && t.Date.Value.Date == DateTime.UtcNow.Date);
-            }
-            else if (period == "thisweek")
-            {
-                var startOfWeek = DateTime.UtcNow.StartOfWeek();
-                query = query.Where(t => t.Date >= startOfWeek);
-            }
-            else if (period == "thismonth")
-            {
-                var startOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
-                query = query.Where(t => t.Date >= startOfMonth);
-            }
-            else if (period == "thisyear")
-            {
-                var startOfYear = new DateTime(DateTime.UtcNow.Year, 1, 1);
-                query = query.Where(t => t.Date >= startOfYear);
-            }
-        }
-
-        if (filter.StartDate.HasValue)
-        {
-            query = query.Where(t => t.Date >= filter.StartDate.Value);
-        }
-
-        if (filter.EndDate.HasValue)
-        {
-            query = query.Where(t => t.Date <= filter.EndDate.Value);
-        }
-
-        if (filter.Category != null && filter.Category.Any())
-        {
-            query = query.Where(t => t.CategoryId.HasValue && filter.Category.Contains(t.CategoryId.Value));
-        }
-
-        if (!string.IsNullOrWhiteSpace(filter.Note))
-        {
-            var loweredNote = filter.Note.ToLower();
-            query = query.Where(t => t.Notes != null && EF.Functions.Like(t.Notes.ToLower(), $"%{loweredNote}%"));
-        }
-
-        if (filter.User != null && filter.User.Any())
-        {
-            var loweredUsers = filter.User.Select(u => u.ToLower()).ToList();
-            query = query.Where(t => t.User != null && loweredUsers.Contains(t.User.ToLower()));
-        }
-
-        if (filter.MinValue.HasValue)
-        {
-            query = query.Where(t => t.Value * (t.ExchangeRate ?? 1.0m) >= filter.MinValue.Value);
-        }
-
-        if (filter.MaxValue.HasValue)
-        {
-            query = query.Where(t => t.Value * (t.ExchangeRate ?? 1.0m) <= filter.MaxValue.Value);
-        }
-
-        var totalCount = await query.CountAsync();
+        var monthDate = filter.Month.HasValue
+            ? filter.Month.Value.Date // Strip time components
+            : DateTime.Now.Date;
+        var startDate = new DateTime(monthDate.Year, monthDate.Month, 1);
+        var endDate = startDate.AddMonths(1);
+        query = query.Where(t => t.Date >= startDate && t.Date < endDate);
 
         var transactions = await query.ToListAsync();
 
-        return Ok(new FilterResponse
-        {
-            Transactions = transactions,
-            TotalCount = totalCount
-        });
+        var result = GenerateMonthlyReport(transactions);
+
+        return Ok(result);
     }
 
 
@@ -119,19 +61,50 @@ public class ReportController : ControllerBase
 
     public class ReportRequest
     {
-        public string? Period { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
-        public int[]? Category { get; set; }
-        public string? Note { get; set; }
-        public string[]? User { get; set; }
-        public decimal? MinValue { get; set; }
-        public decimal? MaxValue { get; set; }
-
-        override public string ToString()
-        {
-            return $"Period: {Period}, StartDate: {StartDate}, EndDate: {EndDate}, Category: {string.Join(",", Category ?? Array.Empty<int>())}, Note: {Note}, User: {string.Join(",", User ?? Array.Empty<string>())}, MinValue: {MinValue}, MaxValue: {MaxValue}";
-        }
+        public DateTime? Month { get; set; }
     }
 
+    /// <summary>
+    /// Represents a monthly financial report summary.
+    /// </summary>
+    public class MonthlyReportResult
+    {
+        /// <summary>
+        /// Gets or sets the total expenses for the month (negative values only).
+        /// </summary>
+        public decimal TotalExpense { get; set; }
+
+        /// <summary>
+        /// Gets or sets the total expenses grouped by category name.
+        /// </summary>
+        public Dictionary<string, decimal> ExpenseByCategory { get; set; } = new Dictionary<string, decimal>();
+    }
+
+    /// <summary>
+    /// Generates a monthly financial report from a collection of transactions.
+    /// Expenses are considered as transactions with negative values.
+    /// </summary>
+    /// <param name="transactions">The collection of transactions to analyze.</param>
+    /// <returns>A MonthlyReportResult containing expense totals and breakdown by category.</returns>
+    public static MonthlyReportResult GenerateMonthlyReport(IEnumerable<Transaction> transactions)
+    {
+        var report = new MonthlyReportResult();
+
+        // Filter for expense transactions (negative values) and calculate totals
+        var expenseTransactions = transactions
+            .ToList();
+
+        // Calculate total expense (sum of negative values, stored as positive number)
+        report.TotalExpense = Math.Abs(expenseTransactions.Sum(t => t.Value));
+
+        // Group expenses by category and calculate totals
+        report.ExpenseByCategory = expenseTransactions
+            .GroupBy(t => t.Category?.Name ?? "Uncategorized")
+            .ToDictionary(
+                g => g.Key,
+                g => Math.Abs(g.Sum(t => t.Value))
+            );
+
+        return report;
+    }
 }
