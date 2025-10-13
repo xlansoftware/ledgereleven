@@ -8,27 +8,27 @@ namespace ledger11.web.Controllers;
 
 [Authorize(AuthenticationSchemes = ApiKeyAuthenticationHandler.SchemeName)]
 [ApiController]
-[Route("api/[controller]")]
-public class ReportController : ControllerBase
+[Route("api/v1")]
+public class ExternalApiController : ControllerBase
 {
-    private readonly ILogger<ReportController> _logger;
+    private readonly ILogger<ExternalApiController> _logger;
     private readonly ICurrentLedgerService _currentLedger;
 
-    public ReportController(
-        ILogger<ReportController> logger,
+    public ExternalApiController(
+        ILogger<ExternalApiController> logger,
         ICurrentLedgerService currentLedger)
     {
         _logger = logger;
         _currentLedger = currentLedger;
     }
 
-    // GET: api/report?start=0&limit=100
-    [HttpGet]
+    // GET: api/v1/MonthlyReport?month=2000-01-01
+    [HttpGet("monthlyreport")]
     public async Task<IActionResult> MonthlyReport(
         [FromQuery] ReportRequest filter
     )
     {
-        _logger.LogTrace("Report request received with parameters: {@Filter}", filter);
+        _logger.LogTrace("MonthlyReport request received with parameters: {@Filter}", filter);
 
         using var db = await _currentLedger.GetLedgerDbContextAsync();
 

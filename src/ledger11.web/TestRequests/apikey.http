@@ -1,9 +1,10 @@
 @host = localhost:5139
+@apikey = 5hjW2TrjpgAEU9j78qt7ri78H88vuLrCZQrbMGCIVoo
 
 ###
-GET http://{{host}}/api/report
+GET http://{{host}}/api/v1/monthlyreport
 X-Requested-With: XMLHttpRequest
-X-Api-Key: kTTYjPRSb66VwVvHPh7TXmq14Y70-n0pumrA05J-ezo
+X-Api-Key: {{apikey}}
 
 ###
 POST http://{{host}}/api/transaction
