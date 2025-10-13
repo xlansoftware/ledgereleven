@@ -83,6 +83,7 @@ public static class TestExtesions
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IUserSpaceService, UserSpaceService>();
         services.AddScoped<ICurrentLedgerService, CurrentLedgerService>();
+        services.AddScoped<IBackupService, BackupService>();
 
         var mockExchangeRateService = new Mock<IExchangeRateService>();
         mockExchangeRateService

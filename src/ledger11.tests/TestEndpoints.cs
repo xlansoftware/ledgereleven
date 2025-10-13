@@ -43,10 +43,10 @@ public class TestEndpoints : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
-    public async Task GET_Api_Report()
+    public async Task GET_Api_V1_MonthlyReport()
     {
         // This require X-Api-Key which is not provided here
-        var response1 = await _client.GetAsync("/api/report");
+        var response1 = await _client.GetAsync("/api/v1/monthlyreport");
         Assert.Equal(HttpStatusCode.Unauthorized, response1.StatusCode); // 401 Unauthorized
     }
 
