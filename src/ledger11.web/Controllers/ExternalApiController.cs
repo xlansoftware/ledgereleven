@@ -8,27 +8,30 @@ namespace ledger11.web.Controllers;
 
 [Authorize(AuthenticationSchemes = ApiKeyAuthenticationHandler.SchemeName)]
 [ApiController]
-[Route("api/[controller]")]
-public class ReportController : ControllerBase
+[Route("api/v1")]
+public class ExternalApiController : ControllerBase
 {
-    private readonly ILogger<ReportController> _logger;
+    private readonly ILogger<ExternalApiController> _logger;
     private readonly ICurrentLedgerService _currentLedger;
+    private readonly IBackupService _backupService;
 
-    public ReportController(
-        ILogger<ReportController> logger,
-        ICurrentLedgerService currentLedger)
+    public ExternalApiController(
+        ILogger<ExternalApiController> logger,
+        ICurrentLedgerService currentLedger,
+        IBackupService backupService)
     {
         _logger = logger;
         _currentLedger = currentLedger;
+        _backupService = backupService;
     }
 
-    // GET: api/report?start=0&limit=100
-    [HttpGet]
+    // GET: api/v1/MonthlyReport?month=2000-01-01
+    [HttpGet("monthlyreport")]
     public async Task<IActionResult> MonthlyReport(
         [FromQuery] ReportRequest filter
     )
     {
-        _logger.LogTrace("Report request received with parameters: {@Filter}", filter);
+        _logger.LogTrace("MonthlyReport request received with parameters: {@Filter}", filter);
 
         using var db = await _currentLedger.GetLedgerDbContextAsync();
 
@@ -52,11 +55,55 @@ public class ReportController : ControllerBase
         return Ok(result);
     }
 
+    // GET: api/v1/MonthlyReport?month=2000-01-01
+    [HttpGet("backup")]
+    public async Task<IActionResult> Backup(
+        [FromQuery] BackupRequest options
+    )
+    {
+        _logger.LogTrace("Backup request received with parameters: {@options}", options);
+
+        // Get current UTC time in canonical format
+        var timestamp = DateTime.UtcNow.ToString("yyyyMMddTHHmmssZ");
+
+        // Set content type and file name based on format
+        string contentType;
+        string fileName;
+
+        switch (options.Format)
+        {
+            case ExportFormat.Excel:
+                contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                fileName = $"Backup-{timestamp}.xlsx";
+                break;
+            case ExportFormat.Csv:
+                contentType = "text/csv";
+                fileName = $"Backup-{timestamp}.csv";
+                break;
+            default:
+                return BadRequest("Unsupported export format.");
+        }
+
+        var context = await _currentLedger.GetLedgerDbContextAsync();
+
+        return new FileCallbackResult(contentType, async (stream, _) =>
+        {
+            await _backupService.ExportAsync(options.Format, context, stream);
+        })
+        {
+            FileDownloadName = fileName
+        };
+    }
 
     public class FilterResponse
     {
         public List<Transaction> Transactions { get; set; } = new();
         public int TotalCount { get; set; }
+    }
+
+    public class BackupRequest
+    {
+        public ExportFormat Format { get; set; } = ExportFormat.Excel;
     }
 
     public class ReportRequest

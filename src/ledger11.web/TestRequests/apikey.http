@@ -1,42 +1,12 @@
 @host = localhost:5139
+@apikey = 5hjW2TrjpgAEU9j78qt7ri78H88vuLrCZQrbMGCIVoo
 
 ###
-GET http://{{host}}/api/report
+GET http://{{host}}/api/v1/monthlyreport
 X-Requested-With: XMLHttpRequest
-X-Api-Key: kTTYjPRSb66VwVvHPh7TXmq14Y70-n0pumrA05J-ezo
+X-Api-Key: {{apikey}}
 
 ###
-POST http://{{host}}/api/transaction
-Content-Type: application/json
-
-{
-  "value": 100,
-  "date": "2025-05-02T10:00:00Z",
-  "category": "Food",
-  "transactionDetails": [
-    {
-      "value": 60,
-      "description": "Groceries",
-      "quantity": 1,
-      "category": "Groceries"
-    },
-    {
-      "value": 40,
-      "description": "Snacks",
-      "quantity": 1,
-      "category": "Snacks"
-    }
-  ]
-}
-
-###
-PUT http://{{host}}/api/transaction/1
-Content-Type: application/json
-
-{
-  "id": 1,
-  "value": 300,
-  "date": "2025-05-02T14:00:00Z",
-  "category": "Utilities",
-  "transactionDetails": []
-}
+GET http://{{host}}/api/v1/backup
+X-Requested-With: XMLHttpRequest
+X-Api-Key: {{apikey}}

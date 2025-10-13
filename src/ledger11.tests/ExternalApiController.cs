@@ -20,7 +20,7 @@ public class TestReportController
 
         var categoriesController = ActivatorUtilities.CreateInstance<CategoryController>(serviceProvider);
         var transactionController = ActivatorUtilities.CreateInstance<TransactionController>(serviceProvider);
-        var reportController = ActivatorUtilities.CreateInstance<ReportController>(serviceProvider);
+        var reportController = ActivatorUtilities.CreateInstance<ExternalApiController>(serviceProvider);
 
         // Get available categories
         var allCategoriesResult = await categoriesController.GetAll();
@@ -70,11 +70,11 @@ public class TestReportController
         await transactionController.Create(tx4);
 
         // Act 2: Apply filters and get monthly report
-        var result1 = await reportController.MonthlyReport(new ReportController.ReportRequest
+        var result1 = await reportController.MonthlyReport(new ExternalApiController.ReportRequest
         {
             Month = startOfMonth
         });
-        var response1 = Assert.IsType<ReportController.MonthlyReportResult>(Assert.IsType<OkObjectResult>(result1).Value);
+        var response1 = Assert.IsType<ExternalApiController.MonthlyReportResult>(Assert.IsType<OkObjectResult>(result1).Value);
 
         // Assert
         // Only tx2, tx3, and tx4 should be included (tx1 is from previous month)
