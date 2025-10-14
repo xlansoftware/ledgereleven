@@ -7,6 +7,11 @@ X-Requested-With: XMLHttpRequest
 X-Api-Key: {{apikey}}
 
 ###
+GET http://{{host}}/api/v1/yearlyreport
+X-Requested-With: XMLHttpRequest
+X-Api-Key: {{apikey}}
+
+###
 GET http://{{host}}/api/v1/backup
 X-Requested-With: XMLHttpRequest
 X-Api-Key: {{apikey}}

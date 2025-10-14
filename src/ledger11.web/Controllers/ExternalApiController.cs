@@ -50,7 +50,59 @@ public class ExternalApiController : ControllerBase
 
         var transactions = await query.ToListAsync();
 
-        var result = GenerateMonthlyReport(transactions);
+        var result = GenerateReport(monthDate.Month, transactions);
+
+        return Ok(result);
+    }
+
+    // GET: api/v1/YearlyReport?year=2000
+    [HttpGet("yearlyreport")]
+    public async Task<IActionResult> YearlyReport(
+        [FromQuery] YearlyReportRequest filter
+    )
+    {
+        _logger.LogTrace("YearlyReport request received with parameters: {@Filter}", filter);
+
+        using var db = await _currentLedger.GetLedgerDbContextAsync();
+
+        var query = db.Transactions
+            .Include(t => t.Category)
+            .OrderByDescending(t => t.Date)
+            .AsQueryable();
+
+        // Apply filters
+        var yearDate = filter.Year.HasValue
+            ? new DateTime(filter.Year.Value, 1, 1)
+            : DateTime.Now.Date;
+        var startDate = new DateTime(yearDate.Year, 1, 1);
+        var endDate = startDate.AddYears(1);
+        query = query.Where(t => t.Date >= startDate && t.Date < endDate);
+
+        var transactions = await query.ToListAsync();
+
+        var transactionsPerMonth = transactions
+            .GroupBy(t => t.Date!.Value.Month)
+            .Select(g => GenerateReport(g.Key, g.ToList()))
+            .ToArray();
+
+        var result = new YearlyReportResult();
+        result.Year = yearDate.Year;
+
+        result.TotalExpense = transactionsPerMonth.Sum(m => m.ExpenseByCategory.Sum(r => r.Value));
+        result.AverageExpenseByMonth = result.TotalExpense / transactionsPerMonth.Length;
+
+        result.ExpenseByCategory = transactions
+            .GroupBy(t => t.Category?.Name ?? "Uncategorized")
+            .ToDictionary(
+                g => g.Key,
+                g => Math.Max(decimal.Zero, g.Sum(t => t.Value))
+            );
+
+        result.AverageByCategory = result.ExpenseByCategory
+            .ToDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value / transactionsPerMonth.Length // could have less than 12 months
+            );
 
         return Ok(result);
     }
@@ -111,20 +163,57 @@ public class ExternalApiController : ControllerBase
         public DateTime? Month { get; set; }
     }
 
+    public class YearlyReportRequest
+    {
+        public int? Year { get; set; }
+    }
+
+    public class YearlyReportResult
+    {
+        public int Year { get; set; }
+
+        public decimal TotalExpense { get; set; }
+        public decimal AverageExpenseByMonth { get; set; }
+
+        public decimal TotalIncome { get; set; }
+
+        public Dictionary<string, decimal> ExpenseByCategory { get; set; } = new Dictionary<string, decimal>();
+        public Dictionary<string, decimal> AverageByCategory { get; set; } = new Dictionary<string, decimal>();
+
+    }
+
     /// <summary>
     /// Represents a monthly financial report summary.
     /// </summary>
     public class MonthlyReportResult
     {
+        public MonthlyReportResult(int month)
+        {
+            var d = new DateTime(2000, month, 1);
+            this.Month = month;
+            this.MonthName = d.ToString("MMMM");
+            this.MonthShort = d.ToString("MMM");
+        }
+
+        public int Month { get; set; }
+        public string MonthName { get; set; } = String.Empty;
+        public string MonthShort { get; set; } = String.Empty;
+
         /// <summary>
-        /// Gets or sets the total expenses for the month (negative values only).
+        /// Gets or sets the total expenses for the month.
         /// </summary>
         public decimal TotalExpense { get; set; }
+
+        /// <summary>
+        /// Gets or sets the total income for the month.
+        /// </summary>
+        public decimal TotalIncome { get; set; }
 
         /// <summary>
         /// Gets or sets the total expenses grouped by category name.
         /// </summary>
         public Dictionary<string, decimal> ExpenseByCategory { get; set; } = new Dictionary<string, decimal>();
+
     }
 
     /// <summary>
@@ -133,16 +222,17 @@ public class ExternalApiController : ControllerBase
     /// </summary>
     /// <param name="transactions">The collection of transactions to analyze.</param>
     /// <returns>A MonthlyReportResult containing expense totals and breakdown by category.</returns>
-    public static MonthlyReportResult GenerateMonthlyReport(IEnumerable<Transaction> transactions)
+    private static MonthlyReportResult GenerateReport(int month, IEnumerable<Transaction> transactions)
     {
-        var report = new MonthlyReportResult();
+        var report = new MonthlyReportResult(month);
 
         // Filter for expense transactions (negative values) and calculate totals
         var expenseTransactions = transactions
             .ToList();
 
-        // Calculate total expense (sum of negative values, stored as positive number)
-        report.TotalExpense = Math.Abs(expenseTransactions.Sum(t => t.Value));
+        // Calculate total expense and income
+        report.TotalExpense = Math.Abs(expenseTransactions.Sum(t => Math.Max(decimal.Zero, t.Value)));
+        report.TotalIncome = Math.Abs(expenseTransactions.Sum(t => Math.Min(decimal.Zero, t.Value)));
 
         // Group expenses by category and calculate totals
         report.ExpenseByCategory = expenseTransactions
