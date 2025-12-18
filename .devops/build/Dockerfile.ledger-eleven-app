@@ -59,4 +59,6 @@ RUN echo "Version: $VERSION" > /app/version.txt && \
     echo "Commit: $COMMIT_HASH" >> /app/version.txt && \
     echo "Built: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> /app/version.txt
 
+USER app
+
 ENTRYPOINT ["dotnet", "ledger11.web.dll"]
