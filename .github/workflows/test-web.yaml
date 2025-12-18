@@ -24,6 +24,10 @@ jobs:
         working-directory: ./.devops/test/web
         run: docker compose run --build --rm test
 
+      - name: Inspect docker compose logs
+        working-directory: ./.devops/test/web
+        run: docker compose logs
+
       - name: Fix Permissions
         run: sudo chown -R runner:docker ./.devops/test/web/test-results/
 
