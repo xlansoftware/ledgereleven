@@ -25,6 +25,7 @@ jobs:
         run: docker compose run --build --rm test
 
       - name: Inspect docker compose logs
+        if: always()
         working-directory: ./.devops/test/web
         run: docker compose logs
 
