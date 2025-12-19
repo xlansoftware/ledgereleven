@@ -1,5 +1,12 @@
 services:
     
+  init-data:
+    image: mcr.microsoft.com/dotnet/aspnet:9.0
+    user: root
+    volumes:
+      - ledgertestdata:/data
+    command: chown -R 1654:1654 /data
+
   ledgerapp:
     build:
       context: ../../../src
@@ -12,8 +19,11 @@ services:
       - Logging__LogLevel__Microsoft.AspNetCore.Routing.EndpointMiddleware=Information
       - AppConfig__DataPath=/data
     volumes:
-      - ./data:/data
-
+      - ledgertestdata:/data
+    user: "1654:1654"
+    depends_on: 
+      - init-data
+      
   test:
     build:
       context: ../../../src
@@ -26,3 +36,6 @@ services:
     volumes:
       - ./test-results:/src/test-results
       - ./certs:/usr/local/share/ca-certificates:ro
+
+volumes:
+  ledgertestdata:
