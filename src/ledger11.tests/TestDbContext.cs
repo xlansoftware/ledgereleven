@@ -11,6 +11,7 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using ledger11.service;
 using System.Security.Claims;
+using Moq;
 
 namespace ledger11.tests;
 
@@ -79,28 +80,81 @@ public class TestDbContext
     public async Task Test_CurrentLedgerService_UpdateDefaultCurrencyAsync()
     {
         // Arrange
+        var mockExchangeRateService = new Mock<IExchangeRateService>();
+        decimal oldToNewExchangeRate = 0.92m; // USD to EUR
+        decimal jpyToEurExchangeRate = 0.007m; // JPY to EUR
+
+        // Setup mock exchange rate service to return specific rates
+        mockExchangeRateService.Setup(s => s.GetExchangeRateAsync("JPY", "EUR")).ReturnsAsync(jpyToEurExchangeRate);
+        mockExchangeRateService.Setup(s => s.GetExchangeRateAsync("USD", "EUR")).ReturnsAsync(oldToNewExchangeRate);
+
         using var serviceProvider = await TestExtesions
-            .MockLedgerServiceProviderAsync("xuser1");
+            .MockLedgerServiceProviderAsync("xuser1", services =>
+            {
+                // Override the default mock with our specific setup
+                services.AddScoped<IExchangeRateService>(provider => mockExchangeRateService.Object);
+            });
 
         var appDbContext = serviceProvider.GetRequiredService<AppDbContext>();
-        var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var currentUserService = serviceProvider.GetRequiredService<ICurrentUserService>();
         var userSpaceService = serviceProvider.GetRequiredService<IUserSpaceService>();
-
         var currentLedgerService = serviceProvider.GetRequiredService<ICurrentLedgerService>();
 
-        var ledger = await currentLedgerService.GetLedgerDbContextAsync();
-        Assert.NotNull(ledger);
+        var space = await userSpaceService.GetUserSpaceAsync();
+        Assert.NotNull(space);
+        
+        // change the currency to null (USD default)
+        space.Currency = null;
+        await appDbContext.SaveChangesAsync();
 
-        // The default currency (if not especified) is USD
-        // 1. Create transaction in default currency
-        // 2. Create transaction in EUR
-        // 3. Create transaction in some other currency
+        var originalCurrency = space.Currency ?? "USD"; // Should be "USD" from the mock setup
 
-        await currentLedgerService.UpdateDefaultCurrencyAsync("EUR", 1.95m);
+        var ledgerDb = await currentLedgerService.GetLedgerDbContextAsync();
+        Assert.NotNull(ledgerDb);
 
-        // Assert the values are converted
+        // 1. Create transaction in default currency (implicit)
+        var defaultCurrencyTx = new Transaction { Value = 100, Notes = "Implicit USD" };
+        // 2. Create transaction in JPY
+        var jpyTx = new Transaction { Value = 10000, Currency = "JPY", Notes = "Explicit JPY" };
+        // 3. Create transaction in EUR (the future default currency)
+        var eurTx = new Transaction { Value = 50, Currency = "EUR", Notes = "Explicit EUR" };
 
+        ledgerDb.Transactions.AddRange(defaultCurrencyTx, jpyTx, eurTx);
+        await ledgerDb.SaveChangesAsync();
+
+        // Act
+        // The exchange rate provided is for converting the OLD default (USD) to the NEW default (EUR)
+        await currentLedgerService.UpdateDefaultCurrencyAsync("EUR", oldToNewExchangeRate);
+
+        // Assert
+        // 1. Assert the space's default currency has changed
+        var updatedSpace = await userSpaceService.GetUserSpaceAsync();
+        Assert.NotNull(updatedSpace);
+        updatedSpace.Currency.Should().Be("EUR");
+
+        // 2. Re-fetch transactions to check their updated state
+        // Using AsNoTracking and then ToList to ensure fresh data and not re-use potentially cached instances
+        var transactions = await ledgerDb.Transactions.AsNoTracking().ToListAsync();
+        var updatedDefaultTx = transactions.FirstOrDefault(t => t.Id == defaultCurrencyTx.Id);
+        var updatedJpyTx = transactions.FirstOrDefault(t => t.Id == jpyTx.Id);
+        var updatedEurTx = transactions.FirstOrDefault(t => t.Id == eurTx.Id);
+
+        // 3. Assert the implicitly-default-currency transaction is now explicit
+        Assert.NotNull(updatedDefaultTx);
+        updatedDefaultTx.Value.Should().Be(100);
+        updatedDefaultTx.Currency.Should().Be(originalCurrency); // Explicitly set to old currency
+        updatedDefaultTx.ExchangeRate.Should().Be(oldToNewExchangeRate); // Uses the rate provided in the method call
+
+        // 4. Assert the JPY transaction has its exchange rate updated to convert JPY -> EUR
+        Assert.NotNull(updatedJpyTx);
+        updatedJpyTx.Value.Should().Be(10000);
+        updatedJpyTx.Currency.Should().Be("JPY");
+        updatedJpyTx.ExchangeRate.Should().Be(jpyToEurExchangeRate);
+
+        // 5. Assert the EUR transaction now has a null exchange rate (since it matches the default)
+        Assert.NotNull(updatedEurTx);
+        updatedEurTx.Value.Should().Be(50);
+        updatedEurTx.Currency.Should().Be("EUR");
+        updatedEurTx.ExchangeRate.Should().BeNull(); // Rate is null when currency matches default
     }
 
 }
