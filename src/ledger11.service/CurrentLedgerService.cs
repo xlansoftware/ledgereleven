@@ -44,6 +44,7 @@ public class CurrentLedgerService : ICurrentLedgerService
     private readonly IUserSpaceService _userSpace;
     private readonly AppDbContext _dbContext;
     private readonly ILogger<CurrentLedgerService> _logger;
+    private readonly IExchangeRateService _exchangeRateService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CurrentLedgerService"/> class.
@@ -52,15 +53,18 @@ public class CurrentLedgerService : ICurrentLedgerService
     /// <param name="appConfig">The application configuration options.</param>
     /// <param name="userSpace">The user space service.</param>
     /// <param name="dbContext">The application database context.</param>
+    /// <param name="exchangeRateService">The exchange rate service.</param>
     public CurrentLedgerService(
         ILogger<CurrentLedgerService> logger,
         IOptions<AppConfig> appConfig,
         IUserSpaceService userSpace,
-        AppDbContext dbContext)
+        AppDbContext dbContext,
+        IExchangeRateService exchangeRateService)
     {
         _logger = logger;
         _userSpace = userSpace;
         _dbContext = dbContext;
+        _exchangeRateService = exchangeRateService;
     }
 
     /// <summary>
@@ -80,41 +84,55 @@ public class CurrentLedgerService : ICurrentLedgerService
 
     public async Task UpdateDefaultCurrencyAsync(string newCurrency, decimal exchangeRate)
     {
-        // 1. Get the current ledger/space.
         var space = await _userSpace.GetUserSpaceAsync();
         if (space == null)
             throw new InvalidOperationException("No active user space found.");
 
         var oldCurrency = space.Currency ?? "USD";
-
-        // 2. If currency is the same, do nothing.
         if (oldCurrency == newCurrency)
         {
             return;
         }
 
-        // 3. Get the ledger DB context
         var ledgerDb = await _userSpace.GetLedgerDbContextAsync(space.Id, false);
 
-        // 4. Find all transactions that use the default currency (where currency is null).
-        var transactionsToUpdate = await ledgerDb.Transactions
+        // Handle transactions that were implicitly in the old default currency
+        var nullCurrencyTransactions = await ledgerDb.Transactions
             .Where(t => t.Currency == null)
             .ToListAsync();
 
-        // 5. Update their currency and exchange rate.
-        foreach (var transaction in transactionsToUpdate)
+        foreach (var transaction in nullCurrencyTransactions)
         {
             transaction.Currency = oldCurrency;
             transaction.ExchangeRate = exchangeRate;
         }
 
-        // 6. Update the ledger's default currency.
+        // Handle transactions that had an explicit currency set
+        var explicitCurrencyTransactions = await ledgerDb.Transactions
+            .Where(t => t.Currency != null)
+            .ToListAsync();
+
+        foreach (var transaction in explicitCurrencyTransactions)
+        {
+            // If the transaction's currency is the new default, the rate is 1. Represent this as null.
+            if (transaction.Currency == newCurrency)
+            {
+                transaction.ExchangeRate = null;
+                continue;
+            }
+
+            // Otherwise, fetch the new rate to convert from its currency to the new default currency
+            var newRate = await _exchangeRateService.GetExchangeRateAsync(transaction.Currency!, newCurrency);
+            if (newRate == null)
+            {
+                throw new InvalidOperationException($"Could not retrieve new exchange rate from {transaction.Currency} to {newCurrency}. Aborting update.");
+            }
+            transaction.ExchangeRate = newRate;
+        }
+
         space.Currency = newCurrency;
 
-        // 7. Save all changes.
-        // NOTE: These are two separate databases. Ideally, this would be in a distributed transaction,
-        // but for this application's scope, we accept the small risk of inconsistency if the second save fails.
         await ledgerDb.SaveChangesAsync();
-        await _dbContext.SaveChangesAsync(); // AppDbContext saves the change to the Space
+        await _dbContext.SaveChangesAsync(); 
     }
 }
