@@ -18,6 +18,12 @@ public class MergeSpaceRequestDto
     public int TargetCategoryId { get; set; }
 }
 
+public class UpdateCurrencyRequestDto
+{
+    public required string NewCurrency { get; set; }
+    public decimal ExchangeRate { get; set; }
+}
+
 [Authorize]
 [ApiController]
 [Route("api/space")]
@@ -190,6 +196,25 @@ public class SpaceController : ControllerBase
         await AddDetailsSpacesAsync(resultDto);
 
         return Ok(resultDto);
+    }
+
+    // POST: api/space/currency
+    [HttpPost("currency")]
+    public async Task<IActionResult> UpdateCurrency([FromBody] UpdateCurrencyRequestDto request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        try
+        {
+            await _currentLedgerService.UpdateDefaultCurrencyAsync(request.NewCurrency, request.ExchangeRate);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update default currency.");
+            return StatusCode(500, "An error occurred while updating the currency.");
+        }
     }
 
     // POST: api/space/current
