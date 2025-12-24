@@ -74,4 +74,33 @@ public class TestDbContext
         Assert.Equal(u7.Id, u6.Id);
 
     }
+
+    [Fact]
+    public async Task Test_CurrentLedgerService_UpdateDefaultCurrencyAsync()
+    {
+        // Arrange
+        using var serviceProvider = await TestExtesions
+            .MockLedgerServiceProviderAsync("xuser1");
+
+        var appDbContext = serviceProvider.GetRequiredService<AppDbContext>();
+        var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var currentUserService = serviceProvider.GetRequiredService<ICurrentUserService>();
+        var userSpaceService = serviceProvider.GetRequiredService<IUserSpaceService>();
+
+        var currentLedgerService = serviceProvider.GetRequiredService<ICurrentLedgerService>();
+
+        var ledger = await currentLedgerService.GetLedgerDbContextAsync();
+        Assert.NotNull(ledger);
+
+        // The default currency (if not especified) is USD
+        // 1. Create transaction in default currency
+        // 2. Create transaction in EUR
+        // 3. Create transaction in some other currency
+
+        await currentLedgerService.UpdateDefaultCurrencyAsync("EUR", 1.95m);
+
+        // Assert the values are converted
+
+    }
+
 }
