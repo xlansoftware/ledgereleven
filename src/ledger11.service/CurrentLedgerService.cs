@@ -85,55 +85,81 @@ public class CurrentLedgerService : ICurrentLedgerService
 
     public async Task UpdateDefaultCurrencyAsync(Guid spaceId, string newCurrency, decimal exchangeRate)
     {
+        _logger.LogInformation("UpdateDefaultCurrencyAsync started for SpaceId: {SpaceId}, NewCurrency: {NewCurrency}, ExchangeRate: {ExchangeRate}", spaceId, newCurrency, exchangeRate);
+
         var space = await _userSpace.GetUserSpaceByIdAsync(spaceId);
         if (space == null)
+        {
+            _logger.LogError("UpdateDefaultCurrencyAsync: No active user space found for SpaceId: {SpaceId}.", spaceId);
             throw new InvalidOperationException("No active user space found.");
+        }
+        _logger.LogDebug("UpdateDefaultCurrencyAsync: Space '{SpaceName}' (ID: {SpaceId}) found. Current currency: {CurrentCurrency}.", space.Name, spaceId, space.Currency);
 
         var oldCurrency = space.Currency ?? "USD";
         if (oldCurrency == newCurrency)
         {
+            _logger.LogInformation("UpdateDefaultCurrencyAsync: Old currency '{OldCurrency}' is the same as new currency '{NewCurrency}'. No update needed.", oldCurrency, newCurrency);
             return;
         }
 
+        _logger.LogInformation("UpdateDefaultCurrencyAsync: Changing currency from '{OldCurrency}' to '{NewCurrency}' for SpaceId: {SpaceId}.", oldCurrency, newCurrency, spaceId);
+
         var ledgerDb = await _userSpace.GetLedgerDbContextAsync(space.Id, false);
+        _logger.LogDebug("UpdateDefaultCurrencyAsync: Retrieved LedgerDbContext for SpaceId: {SpaceId}.", spaceId);
 
         // Handle transactions that were implicitly in the old default currency
+        _logger.LogInformation("UpdateDefaultCurrencyAsync: Processing transactions implicitly in old currency ('{OldCurrency}').", oldCurrency);
         var nullCurrencyTransactions = await ledgerDb.Transactions
             .Where(t => t.Currency == null)
             .ToListAsync();
 
+        _logger.LogDebug("UpdateDefaultCurrencyAsync: Found {Count} transactions with null currency.", nullCurrencyTransactions.Count);
         foreach (var transaction in nullCurrencyTransactions)
         {
+            _logger.LogTrace("UpdateDefaultCurrencyAsync: Updating transaction {TransactionId} (Value: {Value}) from null currency to explicit '{OldCurrency}' with exchange rate {ExchangeRate}.", transaction.Id, transaction.Value, oldCurrency, exchangeRate);
             transaction.Currency = oldCurrency;
             transaction.ExchangeRate = exchangeRate;
         }
 
         // Handle transactions that had an explicit currency set
+        _logger.LogInformation("UpdateDefaultCurrencyAsync: Processing transactions with explicit currencies.");
         var explicitCurrencyTransactions = await ledgerDb.Transactions
             .Where(t => t.Currency != null)
             .ToListAsync();
 
+        _logger.LogDebug("UpdateDefaultCurrencyAsync: Found {Count} transactions with explicit currency.", explicitCurrencyTransactions.Count);
         foreach (var transaction in explicitCurrencyTransactions)
         {
+            _logger.LogTrace("UpdateDefaultCurrencyAsync: Examining explicit transaction {TransactionId} (Currency: '{TransactionCurrency}', Value: {Value}).", transaction.Id, transaction.Currency, transaction.Value);
             // If the transaction's currency is the new default, the rate is 1. Represent this as null.
             if (transaction.Currency == newCurrency)
             {
+                _logger.LogTrace("UpdateDefaultCurrencyAsync: Transaction {TransactionId} currency matches new default '{NewCurrency}'. Setting ExchangeRate to null.", transaction.Id, newCurrency);
                 transaction.ExchangeRate = null;
                 continue;
             }
 
             // Otherwise, fetch the new rate to convert from its currency to the new default currency
+            _logger.LogTrace("UpdateDefaultCurrencyAsync: Fetching exchange rate for transaction {TransactionId} from '{TransactionCurrency}' to '{NewCurrency}'.", transaction.Id, transaction.Currency, newCurrency);
             var newRate = await _exchangeRateService.GetExchangeRateAsync(transaction.Currency!, newCurrency);
             if (newRate == null)
             {
+                _logger.LogError("UpdateDefaultCurrencyAsync: Could not retrieve new exchange rate from '{TransactionCurrency}' to '{NewCurrency}' for transaction {TransactionId}. Aborting update.", transaction.Currency, newCurrency, transaction.Id);
                 throw new InvalidOperationException($"Could not retrieve new exchange rate from {transaction.Currency} to {newCurrency}. Aborting update.");
             }
+            _logger.LogTrace("UpdateDefaultCurrencyAsync: Fetched exchange rate {NewRate} for transaction {TransactionId}.", newRate, transaction.Id);
             transaction.ExchangeRate = newRate;
         }
 
+        _logger.LogInformation("UpdateDefaultCurrencyAsync: Updating space '{SpaceName}' (ID: {SpaceId}) default currency to '{NewCurrency}'.", space.Name, spaceId, newCurrency);
         space.Currency = newCurrency;
 
         await ledgerDb.SaveChangesAsync();
+        _logger.LogDebug("UpdateDefaultCurrencyAsync: Saved changes to LedgerDbContext for SpaceId: {SpaceId}.", spaceId);
+
         await _dbContext.SaveChangesAsync(); 
+        _logger.LogDebug("UpdateDefaultCurrencyAsync: Saved changes to AppDbContext for SpaceId: {SpaceId}.", spaceId);
+
+        _logger.LogInformation("UpdateDefaultCurrencyAsync completed successfully for SpaceId: {SpaceId}.", spaceId);
     }
 }
