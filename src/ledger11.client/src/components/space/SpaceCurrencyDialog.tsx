@@ -14,6 +14,7 @@ import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { fetchWithAuth } from "@/api";
 import { useSpaceStore } from "@/lib/store-space";
+import { useConfirmDialog } from "../dialog/ConfirmDialogContext";
 
 interface SpaceCurrencyDialogProps {
   open: boolean;
@@ -38,6 +39,7 @@ export default function SpaceCurrencyDialog({
     initialExchangeRate ?? 1.0
   );
   const [refreshingRate, setRefreshingRate] = useState(false); // New state for loading
+  const { confirm } = useConfirmDialog();
 
   useEffect(() => {
     if (initialCurrency) {
@@ -82,26 +84,32 @@ export default function SpaceCurrencyDialog({
       return;
     }
 
-    try {
-      const response = await fetchWithAuth(`/api/space/currency`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currency: selectedCurrency, spaceId: currentSpaceId, exchangeRate: exchangeRate }),
-      });
+    confirm({
+      title: "Confirm Currency Change",
+      description: "Changing the currency will recompute all existing transactions in this book according to the new exchange rate. Are you sure you want to proceed?",
+      onConfirm: async () => {
+        try {
+          const response = await fetchWithAuth(`/api/space/currency`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ currency: selectedCurrency, spaceId: currentSpaceId, exchangeRate: exchangeRate }),
+          });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to update currency: ${errorText}`);
-      }
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to update currency: ${errorText}`);
+          }
 
-      await loadSpaces(true); // Reload spaces to update the current space's settings
-      toast.success(`Currency updated to ${selectedCurrency}`);
-      onOpenChange(false); // Close dialog
-    } catch (error: unknown) {
-      console.error("Error updating currency:", error);
-      const message = error && (error as Error).message
-      toast.error(`${message}` || "Failed to update currency.");
-    }
+          await loadSpaces(true); // Reload spaces to update the current space's settings
+          toast.success(`Currency updated to ${selectedCurrency}`);
+          onOpenChange(false); // Close dialog
+        } catch (error: unknown) {
+          console.error("Error updating currency:", error);
+          const message = error && (error as Error).message
+          toast.error(`${message}` || "Failed to update currency.");
+        }
+      },
+    });
   };
 
   return (
