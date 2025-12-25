@@ -28,10 +28,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+
+
 import { useSpaceStore } from "@/lib/store-space";
 import { fetchWithAuth } from "@/api";
 import { useConfirmDialog } from "../dialog/ConfirmDialogContext";
 import useVersion from "@/hooks/useVersion";
+import SpaceCurrencyDialog from "@/components/space/SpaceCurrencyDialog";
 import { useBookStore } from "@/lib/store-book";
 
 export default function Settings() {
@@ -43,6 +46,8 @@ export default function Settings() {
   const { confirm } = useConfirmDialog();
 
   const [isImporting, setIsImporting] = useState(false);
+  const [showCurrencyDialog, setShowCurrencyDialog] = useState(false); // State for currency dialog
+
 
   const { appVersion } = useVersion();
 
@@ -134,6 +139,14 @@ export default function Settings() {
     });
   };
 
+  const handleChangeCurrency = () => {
+    setShowCurrencyDialog(true);
+  };
+
+
+
+
+
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">Settings</h2>
@@ -148,23 +161,40 @@ export default function Settings() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="space-select">Current Book:</Label>
-              <Select
-                value={current?.id ?? ""}
-                onValueChange={(value) => handleChangeSpace(value)}
-              >
-                <SelectTrigger className="w-[200px]" id="space-select">
-                  <SelectValue placeholder="Select a space" />
-                </SelectTrigger>
-                <SelectContent>
-                  {spaces.map((space) => (
-                    <SelectItem key={space.id} value={space.id!}>
-                      {space.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex flex-col gap-4"> {/* Use flex-col to stack vertically */}
+              <div className="flex items-center gap-2">
+                <Label htmlFor="space-select">Current Book:</Label>
+                <Select
+                  value={current?.id ?? ""}
+                  onValueChange={(value) => handleChangeSpace(value)}
+                >
+                  <SelectTrigger className="w-[200px]" id="space-select">
+                    <SelectValue placeholder="Select a space" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {spaces.map((space) => (
+                      <SelectItem key={space.id} value={space.id!}>
+                        {space.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Label htmlFor="current-currency">Current Currency:</Label>
+                <span id="current-currency" className="font-medium">
+                  {current?.settings?.Currency ?? "USD"}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleChangeCurrency}
+                  disabled={!current?.id}
+                >
+                  Change Currency
+                </Button>
+              </div>
             </div>
 
             <Button
@@ -336,6 +366,13 @@ export default function Settings() {
           </Card>
         )}
       </div>
+
+      <SpaceCurrencyDialog
+        open={showCurrencyDialog}
+        onOpenChange={setShowCurrencyDialog}
+        currentSpaceId={current?.id}
+        initialCurrency={current?.settings?.Currency}
+      />
     </div>
   );
 }
