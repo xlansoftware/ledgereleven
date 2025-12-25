@@ -11,6 +11,16 @@ using ledger11.data.Extensions;
 
 namespace ledger11.web.Controllers;
 
+public class CreateSpaceDto
+{
+    public string Name { get; set; } = string.Empty;
+
+    public string? Tint { get; set; }
+
+    public string? Currency { get; set; }
+
+}
+
 public class MergeSpaceRequestDto
 {
     public Guid SourceSpaceId { get; set; }
@@ -147,12 +157,26 @@ public class SpaceController : ControllerBase
 
     // POST: api/space
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] Space space)
+    public async Task<IActionResult> Create([FromBody] CreateSpaceDto spaceArgs)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await _userSpace.CreateSpace(space);
+        var space = new Space()
+        {
+            Name = spaceArgs.Name,
+        };
+
+        var settings = new Dictionary<string, string>();
+        if (spaceArgs.Currency != null)
+        {
+            settings.Add("Currency", spaceArgs.Currency);
+        }
+        if (spaceArgs.Tint != null)
+        {
+            settings.Add("Tint", spaceArgs.Tint);
+        }
+        var result = await _userSpace.CreateSpace(space, settings);
         var currentSpace = await _userSpace.GetUserSpaceAsync();
 
         _logger.LogInformation("result.Id = {result}", result?.Id);

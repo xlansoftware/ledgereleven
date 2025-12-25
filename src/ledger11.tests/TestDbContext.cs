@@ -102,14 +102,15 @@ public class TestDbContext
         var space = await userSpaceService.GetUserSpaceAsync();
         Assert.NotNull(space);
         
-        // change the currency to null (USD default)
-        space.Currency = null;
-        await appDbContext.SaveChangesAsync();
-
-        var originalCurrency = space.Currency ?? "USD"; // Should be "USD" from the mock setup
-
         var ledgerDb = await currentLedgerService.GetLedgerDbContextAsync();
         Assert.NotNull(ledgerDb);
+
+        var originalCurrency = "USD";
+        var currencySetting = await ledgerDb.Settings
+            .FirstOrDefaultAsync(s => s.Key == "Currency");
+        Assert.NotNull(currencySetting); // it is EUR by default
+        currencySetting.Value = originalCurrency;
+        await ledgerDb.SaveChangesAsync();
 
         // 1. Create transaction in default currency (implicit)
         var defaultCurrencyTx = new Transaction { Value = 100, Notes = "Implicit USD" };
@@ -129,7 +130,12 @@ public class TestDbContext
         // 1. Assert the space's default currency has changed
         var updatedSpace = await userSpaceService.GetUserSpaceAsync();
         Assert.NotNull(updatedSpace);
-        updatedSpace.Currency.Should().Be("EUR");
+        var updatedCurrencySetting = await ledgerDb.Settings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Key == "Currency")
+            ;
+        Assert.NotNull(updatedCurrencySetting);
+        updatedCurrencySetting.Value.Should().Be("EUR");
 
         // 2. Re-fetch transactions to check their updated state
         // Using AsNoTracking and then ToList to ensure fresh data and not re-use potentially cached instances

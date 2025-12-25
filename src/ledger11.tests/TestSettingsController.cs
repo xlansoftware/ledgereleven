@@ -16,11 +16,11 @@ public class TestSettingsController
         using var serviceProvider = await TestExtesions.MockLedgerServiceProviderAsync("xuser_settings");
         var controller = ActivatorUtilities.CreateInstance<SettingsController>(serviceProvider);
 
-        // Act & Assert: Get all settings (should be empty initially)
+        // Act & Assert: Get all settings (should have Tint and Currency initially)
         var getAllResult = await controller.GetAllSettings();
         var okResult = Assert.IsType<OkObjectResult>(getAllResult);
         var settings = Assert.IsType<Dictionary<string, string?>>(okResult.Value);
-        Assert.Empty(settings);
+        Assert.Equal(2, settings.Count);
 
         // Act & Assert: Get a non-existent setting
         var getResult = await controller.GetSetting("test_key");
@@ -50,7 +50,7 @@ public class TestSettingsController
         var getAllResult2 = await controller.GetAllSettings();
         var okResult3 = Assert.IsType<OkObjectResult>(getAllResult2);
         var settings2 = Assert.IsType<Dictionary<string, string?>>(okResult3.Value);
-        Assert.Single(settings2);
+        Assert.Equal(3, settings2.Count);
         Assert.Equal("updated_value", settings2["test_key"]);
     }
 }

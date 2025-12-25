@@ -93,9 +93,21 @@ public class CurrentLedgerService : ICurrentLedgerService
             _logger.LogError("UpdateDefaultCurrencyAsync: No active user space found for SpaceId: {SpaceId}.", spaceId);
             throw new InvalidOperationException("No active user space found.");
         }
-        _logger.LogDebug("UpdateDefaultCurrencyAsync: Space '{SpaceName}' (ID: {SpaceId}) found. Current currency: {CurrentCurrency}.", space.Name, spaceId, space.Currency);
 
-        var oldCurrency = space.Currency ?? "USD";
+        _logger.LogDebug("UpdateDefaultCurrencyAsync: Space '{SpaceName}' (ID: {SpaceId}) found.", space.Name, spaceId);
+
+        var ledgerDb = await _userSpace.GetLedgerDbContextAsync(space.Id, false);
+        _logger.LogDebug("UpdateDefaultCurrencyAsync: Retrieved LedgerDbContext for SpaceId: {SpaceId}.", spaceId);
+
+        var currencySetting = await ledgerDb.Settings
+            .FirstOrDefaultAsync(s => s.Key == "Currency");
+
+        var oldCurrency = "USD";
+        if (currencySetting != null && currencySetting.Value != null)
+        {
+            oldCurrency = currencySetting.Value;
+        }
+
         if (oldCurrency == newCurrency)
         {
             _logger.LogInformation("UpdateDefaultCurrencyAsync: Old currency '{OldCurrency}' is the same as new currency '{NewCurrency}'. No update needed.", oldCurrency, newCurrency);
@@ -103,9 +115,6 @@ public class CurrentLedgerService : ICurrentLedgerService
         }
 
         _logger.LogInformation("UpdateDefaultCurrencyAsync: Changing currency from '{OldCurrency}' to '{NewCurrency}' for SpaceId: {SpaceId}.", oldCurrency, newCurrency, spaceId);
-
-        var ledgerDb = await _userSpace.GetLedgerDbContextAsync(space.Id, false);
-        _logger.LogDebug("UpdateDefaultCurrencyAsync: Retrieved LedgerDbContext for SpaceId: {SpaceId}.", spaceId);
 
         // Handle transactions that were implicitly in the old default currency
         _logger.LogInformation("UpdateDefaultCurrencyAsync: Processing transactions implicitly in old currency ('{OldCurrency}').", oldCurrency);
@@ -152,7 +161,20 @@ public class CurrentLedgerService : ICurrentLedgerService
         }
 
         _logger.LogInformation("UpdateDefaultCurrencyAsync: Updating space '{SpaceName}' (ID: {SpaceId}) default currency to '{NewCurrency}'.", space.Name, spaceId, newCurrency);
-        space.Currency = newCurrency;
+        if (currencySetting != null)
+        {
+            _logger.LogDebug("Updating existing setting '{SettingKey}' for space {SpaceId}.", "Currency", space.Id);
+            currencySetting.Value = newCurrency;
+        } 
+        else
+        {
+            _logger.LogDebug("Adding new setting '{SettingKey}' for space {SpaceId}.", "Currency", space.Id);
+            ledgerDb.Settings.Add(new Setting
+            {
+                Key = "Currency",
+                Value = newCurrency
+            });
+        }
 
         await ledgerDb.SaveChangesAsync();
         _logger.LogDebug("UpdateDefaultCurrencyAsync: Saved changes to LedgerDbContext for SpaceId: {SpaceId}.", spaceId);

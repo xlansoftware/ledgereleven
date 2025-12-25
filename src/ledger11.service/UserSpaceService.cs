@@ -25,7 +25,7 @@ public interface IUserSpaceService
     /// </summary>
     /// <param name="space">The Space object containing details for the new space.</param>
     /// <returns>The newly created Space object.</returns>
-    Task<Space> CreateSpace(Space space);
+    Task<Space> CreateSpace(Space space, Dictionary<string, string> settings);
 
     /// <summary>
     /// Updates an existing space with the provided fields.
@@ -125,7 +125,7 @@ public class UserSpaceService : IUserSpaceService
 
         if (user.CurrentSpaceId == null)
         {
-            return await AssingDefaultSpace(user);
+            return await AssignDefaultSpace(user);
         }
 
         var existingSpace = await _dbContext.Spaces
@@ -140,7 +140,7 @@ public class UserSpaceService : IUserSpaceService
     /// </summary>
     /// <param name="user">The application user.</param>
     /// <returns>The assigned or newly created Space object.</returns>
-    private async Task<Space> AssingDefaultSpace(ApplicationUser user)
+    private async Task<Space> AssignDefaultSpace(ApplicationUser user)
     {
         var userSpaces = await _dbContext.Spaces
             .Where(s => s.CreatedByUserId == user.Id)
@@ -174,8 +174,10 @@ public class UserSpaceService : IUserSpaceService
             return await CreateSpace(new Space()
             {
                 Name = "Ledger",
-                Tint = "#000000",
-                Currency = "EUR"
+            }, new Dictionary<string, string>
+            {
+                { "Tint", "#000000" },
+                { "Currency", "USD" },
             });
         }
 
@@ -188,7 +190,7 @@ public class UserSpaceService : IUserSpaceService
     /// <returns>The newly created Space object.</returns>
     /// <exception cref="InvalidOperationException">Thrown if no authenticated user is found.</exception>
     /// <exception cref="Exception">Thrown if the user ID is empty.</exception>
-    public async Task<Space> CreateSpace(Space space)
+    public async Task<Space> CreateSpace(Space space, Dictionary<string, string> settings)
     {
         var user = await _currentUserService.GetCurrentUserAsync();
         if (user == null)
@@ -203,15 +205,15 @@ public class UserSpaceService : IUserSpaceService
         var newSpace = new Space
         {
             Name = space.Name,
-            Tint = space.Tint,
-            Currency = space.Currency,
             CreatedAt = DateTime.UtcNow,
             CreatedByUserId = user.Id,
             Members = new List<SpaceMember>()
         };
-
+        
         _dbContext.Spaces.Add(newSpace);
         await _dbContext.SaveChangesAsync();
+
+        await UpdateSpaceSettings(newSpace, settings);
 
         // Add user as owner
         var spaceMember = new SpaceMember
