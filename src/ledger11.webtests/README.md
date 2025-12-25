@@ -8,6 +8,26 @@ This project contains the end-to-end tests for the Ledger Eleven application, wr
 * **End-to-End Testing**: Simulates real user scenarios to test the application's functionality from start to finish.
 * **Cross-Browser Testing**: Configured to run tests on Chromium, with the option to add Firefox and WebKit.
 
+## To run the test
+
+Install playwright prerequisites - you will be reminded by playwright if something is missing.
+
+### Run agains local app instance
+
+1. Build and publish the client app.
+    - ```cd /src/ledger11.client```
+    - ```npm run build```
+    - ```npm run publish```
+2. Start the backend
+    - ```cd /src/ledger11.web```
+    - ```dotnet run```
+    - leave it running and switch to another terminal
+3. Run ```npx playwright test```
+
+### Run in the tests in a container
+
+You can also run the tests in a dedicated docker container. See ```/.devops/test/web/test.sh```.
+
 ---
 
 ```
