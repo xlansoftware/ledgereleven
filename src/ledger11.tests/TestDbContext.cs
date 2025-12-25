@@ -123,7 +123,7 @@ public class TestDbContext
 
         // Act
         // The exchange rate provided is for converting the OLD default (USD) to the NEW default (EUR)
-        await currentLedgerService.UpdateDefaultCurrencyAsync("EUR", oldToNewExchangeRate);
+        await currentLedgerService.UpdateDefaultCurrencyAsync(space.Id, "EUR", oldToNewExchangeRate);
 
         // Assert
         // 1. Assert the space's default currency has changed

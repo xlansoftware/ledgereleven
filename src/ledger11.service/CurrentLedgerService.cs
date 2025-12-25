@@ -26,14 +26,15 @@ public interface ICurrentLedgerService
     Task<LedgerDbContext> GetLedgerDbContextAsync();
 
     /// <summary>
-    /// Updates the default currency for the current ledger.
+    /// Updates the default currency for the ledger with id spaceId.
     /// This operation finds all transactions using the old default currency (where Currency is null),
     /// explicitly sets their currency to the old default, and applies the provided exchange rate.
     /// It then updates the ledger's default currency to the new one.
     /// </summary>
+    /// <param name="spaceId">The id of the ledger</param>
     /// <param name="newCurrency">The new ISO 4217 currency code to set as the default.</param>
     /// <param name="exchangeRate">The exchange rate to convert from the old default currency to the new one.</param>
-    Task UpdateDefaultCurrencyAsync(string newCurrency, decimal exchangeRate);
+    Task UpdateDefaultCurrencyAsync(Guid spaceId, string newCurrency, decimal exchangeRate);
 }
 
 /// <summary>
@@ -82,9 +83,9 @@ public class CurrentLedgerService : ICurrentLedgerService
         return await _userSpace.GetLedgerDbContextAsync(space.Id, true);
     }
 
-    public async Task UpdateDefaultCurrencyAsync(string newCurrency, decimal exchangeRate)
+    public async Task UpdateDefaultCurrencyAsync(Guid spaceId, string newCurrency, decimal exchangeRate)
     {
-        var space = await _userSpace.GetUserSpaceAsync();
+        var space = await _userSpace.GetUserSpaceByIdAsync(spaceId);
         if (space == null)
             throw new InvalidOperationException("No active user space found.");
 

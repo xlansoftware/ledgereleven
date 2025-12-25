@@ -208,7 +208,7 @@ public class SpaceController : ControllerBase
 
         try
         {
-            await _currentLedgerService.UpdateDefaultCurrencyAsync(request.Currency, request.ExchangeRate);
+            await _currentLedgerService.UpdateDefaultCurrencyAsync(request.SpaceId, request.Currency, request.ExchangeRate);
             return Ok();
         }
         catch (Exception ex)
