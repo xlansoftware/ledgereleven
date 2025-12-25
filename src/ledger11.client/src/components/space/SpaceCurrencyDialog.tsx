@@ -9,13 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { fetchWithAuth } from "@/api";
 import { useSpaceStore } from "@/lib/store-space"; // Needed for loadSpaces
@@ -25,6 +19,7 @@ interface SpaceCurrencyDialogProps {
   onOpenChange: (open: boolean) => void;
   currentSpaceId?: string;
   initialCurrency?: string;
+  initialExchangeRate?: number;
 }
 
 export default function SpaceCurrencyDialog({
@@ -32,17 +27,24 @@ export default function SpaceCurrencyDialog({
   onOpenChange,
   currentSpaceId,
   initialCurrency,
+  initialExchangeRate,
 }: SpaceCurrencyDialogProps) {
   const { loadSpaces } = useSpaceStore();
   const [selectedCurrency, setSelectedCurrency] = useState<string>(
     initialCurrency ?? "USD"
+  );
+  const [exchangeRate, setExchangeRate] = useState<number>(
+    initialExchangeRate ?? 1.0
   );
 
   useEffect(() => {
     if (initialCurrency) {
       setSelectedCurrency(initialCurrency);
     }
-  }, [initialCurrency]);
+    if (initialExchangeRate !== undefined) {
+      setExchangeRate(initialExchangeRate);
+    }
+  }, [initialCurrency, initialExchangeRate]);
 
   const handleSaveCurrency = async () => {
     if (!currentSpaceId || !selectedCurrency) {
@@ -54,7 +56,7 @@ export default function SpaceCurrencyDialog({
       const response = await fetchWithAuth(`/api/space/currency`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currency: selectedCurrency, spaceId: currentSpaceId }),
+        body: JSON.stringify({ currency: selectedCurrency, spaceId: currentSpaceId, exchangeRate: exchangeRate }),
       });
 
       if (!response.ok) {
@@ -81,24 +83,30 @@ export default function SpaceCurrencyDialog({
             Select the new currency for your current book.
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4">
-          <Label htmlFor="currency-select">Select Currency:</Label>
-          <Select
-            value={selectedCurrency}
-            onValueChange={setSelectedCurrency}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select a currency" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="USD">USD - United States Dollar</SelectItem>
-              <SelectItem value="EUR">EUR - Euro</SelectItem>
-              <SelectItem value="GBP">GBP - British Pound</SelectItem>
-              <SelectItem value="JPY">JPY - Japanese Yen</SelectItem>
-              <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
-              <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="py-4 space-y-4"> {/* Added space-y-4 for vertical spacing */}
+          <div>
+            <Label htmlFor="currency-input">Currency:</Label>
+            <Input
+              id="currency-input"
+              value={selectedCurrency}
+              onChange={(e) => setSelectedCurrency(e.target.value)}
+              placeholder="e.g. USD"
+              className="w-[180px]"
+            />
+          </div>
+          <div>
+            <Label htmlFor="exchange-rate-input">Exchange Rate (to Base Currency):</Label>
+            <Input
+              id="exchange-rate-input"
+              type="number"
+              value={exchangeRate}
+              onChange={(e) => setExchangeRate(parseFloat(e.target.value))}
+              placeholder="1.0"
+              className="w-[180px]"
+              min="0.01" // Exchange rate should be positive
+              step="0.01"
+            />
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
