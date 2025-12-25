@@ -92,7 +92,10 @@ export default function SpaceCurrencyDialog({
           const response = await fetchWithAuth(`/api/space/currency`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ currency: selectedCurrency, spaceId: currentSpaceId, exchangeRate: exchangeRate }),
+            body: JSON.stringify({ 
+              currency: selectedCurrency, 
+              spaceId: currentSpaceId, 
+              exchangeRate: exchangeRate }),
           });
 
           if (!response.ok) {

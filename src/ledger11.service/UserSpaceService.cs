@@ -42,6 +42,13 @@ public interface IUserSpaceService
     Task SetCurrentSpaceAsync(Guid id);
 
     /// <summary>
+    /// Retrieves a space by its ID.
+    /// </summary>
+    /// <param name="spaceId">The ID of the space to retrieve.</param>
+    /// <returns>The Space object, or null if not found.</returns>
+    Task<Space?> GetUserSpaceByIdAsync(Guid spaceId);
+
+    /// <summary>
     /// Deletes a space. Only the owner of the space can delete it.
     /// </summary>
     /// <param name="id">The ID of the space to delete.</param>
@@ -577,6 +584,18 @@ public class UserSpaceService : IUserSpaceService
             await context.SaveChangesAsync();
         }
 
+    }
+
+    /// <summary>
+    /// Retrieves a space by its ID.
+    /// </summary>
+    /// <param name="spaceId">The ID of the space to retrieve.</param>
+    /// <returns>The Space object, or null if not found.</returns>
+    public async Task<Space?> GetUserSpaceByIdAsync(Guid spaceId)
+    {
+        //TODO: check if the user has access to the space before returning...
+        return await _dbContext.Spaces
+            .FirstOrDefaultAsync(s => s.Id == spaceId);
     }
 
     /// <summary>

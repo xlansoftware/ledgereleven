@@ -20,7 +20,8 @@ public class MergeSpaceRequestDto
 
 public class UpdateCurrencyRequestDto
 {
-    public required string NewCurrency { get; set; }
+    public required Guid SpaceId { get; set; }
+    public required string Currency { get; set; }
     public decimal ExchangeRate { get; set; }
 }
 
@@ -207,7 +208,7 @@ public class SpaceController : ControllerBase
 
         try
         {
-            await _currentLedgerService.UpdateDefaultCurrencyAsync(request.NewCurrency, request.ExchangeRate);
+            await _currentLedgerService.UpdateDefaultCurrencyAsync(request.Currency, request.ExchangeRate);
             return Ok();
         }
         catch (Exception ex)
