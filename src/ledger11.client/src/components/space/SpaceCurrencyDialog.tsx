@@ -10,9 +10,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { fetchWithAuth } from "@/api";
-import { useSpaceStore } from "@/lib/store-space"; // Needed for loadSpaces
+import { useSpaceStore } from "@/lib/store-space";
 
 interface SpaceCurrencyDialogProps {
   open: boolean;
@@ -36,6 +37,7 @@ export default function SpaceCurrencyDialog({
   const [exchangeRate, setExchangeRate] = useState<number>(
     initialExchangeRate ?? 1.0
   );
+  const [refreshingRate, setRefreshingRate] = useState(false); // New state for loading
 
   useEffect(() => {
     if (initialCurrency) {
@@ -45,6 +47,34 @@ export default function SpaceCurrencyDialog({
       setExchangeRate(initialExchangeRate);
     }
   }, [initialCurrency, initialExchangeRate]);
+
+  const handleRefreshExchangeRate = async () => {
+    if (!selectedCurrency) {
+      return;
+    }
+
+    setRefreshingRate(true);
+    try {
+      const params = new URLSearchParams({ fromCurrency: initialCurrency || "USD", toCurrency: selectedCurrency });
+      const response = await fetchWithAuth(
+        `/api/currency/exchange-rate?${params.toString()}`
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.warn(`Exchange rate fetch failed: ${response.status} - ${errorText}`);
+        toast.error("Failed to fetch exchange rate.");
+        return;
+      }
+
+      const data: { rate: number } = await response.json();
+      setExchangeRate(data.rate);
+    } catch (error) {
+      console.error("Error fetching exchange rate:", error);
+    } finally {
+      setRefreshingRate(false);
+    }
+  };
 
   const handleSaveCurrency = async () => {
     if (!currentSpaceId || !selectedCurrency) {
@@ -85,7 +115,7 @@ export default function SpaceCurrencyDialog({
         </DialogHeader>
         <div className="py-4 space-y-4"> {/* Added space-y-4 for vertical spacing */}
           <div>
-            <Label htmlFor="currency-input">Currency:</Label>
+            <Label htmlFor="currency-input">New Default Currency:</Label>
             <Input
               id="currency-input"
               value={selectedCurrency}
@@ -95,17 +125,31 @@ export default function SpaceCurrencyDialog({
             />
           </div>
           <div>
-            <Label htmlFor="exchange-rate-input">Exchange Rate (to Base Currency):</Label>
-            <Input
-              id="exchange-rate-input"
-              type="number"
-              value={exchangeRate}
-              onChange={(e) => setExchangeRate(parseFloat(e.target.value))}
-              placeholder="1.0"
-              className="w-[180px]"
-              min="0.01" // Exchange rate should be positive
-              step="0.01"
-            />
+            <Label htmlFor="exchange-rate-input">Exchange Rate ({initialCurrency || "USD"} - {selectedCurrency}):</Label>
+            <div className="flex items-center gap-2"> {/* New div to hold input and button */}
+              <Input
+                id="exchange-rate-input"
+                type="number"
+                value={exchangeRate}
+                onChange={(e) => setExchangeRate(parseFloat(e.target.value))}
+                placeholder="1.0"
+                className="w-[180px]"
+                min="0.01"
+                step="0.01"
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleRefreshExchangeRate}
+                disabled={refreshingRate || !selectedCurrency}
+              >
+                {refreshingRate ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
           </div>
         </div>
         <DialogFooter>
