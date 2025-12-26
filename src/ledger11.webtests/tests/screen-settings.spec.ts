@@ -169,9 +169,8 @@ test('Change book currency and recompute transactions', async ({ page }) => {
     // Transaction 1 (100 USD with new default conversion 0.92): should appear as 92.00 EUR
     await expect(page.getByTestId('Item: Groceries, 92.00')).toBeVisible();
 
-    // Transaction 2 (10000 JPY with JPY to EUR conversion 0.054): should appear as 54.40 EUR
-    // await expect(page.getByTestId('Item: Entertainment, 54.40')).toBeVisible();
-    // Transaction 2 cannot be asserted, because the rate is automatically fetched
+    // Transaction 2 (10000 JPY with JPY to EUR conversion 0.007 * 0.92 = 0,00644): should appear as 64.40 EUR
+    await expect(page.getByTestId('Item: Entertainment, 64.40')).toBeVisible();
 
     // Transaction 3 (50 EUR with EUR to EUR conversion 1): should appear as 50.00 EUR
     await expect(page.getByTestId('Item: Education, 50.00')).toBeVisible();

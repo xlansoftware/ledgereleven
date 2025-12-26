@@ -45,7 +45,6 @@ public class CurrentLedgerService : ICurrentLedgerService
     private readonly IUserSpaceService _userSpace;
     private readonly AppDbContext _dbContext;
     private readonly ILogger<CurrentLedgerService> _logger;
-    private readonly IExchangeRateService _exchangeRateService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CurrentLedgerService"/> class.
@@ -59,13 +58,11 @@ public class CurrentLedgerService : ICurrentLedgerService
         ILogger<CurrentLedgerService> logger,
         IOptions<AppConfig> appConfig,
         IUserSpaceService userSpace,
-        AppDbContext dbContext,
-        IExchangeRateService exchangeRateService)
+        AppDbContext dbContext)
     {
         _logger = logger;
         _userSpace = userSpace;
         _dbContext = dbContext;
-        _exchangeRateService = exchangeRateService;
     }
 
     /// <summary>
@@ -148,15 +145,13 @@ public class CurrentLedgerService : ICurrentLedgerService
                 continue;
             }
 
-            // Otherwise, fetch the new rate to convert from its currency to the new default currency
-            _logger.LogTrace("UpdateDefaultCurrencyAsync: Fetching exchange rate for transaction {TransactionId} from '{TransactionCurrency}' to '{NewCurrency}'.", transaction.Id, transaction.Currency, newCurrency);
-            var newRate = await _exchangeRateService.GetExchangeRateAsync(transaction.Currency!, newCurrency);
-            if (newRate == null)
-            {
-                _logger.LogError("UpdateDefaultCurrencyAsync: Could not retrieve new exchange rate from '{TransactionCurrency}' to '{NewCurrency}' for transaction {TransactionId}. Aborting update.", transaction.Currency, newCurrency, transaction.Id);
-                throw new InvalidOperationException($"Could not retrieve new exchange rate from {transaction.Currency} to {newCurrency}. Aborting update.");
-            }
-            _logger.LogTrace("UpdateDefaultCurrencyAsync: Fetched exchange rate {NewRate} for transaction {TransactionId}.", newRate, transaction.Id);
+            // Otherwise, update the exchangeRate of the transaction to reflect conversion to the new currency
+            var newRate = transaction.ExchangeRate * exchangeRate;
+            _logger.LogTrace("UpdateDefaultCurrencyAsync: {Value} ({TransactionCurrency} -> {OldCurrency}) {Rate} converted to {NewRate}. (Transaction {TransactionId})", 
+                transaction.Value,
+                transaction.Currency, 
+                oldCurrency,
+                transaction.ExchangeRate, newRate, transaction.Id);
             transaction.ExchangeRate = newRate;
         }
 

@@ -80,19 +80,14 @@ public class TestDbContext
     public async Task Test_CurrentLedgerService_UpdateDefaultCurrencyAsync()
     {
         // Arrange
-        var mockExchangeRateService = new Mock<IExchangeRateService>();
-        decimal oldToNewExchangeRate = 0.92m; // USD to EUR
-        decimal jpyToEurExchangeRate = 0.007m; // JPY to EUR
-
-        // Setup mock exchange rate service to return specific rates
-        mockExchangeRateService.Setup(s => s.GetExchangeRateAsync("JPY", "EUR")).ReturnsAsync(jpyToEurExchangeRate);
-        mockExchangeRateService.Setup(s => s.GetExchangeRateAsync("USD", "EUR")).ReturnsAsync(oldToNewExchangeRate);
+        decimal usdToEurExchangeRate = 0.92m; // USD to EUR
+        decimal eurToUsdExchangeRate = 1.08m; // EUR to USD
+        decimal jpyToUsdExchangeRate = 0.0064m; // JPY to USD
+        decimal jpyToEurExchangeRate = jpyToUsdExchangeRate * usdToEurExchangeRate; // ~ JPY to EUR  0.0054m
 
         using var serviceProvider = await TestExtesions
             .MockLedgerServiceProviderAsync("xuser1", services =>
             {
-                // Override the default mock with our specific setup
-                services.AddScoped<IExchangeRateService>(provider => mockExchangeRateService.Object);
             });
 
         var appDbContext = serviceProvider.GetRequiredService<AppDbContext>();
@@ -105,26 +100,27 @@ public class TestDbContext
         var ledgerDb = await currentLedgerService.GetLedgerDbContextAsync();
         Assert.NotNull(ledgerDb);
 
+        // make sure the book has USD currency bu default
         var originalCurrency = "USD";
         var currencySetting = await ledgerDb.Settings
             .FirstOrDefaultAsync(s => s.Key == "Currency");
-        Assert.NotNull(currencySetting); // it is EUR by default
+        Assert.NotNull(currencySetting);
         currencySetting.Value = originalCurrency;
         await ledgerDb.SaveChangesAsync();
 
         // 1. Create transaction in default currency (implicit)
         var defaultCurrencyTx = new Transaction { Value = 100, Notes = "Implicit USD" };
         // 2. Create transaction in JPY
-        var jpyTx = new Transaction { Value = 10000, Currency = "JPY", Notes = "Explicit JPY" };
+        var jpyTx = new Transaction { Value = 10000, Currency = "JPY", Notes = "Explicit JPY", ExchangeRate = jpyToUsdExchangeRate };
         // 3. Create transaction in EUR (the future default currency)
-        var eurTx = new Transaction { Value = 50, Currency = "EUR", Notes = "Explicit EUR" };
+        var eurTx = new Transaction { Value = 50, Currency = "EUR", Notes = "Explicit EUR", ExchangeRate = eurToUsdExchangeRate };
 
         ledgerDb.Transactions.AddRange(defaultCurrencyTx, jpyTx, eurTx);
         await ledgerDb.SaveChangesAsync();
 
         // Act
         // The exchange rate provided is for converting the OLD default (USD) to the NEW default (EUR)
-        await currentLedgerService.UpdateDefaultCurrencyAsync(space.Id, "EUR", oldToNewExchangeRate);
+        await currentLedgerService.UpdateDefaultCurrencyAsync(space.Id, "EUR", usdToEurExchangeRate);
 
         // Assert
         // 1. Assert the space's default currency has changed
@@ -148,13 +144,13 @@ public class TestDbContext
         Assert.NotNull(updatedDefaultTx);
         updatedDefaultTx.Value.Should().Be(100);
         updatedDefaultTx.Currency.Should().Be(originalCurrency); // Explicitly set to old currency
-        updatedDefaultTx.ExchangeRate.Should().Be(oldToNewExchangeRate); // Uses the rate provided in the method call
+        updatedDefaultTx.ExchangeRate.Should().Be(usdToEurExchangeRate); // Uses the rate provided in the method call
 
         // 4. Assert the JPY transaction has its exchange rate updated to convert JPY -> EUR
         Assert.NotNull(updatedJpyTx);
         updatedJpyTx.Value.Should().Be(10000);
         updatedJpyTx.Currency.Should().Be("JPY");
-        updatedJpyTx.ExchangeRate.Should().Be(jpyToEurExchangeRate);
+        updatedJpyTx.ExchangeRate.Should().Be(jpyToUsdExchangeRate * usdToEurExchangeRate);
 
         // 5. Assert the EUR transaction now has a null exchange rate (since it matches the default)
         Assert.NotNull(updatedEurTx);
