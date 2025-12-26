@@ -66,12 +66,14 @@ public class Space
     /// <summary>
     /// Gets or sets a string representing the tint or color scheme for the space's UI.
     /// </summary>
+    [Obsolete("Use Setting with key Tint instead", true)]
     public string? Tint { get; set; }
 
     /// <summary>
     /// Gets or sets the ISO 4217 currency code (e.g., "USD", "EUR") that this space uses for reporting.
     /// All aggregated values and reports for this space will be presented in this currency.
     /// </summary>
+    [Obsolete("Use Setting with key Currency instead", true)]
     public string? Currency { get; set; }
 
     /// <summary>

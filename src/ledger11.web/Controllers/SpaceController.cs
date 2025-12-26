@@ -11,11 +11,28 @@ using ledger11.data.Extensions;
 
 namespace ledger11.web.Controllers;
 
+public class CreateSpaceDto
+{
+    public string Name { get; set; } = string.Empty;
+
+    public string? Tint { get; set; }
+
+    public string? Currency { get; set; }
+
+}
+
 public class MergeSpaceRequestDto
 {
     public Guid SourceSpaceId { get; set; }
     public Guid TargetSpaceId { get; set; }
     public int TargetCategoryId { get; set; }
+}
+
+public class UpdateCurrencyRequestDto
+{
+    public required Guid SpaceId { get; set; }
+    public required string Currency { get; set; }
+    public decimal ExchangeRate { get; set; }
 }
 
 [Authorize]
@@ -140,12 +157,26 @@ public class SpaceController : ControllerBase
 
     // POST: api/space
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] Space space)
+    public async Task<IActionResult> Create([FromBody] CreateSpaceDto spaceArgs)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await _userSpace.CreateSpace(space);
+        var space = new Space()
+        {
+            Name = spaceArgs.Name,
+        };
+
+        var settings = new Dictionary<string, string>();
+        if (spaceArgs.Currency != null)
+        {
+            settings.Add("Currency", spaceArgs.Currency);
+        }
+        if (spaceArgs.Tint != null)
+        {
+            settings.Add("Tint", spaceArgs.Tint);
+        }
+        var result = await _userSpace.CreateSpace(space, settings);
         var currentSpace = await _userSpace.GetUserSpaceAsync();
 
         _logger.LogInformation("result.Id = {result}", result?.Id);
@@ -190,6 +221,25 @@ public class SpaceController : ControllerBase
         await AddDetailsSpacesAsync(resultDto);
 
         return Ok(resultDto);
+    }
+
+    // POST: api/space/currency
+    [HttpPost("currency")]
+    public async Task<IActionResult> UpdateCurrency([FromBody] UpdateCurrencyRequestDto request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        try
+        {
+            await _currentLedgerService.UpdateDefaultCurrencyAsync(request.SpaceId, request.Currency, request.ExchangeRate);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update default currency.");
+            return StatusCode(500, "An error occurred while updating the currency.");
+        }
     }
 
     // POST: api/space/current

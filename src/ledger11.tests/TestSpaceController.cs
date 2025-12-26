@@ -26,7 +26,7 @@ public class TestSpaceController
         var controller = ActivatorUtilities.CreateInstance<SpaceController>(serviceProvider);
 
         // Act
-        var response = await controller.Create(new Space
+        var response = await controller.Create(new CreateSpaceDto
         {
             Name = "Test Space",
         });
@@ -61,7 +61,7 @@ public class TestSpaceController
         using var serviceProvider = await TestExtesions.MockLedgerServiceProviderAsync("xuser1");
         var controller = ActivatorUtilities.CreateInstance<SpaceController>(serviceProvider);
 
-        var createResult = await controller.Create(new Space
+        var createResult = await controller.Create(new CreateSpaceDto
         {
             Name = "ToDelete",
             Tint = "#111",
@@ -105,7 +105,7 @@ public class TestSpaceController
         using var serviceProvider = await TestExtesions.MockLedgerServiceProviderAsync("xuser1");
         var controller = ActivatorUtilities.CreateInstance<SpaceController>(serviceProvider);
 
-        var createResult = await controller.Create(new Space
+        var createResult = await controller.Create(new CreateSpaceDto
         {
             Name = "ToUpdate",
         });
@@ -153,7 +153,7 @@ public class TestSpaceController
         using var serviceProvider = await TestExtesions.MockLedgerServiceProviderAsync("xuser1");
         var controller = ActivatorUtilities.CreateInstance<SpaceController>(serviceProvider);
 
-        var createResult = await controller.Create(new Space
+        var createResult = await controller.Create(new CreateSpaceDto
         {
             Name = "Main",
             Tint = "#ABC",
@@ -257,7 +257,7 @@ public class TestSpaceController
         var userSpaceService = serviceProvider.GetRequiredService<IUserSpaceService>();
 
         // 1. Create source space and add a transaction to it
-        var sourceSpaceResponse = await controller.Create(new Space { Name = "Source Space", Currency = "USD" });
+        var sourceSpaceResponse = await controller.Create(new CreateSpaceDto { Name = "Source Space", Currency = "USD" });
         var sourceSpace = Assert.IsType<SpaceDto>(((CreatedAtActionResult)sourceSpaceResponse).Value);
 
         var sourceLedger = await userSpaceService.GetLedgerDbContextAsync(sourceSpace.Id, true);
@@ -266,7 +266,7 @@ public class TestSpaceController
         await sourceLedger.SaveChangesAsync();
 
         // 2. Create target space
-        var targetSpaceResponse = await controller.Create(new Space { Name = "Target Space", Currency = "USD" });
+        var targetSpaceResponse = await controller.Create(new CreateSpaceDto { Name = "Target Space", Currency = "USD" });
         var targetSpace = Assert.IsType<SpaceDto>(((CreatedAtActionResult)targetSpaceResponse).Value);
         var targetLedger = await userSpaceService.GetLedgerDbContextAsync(targetSpace.Id, true);
         var targetCategory = await targetLedger.Categories.FirstAsync();
