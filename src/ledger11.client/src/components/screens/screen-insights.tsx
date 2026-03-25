@@ -23,9 +23,9 @@ const COLORS = ["#34d399", "#60a5fa", "#f472b6", "#facc15", "#a78bfa"];
 export default function InsightsScreen() {
   const [mode, setMode] = useState<"charts" | "pie">("charts");
 
-  const [daily, setDaily] = useState<PerPeriodData[]>([]);
   const [weekly, setWeekly] = useState<PerPeriodData[]>([]);
   const [monthly, setMonthly] = useState<PerPeriodData[]>([]);
+  const [yearly, setYearly] = useState<PerPeriodData[]>([]);
 
   const fetchData = useCallback(async (period: string, setter: any) => {
     const res = await fetchWithAuth(
@@ -38,24 +38,54 @@ export default function InsightsScreen() {
   }, []);
 
   useEffect(() => {
-    fetchData("day", setDaily);
     fetchData("week", setWeekly);
     fetchData("month", setMonthly);
+    fetchData("year", setYearly);
   }, [fetchData]);
 
-  // 🔥 Transform for line charts
-  const transformChart = (data: PerPeriodData[]) => {
+  // ✅ Number formatter (space separator)
+  const format = (num: number) =>
+    new Intl.NumberFormat("bg-BG", {
+      maximumFractionDigits: 0,
+    }).format(num);
+
+  // 🔥 Transform for charts
+  const transformChart = (
+    data: PerPeriodData[],
+    period: "week" | "month" | "year"
+  ) => {
     let running = 0;
-    return data.map((item) => {
+
+    return data.map((item, index) => {
       const total = Object.values(item.expense).reduce(
         (s, v) => s + v,
         0
       );
+
       running += total;
 
+      let label = "";
+
+      if (period === "week") {
+        const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        label = days[index % 7];
+      }
+
+      if (period === "month") {
+        label = `${index + 1}`;
+      }
+
+      if (period === "year") {
+        const months = [
+          "Jan","Feb","Mar","Apr","May","Jun",
+          "Jul","Aug","Sep","Oct","Nov","Dec"
+        ];
+        label = months[index % 12];
+      }
+
       return {
-        label: item.title.slice(0, 3),
-        value: running,
+        label,
+        value: Math.round(running),
       };
     });
   };
@@ -93,7 +123,7 @@ export default function InsightsScreen() {
                 <Cell key={i} fill={COLORS[i % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip />
+            <Tooltip formatter={(value: number) => format(value)} />
           </PieChart>
         </ResponsiveContainer>
       </div>
@@ -120,18 +150,18 @@ export default function InsightsScreen() {
       {mode === "charts" && (
         <div className="flex flex-col items-center gap-6">
           <RevolutChartComponent
-            data={transformChart(daily)}
-            title="Spent today"
-          />
-
-          <RevolutChartComponent
-            data={transformChart(weekly)}
+            data={transformChart(weekly, "week")}
             title="Spent this week"
           />
 
           <RevolutChartComponent
-            data={transformChart(monthly)}
+            data={transformChart(monthly, "month")}
             title="Spent this month"
+          />
+
+          <RevolutChartComponent
+            data={transformChart(yearly, "year")}
+            title="Spent this year"
           />
         </div>
       )}
@@ -139,9 +169,9 @@ export default function InsightsScreen() {
       {/* PIE CHARTS */}
       {mode === "pie" && (
         <div className="flex flex-col items-center gap-6">
-          <PieBlock data={transformPie(daily)} />
           <PieBlock data={transformPie(weekly)} />
           <PieBlock data={transformPie(monthly)} />
+          <PieBlock data={transformPie(yearly)} />
         </div>
       )}
     </div>

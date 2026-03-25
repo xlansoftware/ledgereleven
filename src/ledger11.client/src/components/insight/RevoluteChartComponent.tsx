@@ -32,13 +32,13 @@ export default function RevolutChartComponent({ data, title }: Props) {
         <p className="text-sm text-gray-400">{title}</p>
         <div className="flex items-end gap-2">
           <h1 className="text-3xl font-semibold">
-            {latestValue.toFixed(0)} €
+            {new Intl.NumberFormat("fr-FR").format(Math.round(latestValue))}
           </h1>
         </div>
       </div>
 
       {/* Chart */}
-      <div className="h-40">
+      <div className="h-40">  
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data}>
             <defs>
