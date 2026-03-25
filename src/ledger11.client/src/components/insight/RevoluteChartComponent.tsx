@@ -14,10 +14,12 @@ type ChartItem = {
 
 type Props = {
   data: ChartItem[];
+  title: string;
 };
 
-export default function RevolutChartComponent({ data }: Props) {
+export default function RevolutChartComponent({ data, title }: Props) {
   const latestValue = data[data.length - 1]?.value ?? 0;
+  const maxValue = Math.max(...data.map((d) => d.value), 0);
 
   return (
     <motion.div
@@ -27,7 +29,7 @@ export default function RevolutChartComponent({ data }: Props) {
     >
       {/* Header */}
       <div className="mb-4">
-        <p className="text-sm text-gray-400">Spent this period</p>
+        <p className="text-sm text-gray-400">{title}</p>
         <div className="flex items-end gap-2">
           <h1 className="text-3xl font-semibold">
             {latestValue.toFixed(0)} €
@@ -76,7 +78,7 @@ export default function RevolutChartComponent({ data }: Props) {
 
       {/* Top value hint */}
       <div className="flex justify-end text-xs text-gray-400 mt-1">
-        {Math.max(...data.map((d) => d.value))} €
+        {maxValue.toFixed(0)} €
       </div>
     </motion.div>
   );

@@ -43,6 +43,7 @@ export default function InsightsScreen() {
     fetchData("month", setMonthly);
   }, [fetchData]);
 
+  // 🔥 Transform for line charts
   const transformChart = (data: PerPeriodData[]) => {
     let running = 0;
     return data.map((item) => {
@@ -51,6 +52,7 @@ export default function InsightsScreen() {
         0
       );
       running += total;
+
       return {
         label: item.title.slice(0, 3),
         value: running,
@@ -58,6 +60,7 @@ export default function InsightsScreen() {
     });
   };
 
+  // 🔥 Transform for pie charts
   const transformPie = (data: PerPeriodData[]) => {
     const totals: Record<string, number> = {};
 
@@ -99,7 +102,7 @@ export default function InsightsScreen() {
 
   return (
     <div className="min-h-screen bg-[#0c0d1a] p-6 text-white space-y-6">
-      {/* Toggle Buttons */}
+      {/* Toggle */}
       <div className="flex justify-center">
         <Tabs value={mode} onValueChange={(v) => setMode(v as any)}>
           <TabsList className="bg-neutral-800 rounded-2xl p-1 flex gap-2">
@@ -113,12 +116,23 @@ export default function InsightsScreen() {
         </Tabs>
       </div>
 
-      {/* LINE / AREA CHARTS */}
+      {/* AREA CHARTS */}
       {mode === "charts" && (
         <div className="flex flex-col items-center gap-6">
-          <RevolutChartComponent data={transformChart(daily)} />
-          <RevolutChartComponent data={transformChart(weekly)} />
-          <RevolutChartComponent data={transformChart(monthly)} />
+          <RevolutChartComponent
+            data={transformChart(daily)}
+            title="Spent today"
+          />
+
+          <RevolutChartComponent
+            data={transformChart(weekly)}
+            title="Spent this week"
+          />
+
+          <RevolutChartComponent
+            data={transformChart(monthly)}
+            title="Spent this month"
+          />
         </div>
       )}
 
